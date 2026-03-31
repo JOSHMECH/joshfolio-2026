@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+  <meta name="robots" content="noindex,nofollow"/>
+  <title>Admin Panel — Josh_d_Guru</title>
+  <link rel="stylesheet" href="admin.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+</head>
+<body>
+  <div class="noise-overlay"></div>
+
+  <!-- ── Login Screen ─────────────────────────────── -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-bg-grid"></div>
+    <div class="login-orb"></div>
+    <div class="login-card">
+      <div class="login-logo"><span class="logo-bracket">[</span>Admin<span class="logo-bracket">]</span></div>
+      <h1 class="login-title">Welcome Back</h1>
+      <p class="login-sub">Sign in to manage your portfolio.</p>
+      <form id="loginForm" novalidate>
+        <div class="lform-group">
+          <label for="luser">Username</label>
+          <input type="text" id="luser" placeholder="josh_d_guru" autocomplete="username"/>
+        </div>
+        <div class="lform-group">
+          <label for="lpass">Password</label>
+          <div class="pass-wrap">
+            <input type="password" id="lpass" placeholder="••••••••" autocomplete="current-password"/>
+            <button type="button" class="pass-toggle" id="passToggle" aria-label="Toggle password">👁</button>
+          </div>
+        </div>
+        <p class="login-error" id="loginError" role="alert"></p>
+        <button type="submit" class="login-btn" id="loginBtn">Enter Dashboard →</button>
+      </form>
+      <a href="index.html" class="back-link">← Back to Portfolio</a>
+    </div>
+  </div>
+
+  <!-- ── Dashboard ────────────────────────────────── -->
+  <div class="dashboard" id="dashboard" style="display:none">
+
+    <!-- Mobile Top Bar -->
+    <div class="mobile-topbar" id="mobileTopbar">
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+        <span></span><span></span><span></span>
+      </button>
+      <span class="mobile-brand"><span class="logo-bracket">[</span>Josh_d_Guru<span class="logo-bracket">]</span></span>
+      <div class="dash-avatar-sm">JV</div>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <span class="logo-bracket">[</span>Josh_d_Guru<span class="logo-bracket">]</span>
+        <span class="sidebar-tag">Admin</span>
+      </div>
+      <nav class="sidebar-nav" aria-label="Admin navigation">
+        <a href="#" class="snav-link active" data-view="overview"><span class="sn-icon">⬡</span>Overview</a>
+        <a href="#" class="snav-link" data-view="add"><span class="sn-icon">+</span>Add Project</a>
+        <a href="#" class="snav-link" data-view="manage"><span class="sn-icon">≡</span>Manage Projects</a>
+        <a href="#" class="snav-link" data-view="messages"><span class="sn-icon">✉</span>Messages</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="firebase-status" id="fbStatus">
+          <span class="fb-dot" id="fbDot"></span>
+          <span id="fbLabel">Checking Firebase…</span>
+        </div>
+        <a href="index.html" class="sf-link">← View Portfolio</a>
+        <button class="sf-logout" id="logoutBtn">Log Out</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dash-main" id="dashMain">
+      <header class="dash-header">
+        <div>
+          <h2 class="dash-page-title" id="pageTitle">Overview</h2>
+          <p class="dash-page-sub" id="pageSub">Welcome back, Josh.</p>
+        </div>
+        <div class="dash-avatar">JV</div>
+      </header>
+
+      <!-- ── Overview ─────────────────────────────── -->
+      <div class="view" id="view-overview">
+        <div class="stats-row">
+          <div class="dash-stat"><div class="ds-icon">📦</div><div><div class="ds-num" id="statTotal">0</div><div class="ds-label">Total Projects</div></div></div>
+          <div class="dash-stat"><div class="ds-icon">💻</div><div><div class="ds-num" id="statDev">0</div><div class="ds-label">Development</div></div></div>
+          <div class="dash-stat"><div class="ds-icon">🎨</div><div><div class="ds-num" id="statDesign">0</div><div class="ds-label">Design</div></div></div>
+          <div class="dash-stat"><div class="ds-icon">📊</div><div><div class="ds-num" id="statData">0</div><div class="ds-label">Data Science</div></div></div>
+        </div>
+        <div class="overview-info">
+          <div class="oi-card">
+            <h3>Quick Start</h3>
+            <p>Use the <strong>Add Project</strong> panel to upload new work. Projects are stored in <strong>Firebase Firestore</strong> (or localStorage as fallback) and displayed live on your portfolio.</p>
+            <button class="btn-gold" data-goto="add">Add Your First Project →</button>
+          </div>
+          <div class="oi-card">
+            <h3>Tips</h3>
+            <ul class="tips-list">
+              <li>Use high-resolution images (16:9 ratio works best)</li>
+              <li>Keep descriptions concise but descriptive</li>
+              <li>List your tech stack to highlight expertise</li>
+              <li>Add live &amp; GitHub links when available</li>
+            </ul>
+          </div>
+        </div>
+        <div class="recent-section">
+          <h3 class="rs-title">Recently Added</h3>
+          <div id="recentProjects" class="recent-list"></div>
+        </div>
+      </div>
+
+      <!-- ── Add Project ──────────────────────────── -->
+      <div class="view" id="view-add" style="display:none">
+        <div class="form-panel">
+          <h3 class="fp-title" id="formPanelTitle">New Project</h3>
+          <form id="projectForm" class="project-form" novalidate>
+            <input type="hidden" id="editId"/>
+            <div class="pf-row">
+              <div class="pf-group">
+                <label for="pTitle">Project Title *</label>
+                <input type="text" id="pTitle" placeholder="My Awesome Project" required/>
+              </div>
+              <div class="pf-group">
+                <label for="pCategory">Category *</label>
+                <select id="pCategory" required>
+                  <option value="">Select…</option>
+                  <option value="dev">Development</option>
+                  <option value="design">Design</option>
+                  <option value="data">Data Science</option>
+                </select>
+              </div>
+            </div>
+            <div class="pf-group">
+              <label for="pCatLabel">Category Label (displayed on card)</label>
+              <input type="text" id="pCatLabel" placeholder="e.g. Development · React"/>
+            </div>
+            <div class="pf-group">
+              <label for="pDesc">Description *</label>
+              <textarea id="pDesc" rows="4" placeholder="Describe this project in 2–3 sentences…" required></textarea>
+            </div>
+            <div class="pf-row">
+              <div class="pf-group">
+                <label for="pStack">Tech Stack (comma-separated)</label>
+                <input type="text" id="pStack" placeholder="React, Node.js, Firebase"/>
+              </div>
+              <div class="pf-group">
+                <label for="pEmoji">Emoji Icon</label>
+                <input type="text" id="pEmoji" placeholder="🚀" maxlength="4"/>
+              </div>
+            </div>
+            <div class="pf-row">
+              <div class="pf-group">
+                <label for="pLive">Live URL</label>
+                <input type="url" id="pLive" placeholder="https://example.com"/>
+              </div>
+              <div class="pf-group">
+                <label for="pRepo">GitHub / Repo URL</label>
+                <input type="url" id="pRepo" placeholder="https://github.com/…"/>
+              </div>
+            </div>
+            <div class="pf-group">
+              <label>Project Image</label>
+              <div class="img-drop-zone" id="dropZone" role="button" tabindex="0" aria-label="Upload image">
+                <div class="dz-icon">📁</div>
+                <p>Drag &amp; drop or <label for="imgFile" class="dz-browse">browse</label></p>
+                <p class="dz-hint">PNG, JPG, WebP — max 5 MB</p>
+                <input type="file" id="imgFile" accept="image/*" hidden/>
+              </div>
+              <div class="img-preview-wrap" id="imgPreviewWrap" style="display:none">
+                <img id="imgPreview" alt="Preview"/>
+                <button type="button" class="img-remove" id="imgRemove">✕ Remove</button>
+              </div>
+            </div>
+            <div class="pf-actions">
+              <button type="submit" class="btn-gold" id="saveBtn">Save Project →</button>
+              <button type="button" class="btn-outline" id="cancelEdit" style="display:none">Cancel Edit</button>
+            </div>
+            <p class="pf-status" id="pfStatus" role="status"></p>
+          </form>
+        </div>
+      </div>
+
+      <!-- ── Manage Projects ──────────────────────── -->
+      <div class="view" id="view-manage" style="display:none">
+        <div class="manage-header">
+          <p class="manage-sub" id="manageSub">All admin projects</p>
+          <input type="text" id="manageSearch" placeholder="Search projects…" class="manage-search-input"/>
+        </div>
+        <div class="manage-grid" id="manageGrid"></div>
+        <p class="empty-msg" id="manageEmpty" style="display:none">No projects yet. <a href="#" data-goto="add">Add one →</a></p>
+      </div>
+
+      <!-- ── View Messages ──────────────────────── -->
+      <div class="view" id="view-messages" style="display:none">
+        <div class="manage-header">
+            <p class="manage-sub" id="messagesSub">All messages</p>
+            <input type="text" id="messagesSearch" placeholder="Search messages…" class="manage-search-input"/>
+        </div>
+        <div class="message-grid" id="messageGrid"></div>
+        <p class="empty-msg" id="messagesEmpty" style="display:none">No messages yet.</p>
+      </div>
+    </main>
+  </div>
+
+  <!-- ── Delete Modal ─────────────────────────────── -->
+  <div class="modal-overlay" id="deleteOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="delTitle">
+    <div class="modal modal-sm">
+      <h3 class="del-title" id="delTitle">Delete Project?</h3>
+      <p class="del-sub">This cannot be undone.</p>
+      <div class="del-actions">
+        <button class="btn-outline" id="delCancel">Cancel</button>
+        <button class="btn-danger" id="delConfirm">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Toast ────────────────────────────────────── -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
