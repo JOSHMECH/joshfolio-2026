@@ -33,19 +33,26 @@
         <a href="#about"    class="nav-link">About</a>
         <a href="#skills"   class="nav-link">Skills</a>
         <a href="#projects" class="nav-link">Projects</a>
+        <a href="#startup"  class="nav-link">Startup</a>
+        <a href="#location" class="nav-link">Location</a>
         <a href="#contact"  class="nav-link">Contact</a>
-        
       </div>
-      <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
+      <div class="nav-actions">
+        <button class="sound-toggle" id="soundToggle" aria-label="Toggle UI sounds">
+          <svg class="sound-icon" viewBox="0 0 24 24" width="20" height="20">
+            <path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+          </svg>
+        </button>
+        <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
     </div>
   </nav>
   <div class="mobile-menu-overlay" id="menuOverlay"></div>
 
   <!-- ─── Hero ────────────────────────────────────────── -->
   <section id="hero" class="hero">
-    <div class="hero-bg-grid"></div>
     <div class="hero-orb hero-orb-1"></div>
     <div class="hero-orb hero-orb-2"></div>
 
@@ -254,12 +261,432 @@
     </div>
   </section>
 
+  <!-- ─── Statistics Lab ─────────────────────────────── -->
+  <section id="stats-lab" class="stats-lab section">
+    <div class="container">
+      <div class="section-header centered">
+        <span class="section-tag">04 / Stats Lab</span>
+        <h2 class="section-title">Statistics &amp; ML<br /><span class="gold">Sandbox</span></h2>
+        <p class="section-sub" style="margin: 0 auto;">Interactive models to visualize mathematical and machine learning concepts in real time.</p>
+      </div>
+
+      <div class="stats-lab-tabs">
+        <button class="stats-tab-btn active" data-tab="regression">Linear Regression</button>
+        <button class="stats-tab-btn" data-tab="knn">KNN Classifier</button>
+      </div>
+
+      <div class="stats-lab-container">
+        <!-- Regression View -->
+        <div class="stats-lab-view active" id="regression-view">
+          <div class="canvas-wrap">
+            <canvas id="regressionCanvas" width="500" height="350"></canvas>
+            <div class="canvas-instructions">Click inside the grid to plot data points</div>
+          </div>
+          <div class="stats-sidebar">
+            <div class="stats-card">
+              <h3 class="sc-title">Regression Metrics</h3>
+              <div class="sc-stat-row">
+                <span class="sc-stat-label">Model Equation:</span>
+                <span class="sc-stat-val" id="reg-eq">y = 0.00x + 0.00</span>
+              </div>
+              <div class="sc-stat-row">
+                <span class="sc-stat-label">Slope (β₁):</span>
+                <span class="sc-stat-val" id="reg-slope">0.000</span>
+              </div>
+              <div class="sc-stat-row">
+                <span class="sc-stat-label">Intercept (β₀):</span>
+                <span class="sc-stat-val" id="reg-intercept">0.000</span>
+              </div>
+              <div class="sc-stat-row">
+                <span class="sc-stat-label">Pearson (R):</span>
+                <span class="sc-stat-val" id="reg-r">0.000</span>
+              </div>
+              <div class="sc-stat-row">
+                <span class="sc-stat-label">R-Squared (R²):</span>
+                <span class="sc-stat-val" id="reg-r2">0.000</span>
+              </div>
+              <div class="sc-stat-row">
+                <span class="sc-stat-label">N (Points):</span>
+                <span class="sc-stat-val" id="reg-count">0</span>
+              </div>
+            </div>
+            <button class="btn-ghost full-width" id="clearStatsBtn">Reset Plots</button>
+          </div>
+        </div>
+
+        <!-- KNN Classifier View -->
+        <div class="stats-lab-view" id="knn-view" style="display: none;">
+          <div class="canvas-wrap">
+            <canvas id="knnCanvas" width="500" height="350"></canvas>
+            <div class="canvas-instructions">Plot points and place a query marker to classify</div>
+          </div>
+          <div class="stats-sidebar">
+            <div class="knn-mode-selector">
+              <button class="knn-mode-btn active" data-mode="red">● + Red</button>
+              <button class="knn-mode-btn" data-mode="blue">● + Blue</button>
+              <button class="knn-mode-btn" data-mode="query">● ? Query</button>
+            </div>
+            
+            <div class="stats-card">
+              <h3 class="sc-title">KNN Classifier Output</h3>
+              <div class="sc-stat-row">
+                <span class="sc-stat-label">K Neighbors:</span>
+                <div style="display: flex; align-items: center; gap: 8px; flex: 1; justify-content: flex-end;">
+                  <input type="range" id="knn-k-slider" min="1" max="9" step="2" value="5" style="width: 70px; accent-color: var(--gold);" />
+                  <span id="knn-k-val" style="color: var(--gold); font-weight: bold; font-family: var(--font-mono);">5</span>
+                </div>
+              </div>
+              <div class="sc-stat-row">
+                <span class="sc-stat-label">Red Points:</span>
+                <span class="sc-stat-val" id="knn-red-count" style="color: #FF5F56;">0</span>
+              </div>
+              <div class="sc-stat-row">
+                <span class="sc-stat-label">Blue Points:</span>
+                <span class="sc-stat-val" id="knn-blue-count" style="color: #38bdf8;">0</span>
+              </div>
+              <div class="sc-stat-row">
+                <span class="sc-stat-label">Prediction:</span>
+                <span class="sc-stat-val" id="knn-prediction" style="color: var(--text-muted);">None</span>
+              </div>
+            </div>
+            <button class="btn-ghost full-width" id="clearKnnBtn">Reset Plots</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Design Playground ───────────────────────────── -->
+  <section id="design-playground" class="design-playground section">
+    <div class="container">
+      <div class="section-header centered">
+        <span class="section-tag">05 / Design Playground</span>
+        <h2 class="section-title">Brand Identity<br /><span class="gold">Playground</span></h2>
+        <p class="section-sub" style="margin: 0 auto;">Customize the vector logo configuration dynamically and export your bespoke brand asset.</p>
+      </div>
+      
+      <div class="playground-container">
+        <div class="playground-preview">
+          <div class="svg-wrap" id="svgWrap">
+            <!-- SVG will be placed here -->
+          </div>
+        </div>
+        
+        <div class="playground-sidebar">
+          <div class="playground-card">
+            <h3 class="pg-title">Configurator</h3>
+            
+            <div class="pg-control-group">
+              <label for="pg-rotate">Symbol Rotation</label>
+              <div class="pg-slider-wrap">
+                <input type="range" id="pg-rotate" min="-180" max="180" value="0" />
+                <span class="pg-slider-val" id="pg-rotate-val">0°</span>
+              </div>
+            </div>
+            
+            <div class="pg-control-group">
+              <label for="pg-scale">Emblem Scale</label>
+              <div class="pg-slider-wrap">
+                <input type="range" id="pg-scale" min="50" max="150" value="100" />
+                <span class="pg-slider-val" id="pg-scale-val">1.0x</span>
+              </div>
+            </div>
+            
+            <div class="pg-control-group">
+              <label for="pg-stroke">Line Thickness</label>
+              <div class="pg-slider-wrap">
+                <input type="range" id="pg-stroke" min="4" max="16" value="8" />
+                <span class="pg-slider-val" id="pg-stroke-val">8px</span>
+              </div>
+            </div>
+            
+            <div class="pg-control-group">
+              <label for="pg-glow">Glow Intensity</label>
+              <div class="pg-slider-wrap">
+                <input type="range" id="pg-glow" min="0" max="15" value="8" />
+                <span class="pg-slider-val" id="pg-glow-val">8px</span>
+              </div>
+            </div>
+            
+            <div class="pg-control-group">
+              <label for="pg-hue">Gradient Hue</label>
+              <div class="pg-slider-wrap">
+                <input type="range" id="pg-hue" min="0" max="360" value="38" />
+                <span class="pg-slider-val" id="pg-hue-val">38°</span>
+              </div>
+            </div>
+          </div>
+          
+          <button class="btn-primary full-width" id="exportSvgBtn">Export Vector SVG →</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Tech Startup / Venture: GuruLabs ────────────── -->
+  <section id="startup" class="startup section">
+    <div class="container">
+      <div class="section-header centered">
+        <span class="section-tag" style="color: #10B981; border-color: rgba(16, 185, 129, 0.2);">06 / Tech Startup</span>
+        <h2 class="section-title">Guru<span class="emerald">Labs</span></h2>
+        <p class="section-sub" style="margin: 0 auto; color: var(--text-muted);">Building Africa's next digital ecosystem — creating impactful platforms for youths, students, creators, and entrepreneurs.</p>
+      </div>
+
+      <!-- ── Startup Hero ── -->
+      <div class="startup-hero">
+        <div class="sh-content">
+          <div class="sh-pill">✦ GURULABS ECOSYSTEM</div>
+          <h3 class="sh-title">Building Africa's<br/>Next Digital <span class="emerald-gradient">Ecosystem</span></h3>
+          <p class="sh-desc">Solving real-world problems across education, productivity, finance, and community with AI-driven, highly optimized, and youth-centered tools.</p>
+          <div class="sh-actions">
+            <a href="#startup-products" class="btn-emerald">Explore Products</a>
+            <a href="#contact" class="btn-startup-ghost">Partner With Us</a>
+          </div>
+          <!-- Metrics -->
+          <div class="sh-metrics">
+            <div class="sh-metric">
+              <span class="sh-met-num" data-target="2400">0</span>
+              <span class="sh-met-lbl">Active Users</span>
+            </div>
+            <div class="sh-met-divider"></div>
+            <div class="sh-metric">
+              <span class="sh-met-num" data-target="4">0</span>
+              <span class="sh-met-lbl">Products Built</span>
+            </div>
+            <div class="sh-met-divider"></div>
+            <div class="sh-metric">
+              <span class="sh-met-num" data-target="15000">0</span>
+              <span class="sh-met-lbl">Community Members</span>
+            </div>
+          </div>
+        </div>
+        <div class="sh-visual">
+          <div class="sh-visual-container">
+            <div class="sh-orb"></div>
+            <!-- Bento-style preview mockup -->
+            <div class="sh-bento-card">
+              <div class="sbc-header">
+                <span class="sbc-dot red"></span>
+                <span class="sbc-dot yellow"></span>
+                <span class="sbc-dot green"></span>
+                <span class="sbc-title">gurulabs_core.sh</span>
+              </div>
+              <div class="sbc-body">
+                <div class="sbc-line"><span class="sbc-cmd">npm run start</span></div>
+                <div class="sbc-line sbc-out">> Initializing GuruLabs Node Ecosystem...</div>
+                <div class="sbc-line sbc-out">> Connecting to Gemini API... OK</div>
+                <div class="sbc-line sbc-out">> Syncing active smart contract wallets... OK</div>
+                <div class="sbc-line sbc-out">> System online. Deploying products: Kudiflow, ScholarLens.</div>
+                <div class="sbc-line sbc-cursor">_</div>
+              </div>
+            </div>
+            <!-- Floating tag elements -->
+            <div class="sh-tag tag-kudi">Kudiflow 💼</div>
+            <div class="sh-tag tag-lens">ScholarLens 📘</div>
+            <div class="sh-tag tag-ai">Gemini AI ✦</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── About GuruLabs (Bento Grid) ── -->
+      <div class="startup-bento-grid">
+        <!-- Main philosophy card -->
+        <div class="sbg-card sbg-philosoph">
+          <div class="sbg-icon">⬢</div>
+          <h4>Our Vision</h4>
+          <p>A parent tech ecosystem engineering next-generation AI interfaces, fintech structures, and educational systems that equip youths to participate in the digital economy.</p>
+        </div>
+        <!-- Card: Mission -->
+        <div class="sbg-card sbg-mission">
+          <div class="sbg-icon">🎯</div>
+          <h4>Our Mission</h4>
+          <p>To architect fast, smart, and accessible software assets that solve daily friction in money management, academic research, and community building.</p>
+        </div>
+        <!-- Card: Innovation -->
+        <div class="sbg-card sbg-innovation">
+          <div class="sbg-icon">🧠</div>
+          <h4>Youth-Centered Innovation</h4>
+          <p>Integrating user-first design, statistics-driven models, and AI pipelines to create tools that youths <em>want</em> to use.</p>
+        </div>
+      </div>
+
+      <!-- ── Startup Products Showcase ── -->
+      <div class="startup-products" id="startup-products">
+        <!-- Product 1: Kudiflow -->
+        <div class="startup-prod-card">
+          <div class="spc-info">
+            <div class="spc-tag">FINTECH + PRODUCTIVITY</div>
+            <h4 class="spc-title">Kudi<span class="emerald">flow</span></h4>
+            <p class="spc-desc">A smart finance and operations manager that simplifies payments, balances, tracking, and growth for creators and student builders.</p>
+            <div class="spc-bullets">
+              <div class="spc-bullet"><span>✓</span> Smart wallet tracking &amp; automated ledger</div>
+              <div class="spc-bullet"><span>✓</span> AI-assisted spending analytics and saving triggers</div>
+              <div class="spc-bullet"><span>✓</span> Integrated productivity tools and opportunity filters</div>
+            </div>
+            <div class="spc-tech-tags">
+              <span class="s-tt">Fintech</span><span class="s-tt">Productivity</span><span class="s-tt">AI</span><span class="s-tt">Smart Tools</span>
+            </div>
+          </div>
+          <div class="spc-mockup">
+            <!-- Mockup Card Widget -->
+            <div class="mockup-wallet">
+              <div class="mw-header">
+                <span>Kudiflow Smart Wallet</span>
+                <span class="mw-chip"></span>
+              </div>
+              <div class="mw-balance">₦450,000.00</div>
+              <div class="mw-label">AVAILABLE BALANCE</div>
+              <div class="mw-analytics">
+                <div class="mw-graph-bar" style="height: 40%"></div>
+                <div class="mw-graph-bar" style="height: 60%"></div>
+                <div class="mw-graph-bar" style="height: 80%"></div>
+                <div class="mw-graph-bar" style="height: 50%"></div>
+                <div class="mw-graph-bar" style="height: 70%"></div>
+              </div>
+              <div class="mw-footer">
+                <span>AI spending health: EXCELLENT</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Product 2: ScholarLens -->
+        <div class="startup-prod-card rev">
+          <div class="spc-info">
+            <div class="spc-tag">EDTECH + AI RESEARCH</div>
+            <h4 class="spc-title">Scholar<span class="emerald">Lens</span></h4>
+            <p class="spc-desc">An AI-powered academic sandbox that accelerates research, organizes notes, compiles citations, and provides students with visual predictive grades modeling.</p>
+            <div class="spc-bullets">
+              <div class="spc-bullet"><span>✓</span> Smart text extraction &amp; AI summary generation</div>
+              <div class="spc-bullet"><span>✓</span> Citation builder and research assistant module</div>
+              <div class="spc-bullet"><span>✓</span> Advanced analytics plotting study trends and predictions</div>
+            </div>
+            <div class="spc-tech-tags">
+              <span class="s-tt">EdTech</span><span class="s-tt">AI</span><span class="s-tt">Analytics</span><span class="s-tt">Research</span>
+            </div>
+          </div>
+          <div class="spc-mockup">
+            <!-- Mockup Scholar AI dashboard -->
+            <div class="mockup-scholar">
+              <div class="ms-header">
+                <span>ScholarLens Research AI</span>
+                <span class="ms-status">Active</span>
+              </div>
+              <div class="ms-card">
+                <p class="ms-prompt">"Summarize SPSS ANOVA results..."</p>
+                <div class="ms-reply">
+                  <div class="ms-reply-line"></div>
+                  <div class="ms-reply-line" style="width: 80%"></div>
+                  <div class="ms-reply-line" style="width: 90%"></div>
+                </div>
+              </div>
+              <div class="ms-stats">
+                <div class="ms-stat"><span class="ms-num">4.8</span><span class="ms-lbl">Predicted GPA</span></div>
+                <div class="ms-stat"><span class="ms-num">92%</span><span class="ms-lbl">Study Eff.</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Startup Ecosystem & Architecture ── -->
+      <div class="startup-ecosystem">
+        <h4 class="eco-title">Tech Stack &amp; Scalable Architecture</h4>
+        <p class="eco-desc">GuruLabs leverages a modern serverless architecture powered by AI integrations and robust cloud databases.</p>
+        
+        <!-- Connected Flow Visual -->
+        <div class="eco-flow-container">
+          <div class="eco-node">
+            <span class="en-icon">💻</span>
+            <span class="en-lbl">Client UIs (Next.js / React)</span>
+          </div>
+          <div class="eco-arrow">──></div>
+          <div class="eco-node highlight">
+            <span class="en-icon">✦</span>
+            <span class="en-lbl">Gemini AI / ML API</span>
+          </div>
+          <div class="eco-arrow">──></div>
+          <div class="eco-node">
+            <span class="en-icon">💾</span>
+            <span class="en-lbl">Cloud DB (Supabase / Firebase)</span>
+          </div>
+        </div>
+
+        <!-- Tech Stack Badges Grid -->
+        <div class="eco-tech-grid">
+          <div class="etg-badge"><span class="etg-dot"></span>Next.js</div>
+          <div class="etg-badge"><span class="etg-dot"></span>React</div>
+          <div class="etg-badge"><span class="etg-dot"></span>Tailwind CSS</div>
+          <div class="etg-badge"><span class="etg-dot"></span>Node.js</div>
+          <div class="etg-badge"><span class="etg-dot"></span>Firebase</div>
+          <div class="etg-badge"><span class="etg-dot"></span>Supabase</div>
+          <div class="etg-badge"><span class="etg-dot"></span>Gemini API</div>
+          <div class="etg-badge"><span class="etg-dot"></span>Cloud Firestore</div>
+        </div>
+      </div>
+
+      <!-- ── Founder Showcase Card ── -->
+      <div class="founder-showcase">
+        <div class="fs-card">
+          <div class="fs-badge">FOUNDER &amp; DEVELOPER</div>
+          <h4 class="fs-name">Idowu Joshua Victor</h4>
+          <p class="fs-title">Creative Technologist · Software Architect · Data Scientist</p>
+          <p class="fs-bio">I combine UI/UX engineering, statistical modeling, and AI integration to build products that solve friction in education, finance, and community-driven systems. GuruLabs is the parent vehicle for all my innovation projects, bridging code with human experience.</p>
+          <div class="fs-skills">
+            <span class="fs-sk">BSc Statistics Student (OOU)</span>
+            <span class="fs-sk">Self-taught Developer</span>
+            <span class="fs-sk">Startup Builder</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Waitlist CTA ── -->
+      <div class="startup-waitlist">
+        <div class="sw-card">
+          <h4>Join the Innovation Ecosystem</h4>
+          <p>Subscribe to be notified when Kudiflow and ScholarLens launch beta, and receive exclusive access to early builds.</p>
+          <form class="sw-form" id="waitlistForm" novalidate>
+            <input type="email" id="waitlistEmail" placeholder="your@email.com" required autocomplete="email" />
+            <button type="submit" class="btn-emerald">Join Waitlist →</button>
+          </form>
+          <p class="sw-status" id="waitlistStatus"></p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── Global Footprint / Location Globe ────────────────── -->
+  <section id="location" class="location section">
+    <div class="container">
+      <div class="section-header centered">
+        <span class="section-tag">07 / Location Telemetry</span>
+        <h2 class="section-title">Global<br /><span class="gold">Telemetry Node</span></h2>
+        <p class="section-sub" style="margin: 0 auto; max-width: 520px;">Locate my development node in real time. Spin, swipe, or drag the holographic coordinates grid to scan geographic vectors.</p>
+      </div>
+      
+      <div class="location-content">
+        <div class="globe-card">
+          <div class="globe-card-header">
+            <span class="gch-dot"></span>
+            <span class="gch-title">telemetry_daemon.log</span>
+            <span class="gch-badge">LIVE</span>
+          </div>
+          <div class="globe-canvas-wrap">
+            <canvas id="locationGlobe" width="360" height="360" style="max-width: 100%; height: auto; cursor: grab;"></canvas>
+          </div>
+          <div id="globeTooltip" class="globe-tooltip">Lagos, Nigeria</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ─── Contact ─────────────────────────────────────── -->
   <section id="contact" class="contact section">
     <div class="container">
       <div class="contact-inner">
         <div class="contact-left">
-          <span class="section-tag">04 / Contact</span>
+          <span class="section-tag">08 / Contact</span>
           <h2 class="section-title">Let's Build<br /><span class="gold">Something Great</span></h2>
           <p>Whether you need a stunning website, a compelling brand identity,
           data insights, or all three — I'm ready. Let's turn your ideas into reality.</p>
@@ -268,10 +695,10 @@
               <span class="cl-icon">✉</span><span>joshmech851@gmail.com</span>
             </a>
             <a href="tel:+2348161523407" class="contact-link">
-              <span class="cl-icon">📞</span><span>+234 816 1523 407</span>
+              <span class="cl-icon">✆</span><span>+234 816 1523 407</span>
             </a>
             <div class="contact-link">
-              <span class="cl-icon">📍</span><span>Lagos, Nigeria</span>
+              <span class="cl-icon">⬢</span><span>Lagos, Nigeria</span>
             </div>
           </div>
           <div class="social-row">
@@ -327,6 +754,35 @@
       </div>
     </div>
   </footer>
+
+  <!-- ─── CLI Terminal Overlay ────────────────────────── -->
+  <div class="terminal-overlay" id="terminalOverlay" role="dialog" aria-modal="true" aria-label="Developer Console">
+    <div class="terminal-container">
+      <div class="terminal-window-header">
+        <div class="terminal-window-dots">
+          <span class="tw-dot tw-dot-red"></span>
+          <span class="tw-dot tw-dot-yellow"></span>
+          <span class="tw-dot tw-dot-green"></span>
+        </div>
+        <span class="terminal-window-title">josh_d_guru_console.sh</span>
+        <button class="terminal-close-btn" id="terminalCloseBtn" aria-label="Close terminal">✕</button>
+      </div>
+      <div class="terminal-window-body" id="terminalBody">
+        <div class="terminal-output-line">Josh_d_Guru System Console [Version 1.0.0]</div>
+        <div class="terminal-output-line">Type 'help' to view all available commands.</div>
+        <div class="terminal-output-line">&nbsp;</div>
+      </div>
+      <div class="terminal-input-line">
+        <span class="terminal-prompt-label">guest@josh_d_guru:~$</span>
+        <input type="text" id="terminalInput" autocomplete="off" autofocus spellcheck="false" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Floating CLI Button ─────────────────────────── -->
+  <button class="cli-toggle-btn" id="cliToggleBtn" aria-label="Toggle command line interface">
+    <span class="cli-btn-icon">&gt;_</span>
+  </button>
 
   <!-- ── Firebase SDK (compat v10) ─────────────────────── -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>

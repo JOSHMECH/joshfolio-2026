@@ -65,6 +65,7 @@
         <a href="#" class="snav-link active" data-view="overview"><span class="sn-icon">⬡</span>Overview</a>
         <a href="#" class="snav-link" data-view="add"><span class="sn-icon">+</span>Add Project</a>
         <a href="#" class="snav-link" data-view="manage"><span class="sn-icon">≡</span>Manage Projects</a>
+        <a href="#" class="snav-link" data-view="github"><span class="sn-icon">⚙</span>GitHub Repos</a>
         <a href="#" class="snav-link" data-view="messages"><span class="sn-icon">✉</span>Messages</a>
       </nav>
       <div class="sidebar-footer">
@@ -196,6 +197,20 @@
         </div>
         <div class="manage-grid" id="manageGrid"></div>
         <p class="empty-msg" id="manageEmpty" style="display:none">No projects yet. <a href="#" data-goto="add">Add one →</a></p>
+      </div>
+
+      <!-- ── GitHub Repos ────────────────────────── -->
+      <div class="view" id="view-github" style="display:none">
+        <div class="manage-header">
+          <p class="manage-sub" id="githubSub">Sync and toggle visibility of your public repositories</p>
+          <input type="text" id="githubSearch" placeholder="Search repos…" class="manage-search-input"/>
+        </div>
+        <div class="projects-loading" id="githubLoading" style="display:none">
+          <div class="loading-spinner"></div>
+          <p>Loading repositories from GitHub…</p>
+        </div>
+        <div class="manage-grid" id="githubGrid"></div>
+        <p class="empty-msg" id="githubEmpty" style="display:none">No repositories found.</p>
       </div>
 
       <!-- ── View Messages ──────────────────────── -->

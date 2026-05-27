@@ -3,6 +3,149 @@
    Firebase Firestore integration + localStorage fallback
    ════════════════════════════════════════════════════════ */
 
+/* ─── UI Sound System (Web Audio API Synthesizer) ────── */
+let audioCtx = null;
+let isMuted = localStorage.getItem('josh_sound_mute') === 'true';
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playAudioEffect(type, param) {
+  if (isMuted) return;
+  try {
+    initAudio();
+    if (!audioCtx) return;
+    
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    
+    const now = audioCtx.currentTime;
+    
+    switch(type) {
+      case 'hover': {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
+        
+        gain.gain.setValueAtTime(0.015, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.08);
+        break;
+      }
+      case 'click': {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(320, now);
+        osc.frequency.exponentialRampToValueAtTime(120, now + 0.1);
+        
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.1);
+        break;
+      }
+      case 'plot': {
+        const freq = param ? 200 + (1 - param) * 600 : 440;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.5, now + 0.15);
+        
+        gain.gain.setValueAtTime(0.04, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.15);
+        break;
+      }
+      case 'terminal': {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const filter = audioCtx.createBiquadFilter();
+        
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(900, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.03);
+        
+        filter.type = 'bandpass';
+        filter.frequency.value = 1100;
+        filter.Q.value = 6;
+        
+        gain.gain.setValueAtTime(0.015, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+        
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.03);
+        break;
+      }
+      case 'chord': {
+        const freqs = [261.63, 329.63, 392.00, 523.25];
+        const masterGain = audioCtx.createGain();
+        masterGain.gain.setValueAtTime(0, now);
+        masterGain.gain.linearRampToValueAtTime(0.05, now + 0.15);
+        masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.5);
+        masterGain.connect(audioCtx.destination);
+        
+        freqs.forEach(f => {
+          const osc = audioCtx.createOscillator();
+          osc.type = 'sine';
+          osc.frequency.value = f;
+          osc.connect(masterGain);
+          osc.start(now);
+          osc.stop(now + 1.5);
+        });
+        break;
+      }
+    }
+  } catch(e) {
+    console.warn('Audio effect failed to play:', e);
+  }
+}
+
+function initSoundToggle() {
+  const toggle = document.getElementById('soundToggle');
+  if (!toggle) return;
+  
+  const muteIcon = `<svg class="sound-icon" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`;
+  const playIcon = `<svg class="sound-icon" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
+  
+  if (isMuted) {
+    toggle.classList.add('muted');
+    toggle.innerHTML = muteIcon;
+  } else {
+    toggle.innerHTML = playIcon;
+  }
+  
+  toggle.addEventListener('click', () => {
+    isMuted = !isMuted;
+    localStorage.setItem('josh_sound_mute', isMuted);
+    toggle.classList.toggle('muted', isMuted);
+    toggle.innerHTML = isMuted ? muteIcon : playIcon;
+    if (!isMuted) {
+      playAudioEffect('click');
+    }
+  });
+}
+
 /* ─── Demo Projects (always shown) ──────────────────── */
 const DEMO_PROJECTS = [];
 
@@ -20,14 +163,19 @@ document.addEventListener('mousemove', e => {
   if(cursorTrail){ cursorTrail.style.left=tx+'px'; cursorTrail.style.top=ty+'px'; }
   requestAnimationFrame(animCursor);
 })();
+
 document.querySelectorAll('a,button,.role-pill,.filter-btn,.tab-btn,.stag,.project-card,.social-btn').forEach(el=>{
   el.addEventListener('mouseenter',()=>{
     if(cursor){cursor.style.width='14px';cursor.style.height='14px';}
     if(cursorTrail){cursorTrail.style.width='46px';cursorTrail.style.height='46px';}
+    playAudioEffect('hover');
   });
   el.addEventListener('mouseleave',()=>{
     if(cursor){cursor.style.width='8px';cursor.style.height='8px';}
     if(cursorTrail){cursorTrail.style.width='32px';cursorTrail.style.height='32px';}
+  });
+  el.addEventListener('click',()=>{
+    playAudioEffect('click');
   });
 });
 
@@ -140,9 +288,44 @@ if(skillsSec) skillsObs.observe(skillsSec);
 
 /* ─── Project Card Builder ───────────────────────────── */
 function buildCard(project){
-  const thumbHtml = project.image
-    ? `<img src="${project.image}" alt="${project.title}" loading="lazy"/>`
-    : `<div class="project-thumb-placeholder">${project.emoji||'🚀'}</div>`;
+  let thumbHtml = '';
+  if (project.isGitHubRepo) {
+    thumbHtml = `
+      <div class="github-preview-thumb">
+        <div class="gh-preview-grid"></div>
+        <div class="gh-preview-orb"></div>
+        <div class="gh-preview-header">
+          <span class="gh-preview-lang">${project.language || 'Code'}</span>
+          <span class="gh-preview-stars">★ ${project.stars || 0}</span>
+        </div>
+        <div class="gh-preview-code">
+          <span class="gh-preview-bracket">[</span>
+          <span class="gh-preview-name">${project.title}</span>
+          <span class="gh-preview-bracket">]</span>
+        </div>
+        <div class="gh-preview-footer">
+          <span>github.com/JOSHMECH</span>
+        </div>
+      </div>`;
+  } else {
+    thumbHtml = project.image
+      ? `<img src="${project.image}" alt="${project.title}" loading="lazy"/>`
+      : `<div class="curated-preview-thumb">
+          <div class="cp-grid"></div>
+          <div class="cp-orb"></div>
+          <div class="cp-header">
+            <span class="cp-category">${project.categoryLabel || project.category || 'Project'}</span>
+            <span class="cp-badge">${project.emoji || '✦'}</span>
+          </div>
+          <div class="cp-title-block">
+            <span class="cp-bracket">❖</span>
+            <span class="cp-name">${project.title}</span>
+          </div>
+          <div class="cp-footer">
+            <span class="cp-stack">${(project.stack || []).slice(0, 3).join(' · ') || 'Curated Project'}</span>
+          </div>
+        </div>`;
+  }
 
   const overlayBtns = [
     project.liveUrl ? `<a href="${project.liveUrl}" class="overlay-btn" target="_blank" rel="noopener">Live ↗</a>` : '',
@@ -167,25 +350,80 @@ function buildCard(project){
   return card;
 }
 
-/* ─── Render Projects ────────────────────────────────── */
+/* ─── Render Projects with Transitions ──────────────── */
 let allAdminProjects = [];
 function renderProjects(filter='all'){
   const grid = document.getElementById('projectsGrid');
   const note = document.getElementById('adminNote');
   if(!grid) return;
-  grid.innerHTML = '';
-  const combined = [...allAdminProjects]; // Only show admin projects after removing demos
-  let shown = 0;
-  combined.forEach(p=>{
-    if(filter==='all' || p.category===filter){
-      grid.appendChild(buildCard(p)); shown++;
-    }
-  });
-  if(shown===0){
-    grid.innerHTML='<p style="color:var(--text-muted);grid-column:1/-1;text-align:center;padding:3rem;font-family:var(--font-mono);font-size:.85rem;">No projects in this category yet.</p>';
+  
+  const cards = Array.from(grid.querySelectorAll('.project-card'));
+  
+  if (cards.length > 0) {
+    cards.forEach(card => {
+      card.classList.add('fade-out');
+    });
+    setTimeout(() => {
+      performRender();
+    }, 250);
+  } else {
+    performRender();
   }
-  if(note && allAdminProjects.length>0){
-    note.textContent = `✦ ${allAdminProjects.length} project${allAdminProjects.length>1?'s':''} added via admin panel`;
+  
+  function performRender() {
+    grid.innerHTML = '';
+    let shown = 0;
+    let projectsToRender = [];
+    
+    if (filter === 'github') {
+      projectsToRender = allAdminProjects.filter(p => p.isGitHubRepo);
+      if (note) {
+        note.textContent = `✦ ${projectsToRender.length} repository${projectsToRender.length !== 1 ? 'ies' : ''} synchronized from GitHub`;
+      }
+    } else {
+      const curated = allAdminProjects.filter(p => !p.isGitHubRepo);
+      projectsToRender = curated.filter(p => filter === 'all' || p.category === filter);
+      if (note && curated.length > 0) {
+        note.textContent = `✦ ${curated.length} project${curated.length !== 1 ? 's' : ''} added via admin panel`;
+      } else if (note) {
+        note.textContent = '';
+      }
+    }
+    
+    if(projectsToRender.length === 0){
+      grid.innerHTML = '<p style="color:var(--text-muted);grid-column:1/-1;text-align:center;padding:3rem;font-family:var(--font-mono);font-size:.85rem;">No projects in this category yet.</p>';
+      return;
+    }
+    
+    projectsToRender.forEach((p, idx) => {
+      const card = buildCard(p);
+      card.classList.add('fade-in');
+      grid.appendChild(card);
+      
+      // Re-bind mouse enter/leave for custom cursor & hover sounds
+      card.addEventListener('mouseenter',()=>{
+        if(cursor){cursor.style.width='14px';cursor.style.height='14px';}
+        if(cursorTrail){cursorTrail.style.width='46px';cursorTrail.style.height='46px';}
+        playAudioEffect('hover');
+      });
+      card.addEventListener('mouseleave',()=>{
+        if(cursor){cursor.style.width='8px';cursor.style.height='8px';}
+        if(cursorTrail){cursorTrail.style.width='32px';cursorTrail.style.height='32px';}
+      });
+      
+      // Hook audio click/hover for overlays
+      card.querySelectorAll('a').forEach(a => {
+        a.addEventListener('click', () => playAudioEffect('click'));
+        a.addEventListener('mouseenter', () => playAudioEffect('hover'));
+      });
+      
+      // Trigger staggered animation in next frame
+      setTimeout(() => {
+        card.classList.remove('fade-in');
+        card.classList.add('fade-in-active');
+        card.style.transitionDelay = `${idx * 40}ms`;
+      }, 50);
+    });
   }
 }
 
@@ -199,23 +437,142 @@ filterBtns.forEach(btn=>{
   });
 });
 
+/* ─── GitHub API Fetching & Caching ──────────────────── */
+async function fetchGitHubRepos() {
+  const cacheKey = 'josh_github_repos';
+  const cacheTimeKey = 'josh_github_repos_time';
+  const cacheDuration = 30 * 60 * 1000; // 30 minutes
+  
+  const cached = localStorage.getItem(cacheKey);
+  const cachedTime = localStorage.getItem(cacheTimeKey);
+  
+  if (cached && cachedTime && (Date.now() - parseInt(cachedTime) < cacheDuration)) {
+    try { return JSON.parse(cached); } catch(e) {}
+  }
+  
+  try {
+    const res = await fetch('https://api.github.com/users/JOSHMECH/repos?sort=updated&per_page=100');
+    if (!res.ok) throw new Error('GitHub API error');
+    const repos = await res.json();
+    
+    const mapped = repos
+      .filter(r => !r.fork)
+      .map(r => {
+        const topics = r.topics || [];
+        let category = 'dev';
+        
+        if (topics.includes('design') || topics.includes('ui-ux') || topics.includes('creative')) {
+          category = 'design';
+        } else if (topics.includes('data-science') || topics.includes('data') || topics.includes('statistics') || topics.includes('analytics') || topics.includes('r') || topics.includes('spss')) {
+          category = 'data';
+        }
+        
+        let emoji = '🚀';
+        if (category === 'design') emoji = '🎨';
+        else if (category === 'data') emoji = '📊';
+        else if (r.language === 'JavaScript' || r.language === 'TypeScript') emoji = '🟨';
+        else if (r.language === 'Python') emoji = '🐍';
+        else if (r.language === 'HTML' || r.language === 'CSS') emoji = '💻';
+        
+        const stack = [r.language, ...topics.filter(t => t !== category)].filter(Boolean);
+        const uniqueStack = [...new Set(stack)];
+        
+        return {
+          id: 'gh-' + r.id,
+          title: r.name.replace(/[-_]/g, ' '),
+          category,
+          categoryLabel: category === 'dev' ? 'Development' : (category === 'design' ? 'Creative Design' : 'Data Science'),
+          desc: r.description || 'Public GitHub repository.',
+          stack: uniqueStack.slice(0, 5),
+          emoji,
+          liveUrl: r.homepage || null,
+          repoUrl: r.html_url,
+          stars: r.stargazers_count,
+          forks: r.forks_count,
+          language: r.language,
+          createdAt: r.created_at,
+          isGitHubRepo: true
+        };
+      });
+      
+    localStorage.setItem(cacheKey, JSON.stringify(mapped));
+    localStorage.setItem(cacheTimeKey, Date.now().toString());
+    return mapped;
+  } catch (err) {
+    console.warn('GitHub fetch failed, returning empty:', err);
+    return [];
+  }
+}
+
+function normalizeRepoUrl(url) {
+  if (!url) return '';
+  return url.toLowerCase().trim().replace(/\.git$/, '').replace(/\/$/, '');
+}
+
+async function getHiddenRepoIds() {
+  const { db, firebaseReady } = window.joshFirebase || {};
+  if (firebaseReady && db) {
+    try {
+      const snap = await db.collection('hidden_repos').get();
+      return new Set(snap.docs.map(d => String(d.id)));
+    } catch (err) {
+      console.warn('Failed to fetch hidden repos, using localStorage:', err);
+      return new Set(getLocalHiddenRepos());
+    }
+  }
+  return new Set(getLocalHiddenRepos());
+}
+
+function getLocalHiddenRepos() {
+  try { return JSON.parse(localStorage.getItem('josh_hidden_repos') || '[]'); }
+  catch { return []; }
+}
+
 /* ─── Load Projects from Firebase or localStorage ────── */
 async function loadAdminProjects(){
   const loading = document.getElementById('projectsLoading');
   const { db, firebaseReady } = window.joshFirebase || {};
 
+  let firebaseProjects = [];
   if(firebaseReady && db){
     try{
       const snap = await db.collection('projects')
         .orderBy('createdAt','desc').get();
-      allAdminProjects = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+      firebaseProjects = snap.docs.map(d=>({ id:d.id, ...d.data() }));
     } catch(err){
       console.warn('Firestore read failed, using localStorage:', err);
-      allAdminProjects = getLocalProjects();
+      firebaseProjects = getLocalProjects();
     }
   } else {
-    allAdminProjects = getLocalProjects();
+    firebaseProjects = getLocalProjects();
   }
+
+  // Fetch GitHub projects
+  let githubProjects = await fetchGitHubRepos();
+
+  // Fetch Hidden Repo IDs
+  const hiddenRepoIds = await getHiddenRepoIds();
+
+  // Filter out any hidden repos
+  githubProjects = githubProjects.filter(gh => {
+    const rawId = gh.id.replace('gh-', '');
+    return !hiddenRepoIds.has(String(rawId));
+  });
+
+  // Merge: Curated Firebase projects take precedence.
+  const firebaseRepos = new Set(
+    firebaseProjects
+      .map(p => normalizeRepoUrl(p.repoUrl))
+      .filter(Boolean)
+  );
+
+  const filteredGitHub = githubProjects.filter(gh => {
+    const url = normalizeRepoUrl(gh.repoUrl);
+    return !firebaseRepos.has(url);
+  });
+
+  // Combine lists: curated projects first, then github repositories
+  allAdminProjects = [...firebaseProjects, ...filteredGitHub];
 
   if(loading) loading.style.display='none';
   renderProjects('all');
@@ -294,10 +651,1213 @@ const fadeObs = new IntersectionObserver(entries=>{
     }
   });
 },{threshold:.08});
-document.querySelectorAll('.about-card,.contact-link,.skill-item,.project-card').forEach(el=>{
+document.querySelectorAll('.about-card,.contact-link,.skill-item,.project-card,.sbg-card,.startup-prod-card,.eco-node,.etg-badge,.fs-card,.sw-card,.globe-card').forEach(el=>{
   el.style.cssText += 'opacity:0;transform:translateY(22px);transition:opacity .55s ease,transform .55s ease;';
   fadeObs.observe(el);
 });
 
+/* ─── Statistics Lab: Regression Canvas ──────────────── */
+function initRegressionLab() {
+  const canvas = document.getElementById('regressionCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let points = [];
+  
+  const regEq = document.getElementById('reg-eq');
+  const regSlope = document.getElementById('reg-slope');
+  const regIntercept = document.getElementById('reg-intercept');
+  const regR = document.getElementById('reg-r');
+  const regR2 = document.getElementById('reg-r2');
+  const regCount = document.getElementById('reg-count');
+  const clearBtn = document.getElementById('clearStatsBtn');
+  
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    const gridColor = 'rgba(200, 169, 110, 0.08)';
+    const axisColor = 'rgba(200, 169, 110, 0.3)';
+    const pointColor = '#C8A96E';
+    const lineColor = '#FAF6EE';
+    
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 1;
+    
+    const step = 25;
+    for (let x = 0; x < canvas.width; x += step) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+      ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += step) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+      ctx.stroke();
+    }
+    
+    ctx.strokeStyle = axisColor;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(30, 0);
+    ctx.lineTo(30, canvas.height - 30);
+    ctx.lineTo(canvas.width, canvas.height - 30);
+    ctx.stroke();
+    
+    ctx.fillStyle = pointColor;
+    points.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.strokeStyle = 'rgba(200, 169, 110, 0.2)';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 11, 0, Math.PI * 2);
+      ctx.stroke();
+    });
+    
+    const N = points.length;
+    if (N >= 2) {
+      const originX = 30;
+      const originY = canvas.height - 30;
+      
+      const dataset = points.map(p => ({
+        x: p.x - originX,
+        y: originY - p.y
+      }));
+      
+      let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0, sumYY = 0;
+      dataset.forEach(d => {
+        sumX += d.x;
+        sumY += d.y;
+        sumXY += d.x * d.y;
+        sumXX += d.x * d.x;
+        sumYY += d.y * d.y;
+      });
+      
+      const meanX = sumX / N;
+      const meanY = sumY / N;
+      
+      const numSlope = sumXY - (sumX * sumY) / N;
+      const denSlope = sumXX - (sumX * sumX) / N;
+      
+      let slope = denSlope !== 0 ? numSlope / denSlope : 0;
+      let intercept = meanY - slope * meanX;
+      
+      const numR = N * sumXY - sumX * sumY;
+      const denR = Math.sqrt((N * sumXX - sumX * sumX) * (N * sumYY - sumY * sumY));
+      let r = denR !== 0 ? numR / denR : 0;
+      let r2 = r * r;
+      
+      if (regEq) regEq.textContent = `y = ${slope.toFixed(2)}x ${intercept >= 0 ? '+' : ''}${intercept.toFixed(2)}`;
+      if (regSlope) regSlope.textContent = slope.toFixed(3);
+      if (regIntercept) regIntercept.textContent = intercept.toFixed(3);
+      if (regR) regR.textContent = r.toFixed(3);
+      if (regR2) regR2.textContent = r2.toFixed(3);
+      if (regCount) regCount.textContent = N;
+      
+      const startX = originX;
+      const startY = originY - (slope * (startX - originX) + intercept);
+      const endX = canvas.width;
+      const endY = originY - (slope * (endX - originX) + intercept);
+      
+      ctx.strokeStyle = lineColor;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+    } else {
+      if (regEq) regEq.textContent = "y = 0.00x + 0.00";
+      if (regSlope) regSlope.textContent = "0.000";
+      if (regIntercept) regIntercept.textContent = "0.000";
+      if (regR) regR.textContent = "0.000";
+      if (regR2) regR2.textContent = "0.000";
+      if (regCount) regCount.textContent = N;
+    }
+  }
+  
+  canvas.addEventListener('click', e => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+    
+    if (x >= 30 && y <= canvas.height - 30) {
+      points.push({ x, y });
+      playAudioEffect('plot', y / canvas.height);
+      draw();
+    }
+  });
+  
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      points = [];
+      draw();
+      playAudioEffect('click');
+    });
+  }
+  
+  draw();
+}
+
+/* ─── Stats Lab Tabs Switching ──────────────────────── */
+function initStatsLabTabs() {
+  const tabs = document.querySelectorAll('.stats-tab-btn');
+  const regressionView = document.getElementById('regression-view');
+  const knnView = document.getElementById('knn-view');
+  
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      
+      const targetModel = tab.dataset.tab;
+      playAudioEffect('click');
+      
+      if (targetModel === 'regression') {
+        regressionView.classList.add('active');
+        regressionView.style.display = 'grid';
+        knnView.classList.remove('active');
+        knnView.style.display = 'none';
+      } else {
+        regressionView.classList.remove('active');
+        regressionView.style.display = 'none';
+        knnView.classList.add('active');
+        knnView.style.display = 'grid';
+        // Force redraw on KNN canvas
+        const canvas = document.getElementById('knnCanvas');
+        if (canvas) {
+          const event = new Event('redraw-knn');
+          canvas.dispatchEvent(event);
+        }
+      }
+    });
+  });
+}
+
+/* ─── Statistics Lab: KNN Classifier Canvas ─────────── */
+function initKnnLab() {
+  const canvas = document.getElementById('knnCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  let knnPoints = [];
+  let queryPoint = null;
+  let activeMode = 'red';
+  let kValue = 5;
+  let isDraggingQuery = false;
+  
+  const kSlider = document.getElementById('knn-k-slider');
+  const kValSpan = document.getElementById('knn-k-val');
+  const redCountSpan = document.getElementById('knn-red-count');
+  const blueCountSpan = document.getElementById('knn-blue-count');
+  const predictionSpan = document.getElementById('knn-prediction');
+  const clearBtn = document.getElementById('clearKnnBtn');
+  const modeBtns = document.querySelectorAll('.knn-mode-btn');
+  
+  modeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      modeBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeMode = btn.dataset.mode;
+      playAudioEffect('click');
+    });
+  });
+  
+  if (kSlider && kValSpan) {
+    kSlider.addEventListener('input', (e) => {
+      kValue = parseInt(e.target.value);
+      kValSpan.textContent = kValue;
+      draw();
+    });
+  }
+  
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      knnPoints = [];
+      queryPoint = null;
+      draw();
+      playAudioEffect('click');
+    });
+  }
+  
+  function getDist(p1, p2) {
+    return Math.hypot(p1.x - p2.x, p1.y - p2.y);
+  }
+  
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    const gridColor = 'rgba(200, 169, 110, 0.08)';
+    const axisColor = 'rgba(200, 169, 110, 0.3)';
+    
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 1;
+    const step = 25;
+    for (let x = 0; x < canvas.width; x += step) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+      ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += step) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+      ctx.stroke();
+    }
+    
+    ctx.strokeStyle = axisColor;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(30, 0);
+    ctx.lineTo(30, canvas.height - 30);
+    ctx.lineTo(canvas.width, canvas.height - 30);
+    ctx.stroke();
+    
+    const redPoints = knnPoints.filter(p => p.label === 'red');
+    const bluePoints = knnPoints.filter(p => p.label === 'blue');
+    if (redCountSpan) redCountSpan.textContent = redPoints.length;
+    if (blueCountSpan) blueCountSpan.textContent = bluePoints.length;
+    
+    knnPoints.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+      ctx.fillStyle = p.label === 'red' ? '#FF5F56' : '#38bdf8';
+      ctx.fill();
+      
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 11, 0, Math.PI * 2);
+      ctx.strokeStyle = p.label === 'red' ? 'rgba(255, 95, 86, 0.2)' : 'rgba(56, 189, 248, 0.2)';
+      ctx.stroke();
+    });
+    
+    if (queryPoint && knnPoints.length > 0) {
+      const list = knnPoints.map(p => {
+        return {
+          point: p,
+          dist: getDist(queryPoint, p)
+        };
+      });
+      
+      list.sort((a, b) => a.dist - b.dist);
+      
+      const actualK = Math.min(kValue, list.length);
+      const neighbors = list.slice(0, actualK);
+      
+      let votesRed = 0;
+      let votesBlue = 0;
+      
+      neighbors.forEach(n => {
+        if (n.point.label === 'red') votesRed++;
+        else votesBlue++;
+      });
+      
+      let prediction = 'Undecided';
+      let predColor = 'var(--text-muted)';
+      if (votesRed > votesBlue) {
+        prediction = 'Red Class';
+        predColor = '#FF5F56';
+      } else if (votesBlue > votesRed) {
+        prediction = 'Blue Class';
+        predColor = '#38bdf8';
+      }
+      
+      if (predictionSpan) {
+        predictionSpan.textContent = prediction;
+        predictionSpan.style.color = predColor;
+      }
+      
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      neighbors.forEach(n => {
+        ctx.beginPath();
+        ctx.moveTo(queryPoint.x, queryPoint.y);
+        ctx.lineTo(n.point.x, n.point.y);
+        ctx.strokeStyle = n.point.label === 'red' ? 'rgba(255, 95, 86, 0.5)' : 'rgba(56, 189, 248, 0.5)';
+        ctx.stroke();
+      });
+      ctx.setLineDash([]);
+      
+      if (neighbors.length > 0) {
+        const maxDist = neighbors[neighbors.length - 1].dist;
+        ctx.beginPath();
+        ctx.arc(queryPoint.x, queryPoint.y, maxDist, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(200, 169, 110, 0.15)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([2, 6]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      
+      ctx.beginPath();
+      ctx.arc(queryPoint.x, queryPoint.y, 8, 0, Math.PI * 2);
+      ctx.fillStyle = '#C8A96E';
+      ctx.fill();
+      
+      ctx.beginPath();
+      ctx.arc(queryPoint.x, queryPoint.y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = predColor === 'var(--text-muted)' ? '#080808' : predColor;
+      ctx.fill();
+      
+      ctx.beginPath();
+      ctx.arc(queryPoint.x, queryPoint.y, 14, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(200, 169, 110, 0.3)';
+      ctx.stroke();
+    } else {
+      if (predictionSpan) {
+        predictionSpan.textContent = queryPoint ? 'Need training points' : 'Plot points';
+        predictionSpan.style.color = 'var(--text-muted)';
+      }
+      
+      if (queryPoint) {
+        ctx.beginPath();
+        ctx.arc(queryPoint.x, queryPoint.y, 8, 0, Math.PI * 2);
+        ctx.fillStyle = '#C8A96E';
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.arc(queryPoint.x, queryPoint.y, 14, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(200, 169, 110, 0.3)';
+        ctx.stroke();
+      }
+    }
+  }
+  
+  function getMousePos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  }
+  
+  canvas.addEventListener('mousedown', e => {
+    const pos = getMousePos(e);
+    if (pos.x >= 30 && pos.y <= canvas.height - 30) {
+      if (queryPoint && getDist(pos, queryPoint) < 15) {
+        isDraggingQuery = true;
+        playAudioEffect('click');
+      } else {
+        if (activeMode === 'query') {
+          queryPoint = { x: pos.x, y: pos.y };
+          playAudioEffect('plot', pos.y / canvas.height);
+          draw();
+        } else {
+          knnPoints.push({ x: pos.x, y: pos.y, label: activeMode });
+          playAudioEffect('plot', pos.y / canvas.height);
+          draw();
+        }
+      }
+    }
+  });
+  
+  canvas.addEventListener('mousemove', e => {
+    if (isDraggingQuery && queryPoint) {
+      const pos = getMousePos(e);
+      if (pos.x >= 30 && pos.y <= canvas.height - 30) {
+        queryPoint = { x: pos.x, y: pos.y };
+        draw();
+      }
+    }
+  });
+  
+  window.addEventListener('mouseup', () => {
+    isDraggingQuery = false;
+  });
+  
+  canvas.addEventListener('redraw-knn', () => {
+    draw();
+  });
+  
+  draw();
+}
+
+/* ─── Brand Identity Playground SVG Customizer ──────── */
+function initDesignPlayground() {
+  const svgWrap = document.getElementById('svgWrap');
+  if (!svgWrap) return;
+  
+  const rotSlider = document.getElementById('pg-rotate');
+  const rotVal = document.getElementById('pg-rotate-val');
+  
+  const scaleSlider = document.getElementById('pg-scale');
+  const scaleVal = document.getElementById('pg-scale-val');
+  
+  const strokeSlider = document.getElementById('pg-stroke');
+  const strokeVal = document.getElementById('pg-stroke-val');
+  
+  const glowSlider = document.getElementById('pg-glow');
+  const glowVal = document.getElementById('pg-glow-val');
+  
+  const hueSlider = document.getElementById('pg-hue');
+  const hueVal = document.getElementById('pg-hue-val');
+  
+  const exportBtn = document.getElementById('exportSvgBtn');
+  
+  let rotate = 0;
+  let scale = 1.0;
+  let strokeWidth = 8;
+  let glowIntensity = 8;
+  let hue = 38;
+  
+  function updateSVG() {
+    const colorStart = `hsl(${hue}, 50%, 61%)`;
+    const colorEnd = `hsl(${(hue + 20) % 360}, 65%, 72%)`;
+    
+    const svgCode = `
+<svg id="playgroundSVG" width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${colorStart}" id="gradStart" />
+      <stop offset="100%" stop-color="${colorEnd}" id="gradEnd" />
+    </linearGradient>
+    <filter id="logoGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="${glowIntensity}" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <!-- Background subtle grid -->
+  <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(200, 169, 110, 0.12)" stroke-width="1" stroke-dasharray="4 4" />
+  <circle cx="100" cy="100" r="60" fill="none" stroke="rgba(200, 169, 110, 0.05)" stroke-width="1" />
+  
+  <!-- Main dynamic symbol group -->
+  <g id="logoGroup" transform="translate(100, 100) rotate(${rotate}) scale(${scale})">
+    <!-- Outer accent arc -->
+    <path d="M -45,-45 A 60 60 0 0 1 45,-45" fill="none" stroke="url(#logoGrad)" stroke-width="${strokeWidth / 2}" stroke-linecap="round" opacity="0.4" />
+    
+    <!-- Central stylized "J" / "G" geometric curve -->
+    <!-- Glow layer -->
+    <path d="M -25,-30 L 20,-30 L 20,20 C 20,35 5,45 -20,45 L -25,45" fill="none" stroke="url(#logoGrad)" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" opacity="0.35" filter="url(#logoGlow)" />
+    
+    <!-- Main crisp path -->
+    <path d="M -25,-30 L 20,-30 L 20,20 C 20,35 5,45 -20,45 L -25,45" fill="none" stroke="url(#logoGrad)" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" />
+    
+    <!-- Design detail terminal nodes -->
+    <circle cx="-25" cy="-30" r="${strokeWidth / 2.5}" fill="#080808" stroke="url(#logoGrad)" stroke-width="2" />
+    <circle cx="-25" cy="45" r="${strokeWidth / 2.5}" fill="#080808" stroke="url(#logoGrad)" stroke-width="2" />
+  </g>
+</svg>
+    `;
+    
+    svgWrap.innerHTML = svgCode.trim();
+  }
+  
+  if (rotSlider && rotVal) {
+    rotSlider.addEventListener('input', (e) => {
+      rotate = parseInt(e.target.value);
+      rotVal.textContent = `${rotate}°`;
+      updateSVG();
+    });
+  }
+  if (scaleSlider && scaleVal) {
+    scaleSlider.addEventListener('input', (e) => {
+      scale = (parseInt(e.target.value) / 100).toFixed(1);
+      scaleVal.textContent = `${scale}x`;
+      updateSVG();
+    });
+  }
+  if (strokeSlider && strokeVal) {
+    strokeSlider.addEventListener('input', (e) => {
+      strokeWidth = parseInt(e.target.value);
+      strokeVal.textContent = `${strokeWidth}px`;
+      updateSVG();
+    });
+  }
+  if (glowSlider && glowVal) {
+    glowSlider.addEventListener('input', (e) => {
+      glowIntensity = parseInt(e.target.value);
+      glowVal.textContent = `${glowIntensity}px`;
+      updateSVG();
+    });
+  }
+  if (hueSlider && hueVal) {
+    hueSlider.addEventListener('input', (e) => {
+      hue = parseInt(e.target.value);
+      hueVal.textContent = `${hue}°`;
+      updateSVG();
+    });
+  }
+  
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      const svgElement = svgWrap.querySelector('svg');
+      if (!svgElement) return;
+      
+      const serializer = new XMLSerializer();
+      let source = serializer.serializeToString(svgElement);
+      
+      if(!source.startsWith('<?xml')) {
+        source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+      }
+      
+      const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
+      
+      const downloadLink = document.createElement("a");
+      downloadLink.href = url;
+      downloadLink.download = "josh_logo.svg";
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      
+      playAudioEffect('chord');
+    });
+  }
+  
+  updateSVG();
+}
+
+/* ─── Developer CLI Terminal Simulator ──────────────── */
+function initTerminalCLI() {
+  const termOverlay = document.getElementById('terminalOverlay');
+  const toggleBtn = document.getElementById('cliToggleBtn');
+  const closeBtn = document.getElementById('terminalCloseBtn');
+  const termInput = document.getElementById('terminalInput');
+  const termBody = document.getElementById('terminalBody');
+  
+  if (!termOverlay || !toggleBtn || !termInput || !termBody) return;
+  
+  toggleBtn.addEventListener('click', () => {
+    const isOpen = termOverlay.classList.toggle('open');
+    if (isOpen) {
+      termInput.focus();
+      playAudioEffect('chord');
+    } else {
+      playAudioEffect('click');
+    }
+  });
+  
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      termOverlay.classList.remove('open');
+      playAudioEffect('click');
+    });
+  }
+  
+  termOverlay.addEventListener('click', e => {
+    if (e.target === termOverlay) {
+      termOverlay.classList.remove('open');
+    }
+  });
+  
+  const commands = {
+    help: () => [
+      "Available commands:",
+      "  help     - Show list of system commands",
+      "  about    - Print biographical system logs",
+      "  projects - List synchronized repositories",
+      "  startup  - Show GuruLabs ecosystem details",
+      "  globe    - Print location and globe telemetry",
+      "  contact  - Retrieve messaging endpoints",
+      "  clear    - Clear console log stack",
+      "  exit     - Shutdown console session"
+    ],
+    about: () => [
+      "SYSTEM DATA LOG: IDOWU JOSHUA VICTOR",
+      "------------------------------------",
+      "ROLE: Frontend Developer, Designer & Data Scientist",
+      "LOCATION: Lagos, Nigeria",
+      "EDUCATION: BSc Statistics (Olabisi Onabanjo University)",
+      "BIO: Creative technologist engineering rich, accessible user",
+      "     interfaces and training predictive analytics systems."
+    ],
+    projects: () => {
+      const list = allAdminProjects.map(p => {
+        const label = p.isGitHubRepo ? "[github]" : "[curated]";
+        return `  ${label.padEnd(10)} ${p.title}`;
+      });
+      return [
+        "LOADED REPOSITORIES & PROJECTS:",
+        "------------------------------------",
+        ...list
+      ];
+    },
+    startup: () => [
+      "GURULABS DIAGNOSTICS & SYSTEM STATUS:",
+      "------------------------------------",
+      "MISSION: Building Africa's Next Digital Ecosystem",
+      "STATUS: Development Beta",
+      "PRODUCTS ACTIVE:",
+      "  - Kudiflow (Smart Wallet & Finance Manager)",
+      "  - ScholarLens (AI Academic Sandbox)",
+      "METRICS:",
+      "  - Active Beta Users: 2,400+",
+      "  - Ecosystem Nodes: 3 Built",
+      "  - Community Members: 15,000+",
+      "INTEGRATIONS: Gemini AI, Supabase, Cloud Firestore"
+    ],
+    globe: () => [
+      "LOCATION TELEMETRY SYSTEM:",
+      "------------------------------------",
+      "HEADQUARTERS: Lagos, Nigeria",
+      "COORDINATES: 6.5244° N, 3.3792° E",
+      "RADAR SCAN: 3D Holographic Canvas Active",
+      "DOTTED GRID NODES: 852 landmass coordinates projected",
+      "SPIN STATE: Drag interaction enabled"
+    ],
+    contact: () => [
+      "CONTACT ENDPOINTS:",
+      "------------------------------------",
+      "  email: joshmech851@gmail.com",
+      "  phone: +234 816 1523 407",
+      "  github: github.com/JOSHMECH"
+    ],
+    clear: () => {
+      termBody.innerHTML = '';
+      return [];
+    },
+    exit: () => {
+      termOverlay.classList.remove('open');
+      return ["Console session closed."];
+    }
+  };
+  
+  function addLine(text, className = '') {
+    const line = document.createElement('div');
+    line.className = 'terminal-output-line' + (className ? ' ' + className : '');
+    line.textContent = text;
+    termBody.appendChild(line);
+    termBody.scrollTop = termBody.scrollHeight;
+  }
+  
+  termInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const rawInput = termInput.value;
+      const cmd = rawInput.trim().toLowerCase();
+      termInput.value = '';
+      
+      if (!cmd) return;
+      
+      addLine(`guest@josh_d_guru:~$ ${rawInput}`, 'terminal-output-line-user');
+      
+      if (commands[cmd]) {
+        const output = commands[cmd]();
+        output.forEach(line => addLine(line));
+      } else {
+        addLine(`✕ Command not found: '${cmd}'. Type 'help' for instructions.`, 'terminal-output-line-error');
+      }
+    } else {
+      if (!e.metaKey && !e.ctrlKey && !e.altKey && e.key.length === 1) {
+        playAudioEffect('terminal');
+      }
+    }
+  });
+}
+
+/* ─── Magnetic button & parallax animation effects ─── */
+function initMagneticAndParallax() {
+  const magnetics = document.querySelectorAll('.cli-toggle-btn, .theme-toggle, .btn-primary, .social-btn, .nav-logo, .sound-toggle');
+  
+  document.addEventListener('mousemove', e => {
+    const mx = e.clientX;
+    const my = e.clientY;
+    
+    magnetics.forEach(el => {
+      const rect = el.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      const dist = Math.hypot(mx - centerX, my - centerY);
+      
+      if (dist < 45) {
+        const strength = 12;
+        const deltaX = ((mx - centerX) / dist) * strength;
+        const deltaY = ((my - centerY) / dist) * strength;
+        el.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+        el.style.transition = 'transform 0.1s ease-out';
+      } else {
+        el.style.transform = '';
+        el.style.transition = 'transform 0.3s ease';
+      }
+    });
+  });
+  
+  const orb1 = document.querySelector('.hero-orb-1');
+  const orb2 = document.querySelector('.hero-orb-2');
+  
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    if (orb1) {
+      orb1.style.transform = `translateY(${scrolled * 0.15}px)`;
+    }
+    if (orb2) {
+      orb2.style.transform = `translateY(${scrolled * -0.1}px)`;
+    }
+  }, { passive: true });
+}
+
+/* ─── 3D Dotted Location Globe ───────────────────────── */
+function initLocationGlobe() {
+  const canvas = document.getElementById('locationGlobe');
+  const tooltip = document.getElementById('globeTooltip');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  const radius = 110;
+  const cameraDistance = 330;
+  
+  const dpr = window.devicePixelRatio || 1;
+  const width = 360;
+  const height = 360;
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  ctx.scale(dpr, dpr);
+  
+  const cx = width / 2;
+  const cy = height / 2;
+  
+  function isLand(lat, lon) {
+    if (lat >= -35 && lat <= 35 && lon >= -17 && lon <= 51) {
+      if (lat < 5 && lon < 8) return false;
+      if (lat > 18 && lon > 33 && lat < 30 && lon < 45) return false;
+      return true;
+    }
+    if (lat >= 36 && lat <= 70 && lon >= -10 && lon <= 45) {
+      if (lat > 60 && lon < 5) return false;
+      if (lat < 42 && lon > 25 && lon < 35) return false;
+      return true;
+    }
+    if (lat >= 5 && lat <= 75 && lon >= 45 && lon <= 180) {
+      if (lat < 30 && lon < 60 && lat > 12) return true;
+      if (lat < 8 && lon < 95) return false;
+      return true;
+    }
+    if (lat >= -10 && lat <= 8 && lon >= 95 && lon <= 150) {
+      return true;
+    }
+    if (lat >= -44 && lat <= -10 && lon >= 113 && lon <= 154) {
+      return true;
+    }
+    if (lat >= 15 && lat <= 75 && lon >= -168 && lon <= -52) {
+      if (lat < 25 && lon > -85) return false;
+      return true;
+    }
+    if (lat >= 60 && lat <= 83 && lon >= -75 && lon <= -15) {
+      return true;
+    }
+    if (lat >= -56 && lat <= 12 && lon >= -92 && lon <= -34) {
+      if (lat > 5 && lon < -75) return false;
+      if (lat < -20 && lon > -40) return false;
+      return true;
+    }
+    if (lat <= -60) {
+      return true;
+    }
+    return false;
+  }
+  
+  const points = [];
+  for (let lat = -80; lat <= 80; lat += 4.5) {
+    const radLat = lat * Math.PI / 180;
+    const cosLat = Math.cos(radLat);
+    const lonStep = cosLat > 0.1 ? 4.5 / cosLat : 90;
+    for (let lon = -180; lon < 180; lon += lonStep) {
+      if (isLand(lat, lon)) {
+        points.push({
+          x: radius * Math.cos(radLat) * Math.sin(lon * Math.PI / 180),
+          y: -radius * Math.sin(radLat),
+          z: radius * Math.cos(radLat) * Math.cos(lon * Math.PI / 180)
+        });
+      }
+    }
+  }
+  
+  const lagosLat = 6.5244;
+  const lagosLon = 3.3792;
+  const lagosRadLat = lagosLat * Math.PI / 180;
+  const lagosRadLon = lagosLon * Math.PI / 180;
+  const lagosPt = {
+    x: radius * Math.cos(lagosRadLat) * Math.sin(lagosRadLon),
+    y: -radius * Math.sin(lagosRadLat),
+    z: radius * Math.cos(lagosRadLat) * Math.cos(lagosRadLon)
+  };
+  
+  let angleY = 1.6;
+  let angleX = 0.25;
+  
+  let isDragging = false;
+  let lastX = 0;
+  let lastY = 0;
+  let velY = 0;
+  let velX = 0;
+  
+  function getEventPos(e) {
+    if (e.touches && e.touches.length > 0) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    return { x: e.clientX, y: e.clientY };
+  }
+  
+  function handleStart(e) {
+    isDragging = true;
+    const pos = getEventPos(e);
+    lastX = pos.x;
+    lastY = pos.y;
+    velX = 0;
+    velY = 0;
+    canvas.style.cursor = 'grabbing';
+  }
+  
+  function handleMove(e) {
+    if (!isDragging) return;
+    if (e.cancelable) e.preventDefault();
+    const pos = getEventPos(e);
+    const dx = pos.x - lastX;
+    const dy = pos.y - lastY;
+    
+    velY = dx * 0.004;
+    velX = dy * 0.004;
+    
+    angleY += velY;
+    angleX += velX;
+    angleX = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, angleX));
+    
+    lastX = pos.x;
+    lastY = pos.y;
+  }
+  
+  function handleEnd() {
+    isDragging = false;
+    canvas.style.cursor = 'grab';
+  }
+  
+  canvas.addEventListener('mousedown', handleStart);
+  canvas.addEventListener('mousemove', handleMove);
+  window.addEventListener('mouseup', handleEnd);
+  
+  canvas.addEventListener('touchstart', handleStart, { passive: false });
+  canvas.addEventListener('touchmove', handleMove, { passive: false });
+  window.addEventListener('touchend', handleEnd);
+  
+  function render() {
+    ctx.clearRect(0, 0, width, height);
+    
+    const glow = ctx.createRadialGradient(cx, cy, radius * 0.6, cx, cy, radius * 1.3);
+    glow.addColorStop(0, 'rgba(200, 169, 110, 0.03)');
+    glow.addColorStop(0.8, 'rgba(200, 169, 110, 0.005)');
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, width, height);
+    
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(200, 169, 110, 0.06)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    
+    if (!isDragging) {
+      velY *= 0.95;
+      velX *= 0.95;
+      angleY += 0.0018 + velY;
+      angleX += velX;
+      angleX = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, angleX));
+    }
+    
+    const projected = [];
+    const cosY = Math.cos(angleY);
+    const sinY = Math.sin(angleY);
+    const cosX = Math.cos(angleX);
+    const sinX = Math.sin(angleX);
+    
+    points.forEach(p => {
+      const x1 = p.x * cosY - p.z * sinY;
+      const z1 = p.x * sinY + p.z * cosY;
+      const y2 = p.y * cosX - z1 * sinX;
+      const z2 = p.y * sinX + z1 * cosX;
+      
+      const scale = cameraDistance / (cameraDistance - z2);
+      projected.push({
+        x: cx + x1 * scale,
+        y: cy + y2 * scale,
+        z: z2,
+        scale: scale
+      });
+    });
+    
+    projected.sort((a, b) => a.z - b.z);
+    
+    projected.forEach(p => {
+      ctx.beginPath();
+      const isFront = p.z > 0;
+      const r = (isFront ? 1.1 : 0.75) * p.scale;
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      
+      if (isFront) {
+        const opacity = 0.15 + (p.z / radius) * 0.45;
+        ctx.fillStyle = `rgba(200, 169, 110, ${opacity})`;
+      } else {
+        ctx.fillStyle = 'rgba(200, 169, 110, 0.05)';
+      }
+      ctx.fill();
+    });
+    
+    const lx1 = lagosPt.x * cosY - lagosPt.z * sinY;
+    const lz1 = lagosPt.x * sinY + lagosPt.z * cosY;
+    const ly2 = lagosPt.y * cosX - lz1 * sinX;
+    const lz2 = lagosPt.y * sinX + lz1 * cosX;
+    
+    const isLagosFront = lz2 > 0;
+    if (isLagosFront) {
+      const lScale = cameraDistance / (cameraDistance - lz2);
+      const lpx = cx + lx1 * lScale;
+      const lpy = cy + ly2 * lScale;
+      
+      const pulse = 1 + Math.sin(Date.now() * 0.005) * 0.3;
+      
+      ctx.beginPath();
+      ctx.arc(lpx, lpy, 8 * pulse * lScale, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(200, 169, 110, 0.8)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.arc(lpx, lpy, 3.5 * lScale, 0, Math.PI * 2);
+      ctx.fillStyle = '#FAF6EE';
+      ctx.shadowColor = '#C8A96E';
+      ctx.shadowBlur = 8;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      
+      if (tooltip) {
+        tooltip.innerHTML = `Lagos, Nigeria <span style="color:var(--gold); opacity:0.65; margin-left:6px;">[6.5° N, 3.4° E]</span>`;
+        tooltip.style.opacity = '1';
+      }
+    } else {
+      if (tooltip) {
+        tooltip.innerHTML = `Lagos, Nigeria <span style="color:var(--text-muted); opacity:0.4; margin-left:6px;">(rotated behind)</span>`;
+        tooltip.style.opacity = '0.5';
+      }
+    }
+    
+    requestAnimationFrame(render);
+  }
+  
+  render();
+}
+
+/* ─── GuruLabs Waitlist ──────────────────────────────── */
+function initStartupWaitlist() {
+  const form = document.getElementById('waitlistForm');
+  const emailInput = document.getElementById('waitlistEmail');
+  const status = document.getElementById('waitlistStatus');
+  if (!form || !emailInput || !status) return;
+  
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = emailInput.value.trim();
+    
+    if (!email) {
+      status.textContent = '⚠ Please enter your email address.';
+      status.className = 'sw-status error';
+      playAudioEffect('terminal');
+      return;
+    }
+    
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      status.textContent = '⚠ Please enter a valid email address.';
+      status.className = 'sw-status error';
+      playAudioEffect('terminal');
+      return;
+    }
+    
+    playAudioEffect('click');
+    status.textContent = 'Connecting to ecosystem...';
+    status.className = 'sw-status';
+    
+    const payload = {
+      email,
+      subscribedAt: new Date().toISOString(),
+      source: 'GuruLabs Waitlist'
+    };
+    
+    const { db, firebaseReady } = window.joshFirebase || {};
+    
+    try {
+      if (firebaseReady && db) {
+        await db.collection('waitlist').add({
+          ...payload,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } else {
+        const waitlist = JSON.parse(localStorage.getItem('josh_waitlist') || '[]');
+        waitlist.push(payload);
+        localStorage.setItem('josh_waitlist', JSON.stringify(waitlist));
+      }
+      
+      status.textContent = '✓ Welcome to the ecosystem! You\'re on the list.';
+      status.className = 'sw-status';
+      form.reset();
+      playAudioEffect('chord');
+    } catch (err) {
+      console.error('Waitlist submission failed:', err);
+      status.textContent = '⚠ Something went wrong. Saving locally...';
+      status.className = 'sw-status error';
+      
+      try {
+        const waitlist = JSON.parse(localStorage.getItem('josh_waitlist') || '[]');
+        waitlist.push(payload);
+        localStorage.setItem('josh_waitlist', JSON.stringify(waitlist));
+        status.textContent = '✓ Saved offline! Welcome to the ecosystem.';
+        status.className = 'sw-status';
+        form.reset();
+        playAudioEffect('chord');
+      } catch (localErr) {
+        status.textContent = '⚠ Save failed. Please check internet connection.';
+        status.className = 'sw-status error';
+      }
+    }
+    
+    setTimeout(() => {
+      status.textContent = '';
+      status.className = 'sw-status';
+    }, 6000);
+  });
+}
+
+/* ─── GuruLabs Startup Metrics Count-Up ──────────────── */
+function initStartupMetrics() {
+  const metricsEl = document.querySelector('.sh-metrics');
+  if (!metricsEl) return;
+  
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        metricsEl.querySelectorAll('.sh-met-num').forEach(animateCounter);
+        obs.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  
+  obs.observe(metricsEl);
+}
+
+/* ─── Interactive Mockups (Kudiflow & ScholarLens) ───── */
+function initInteractiveMockups() {
+  const wallet = document.querySelector('.mockup-wallet');
+  const balance = document.querySelector('.mw-balance');
+  if (wallet && balance) {
+    let isNaira = true;
+    wallet.style.cursor = 'pointer';
+    wallet.addEventListener('click', () => {
+      isNaira = !isNaira;
+      playAudioEffect('click');
+      if (isNaira) {
+        balance.textContent = '₦450,000.00';
+      } else {
+        balance.textContent = '$300.00';
+      }
+      
+      const bars = wallet.querySelectorAll('.mw-graph-bar');
+      bars.forEach(bar => {
+        const origHeight = bar.style.height;
+        bar.style.height = '0px';
+        setTimeout(() => {
+          bar.style.height = origHeight;
+        }, 80);
+      });
+    });
+  }
+  
+  const scholar = document.querySelector('.mockup-scholar');
+  const promptEl = document.querySelector('.ms-prompt');
+  const replyLines = document.querySelectorAll('.ms-reply-line');
+  const gpaVal = document.querySelector('.ms-stats .ms-stat:nth-child(1) .ms-num');
+  const effVal = document.querySelector('.ms-stats .ms-stat:nth-child(2) .ms-num');
+  
+  if (scholar && promptEl) {
+    const prompts = [
+      {
+        text: '"Summarize SPSS ANOVA results..."',
+        gpa: '4.8',
+        eff: '92%',
+        widths: ['100%', '80%', '90%']
+      },
+      {
+        text: '"Generate APA citations for AI model..."',
+        gpa: '4.9',
+        eff: '95%',
+        widths: ['85%', '95%', '60%']
+      },
+      {
+        text: '"Plot regression trends of GPA..."',
+        gpa: '4.7',
+        eff: '88%',
+        widths: ['95%', '70%', '80%']
+      }
+    ];
+    
+    let currentPromptIdx = 0;
+    let isTyping = false;
+    scholar.style.cursor = 'pointer';
+    
+    scholar.addEventListener('click', () => {
+      if (isTyping) return;
+      isTyping = true;
+      playAudioEffect('click');
+      
+      currentPromptIdx = (currentPromptIdx + 1) % prompts.length;
+      const targetPrompt = prompts[currentPromptIdx];
+      
+      replyLines.forEach(line => { line.style.width = '0%'; line.style.opacity = '0'; });
+      if (gpaVal) gpaVal.style.opacity = '0.3';
+      if (effVal) effVal.style.opacity = '0.3';
+      
+      let currentText = '';
+      const fullText = targetPrompt.text;
+      let charIdx = 0;
+      promptEl.textContent = '';
+      
+      const typeTimer = setInterval(() => {
+        if (charIdx < fullText.length) {
+          currentText += fullText[charIdx];
+          promptEl.textContent = currentText;
+          charIdx++;
+          if (charIdx % 3 === 0) {
+            playAudioEffect('terminal');
+          }
+        } else {
+          clearInterval(typeTimer);
+          
+          setTimeout(() => {
+            replyLines.forEach((line, idx) => {
+              setTimeout(() => {
+                line.style.opacity = '1';
+                line.style.width = targetPrompt.widths[idx];
+                playAudioEffect('hover');
+              }, idx * 100);
+            });
+            
+            if (gpaVal) {
+              gpaVal.textContent = targetPrompt.gpa;
+              gpaVal.style.opacity = '1';
+            }
+            if (effVal) {
+              effVal.textContent = targetPrompt.eff;
+              effVal.style.opacity = '1';
+            }
+            
+            isTyping = false;
+          }, 250);
+        }
+      }, 25);
+    });
+  }
+}
+
 /* ─── Init ───────────────────────────────────────────── */
+initSoundToggle();
+initRegressionLab();
+initStatsLabTabs();
+initKnnLab();
+initDesignPlayground();
+initTerminalCLI();
+initMagneticAndParallax();
 loadAdminProjects();
+initLocationGlobe();
+initStartupWaitlist();
+initStartupMetrics();
+initInteractiveMockups();
