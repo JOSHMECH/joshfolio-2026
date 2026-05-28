@@ -1670,7 +1670,7 @@ function initTerminalCLI() {
     about: () => [
       "SYSTEM DATA LOG: IDOWU JOSHUA VICTOR",
       "------------------------------------",
-      "ROLE: Frontend Developer, Designer & Data Scientist",
+      "ROLE: Software Developer, Designer & Data Scientist",
       "LOCATION: Lagos, Nigeria",
       "EDUCATION: BSc Statistics (Olabisi Onabanjo University)",
       "BIO: Creative technologist engineering rich, accessible user",
