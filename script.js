@@ -375,25 +375,17 @@ function renderProjects(filter='all'){
     let shown = 0;
     let projectsToRender = [];
     
-    // Render both curated projects and synced GitHub repositories that match the filter category
-    projectsToRender = allAdminProjects.filter(p => filter === 'all' || p.category === filter);
-    
-    // Set an informative note summarizing curated projects and synced GitHub repositories
-    if (note) {
-      const activeCurated = projectsToRender.filter(p => !p.isGitHubRepo).length;
-      const activeGitHub = projectsToRender.filter(p => p.isGitHubRepo).length;
-      
-      let noteParts = [];
-      if (activeCurated > 0) {
-        noteParts.push(`${activeCurated} curated project${activeCurated !== 1 ? 's' : ''}`);
+    if (filter === 'github') {
+      projectsToRender = allAdminProjects.filter(p => p.isGitHubRepo);
+      if (note) {
+        note.textContent = `✦ ${projectsToRender.length} repository${projectsToRender.length !== 1 ? 'ies' : ''} synchronized from GitHub`;
       }
-      if (activeGitHub > 0) {
-        noteParts.push(`${activeGitHub} GitHub repo${activeGitHub !== 1 ? 's' : ''} synced`);
-      }
-      
-      if (noteParts.length > 0) {
-        note.textContent = `✦ ${noteParts.join(' & ')}`;
-      } else {
+    } else {
+      const curated = allAdminProjects.filter(p => !p.isGitHubRepo);
+      projectsToRender = curated.filter(p => filter === 'all' || p.category === filter);
+      if (note && curated.length > 0) {
+        note.textContent = `✦ ${projectsToRender.length} project${projectsToRender.length !== 1 ? 's' : ''} added via admin panel`;
+      } else if (note) {
         note.textContent = '';
       }
     }
