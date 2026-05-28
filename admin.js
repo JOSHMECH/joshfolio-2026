@@ -736,6 +736,13 @@ async function renderGitHubGrid(search = '') {
       (r.language || '').toLowerCase().includes(search.toLowerCase())
     );
     
+    // Sort: overridden projects first
+    filtered.sort((a, b) => {
+      const aOver = overrides[String(a.id)] ? 1 : 0;
+      const bOver = overrides[String(b.id)] ? 1 : 0;
+      return bOver - aOver;
+    });
+    
     if (sub) sub.textContent = `${filtered.length} repository${filtered.length !== 1 ? 'ies' : ''} found`;
     if (filtered.length === 0) {
       if (empty) empty.style.display = 'block';

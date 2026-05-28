@@ -440,11 +440,18 @@ function buildCard(project){
   }
 
   const repoLink = project.isGitHubRepo
-    ? `private.html?repo=${encodeURIComponent(project.title)}&live=${project.liveUrl ? encodeURIComponent(project.liveUrl) : ''}`
+    ? `private.html?repo=${encodeURIComponent(project.title)}&live=${(project.isOverridden && project.liveUrl) ? encodeURIComponent(project.liveUrl) : ''}`
     : project.repoUrl;
 
+  let liveBtnHtml = '';
+  if (project.isGitHubRepo && !project.isOverridden) {
+    liveBtnHtml = `<span class="overlay-btn disabled-btn">Demo Not Live</span>`;
+  } else if (project.liveUrl) {
+    liveBtnHtml = `<a href="${project.liveUrl}" class="overlay-btn" target="_blank" rel="noopener">Live ↗</a>`;
+  }
+
   const overlayBtns = [
-    project.liveUrl ? `<a href="${project.liveUrl}" class="overlay-btn" target="_blank" rel="noopener">Live ↗</a>` : '',
+    liveBtnHtml,
     repoLink ? `<a href="${repoLink}" class="overlay-btn ghost" target="_blank" rel="noopener">Repo</a>` : ''
   ].filter(Boolean).join('');
 
@@ -504,6 +511,12 @@ function renderProjects(filter='all'){
     
     if (filter === 'github') {
       projectsToRender = allAdminProjects.filter(p => p.isGitHubRepo);
+      // Sort: overridden projects first
+      projectsToRender.sort((a, b) => {
+        const aOver = a.isOverridden ? 1 : 0;
+        const bOver = b.isOverridden ? 1 : 0;
+        return bOver - aOver;
+      });
       if (note) {
         note.textContent = `✦ ${projectsToRender.length} repository${projectsToRender.length !== 1 ? 'ies' : ''} synchronized from GitHub`;
       }
@@ -743,13 +756,18 @@ async function loadAdminProjects(){
         return {
           ...gh,
           liveUrl: o.liveUrl || gh.liveUrl,
-          image: o.previewUrl || gh.image || ''
+          image: o.previewUrl || gh.image || '',
+          isOverridden: true
         };
       }
-      return gh;
+      return {
+        ...gh,
+        isOverridden: false
+      };
     });
   } catch (err) {
     console.warn('Failed to apply GitHub overrides:', err);
+    githubProjects = githubProjects.map(gh => ({ ...gh, isOverridden: false }));
   }
 
   // Merge Firestore projects with local projects overrides/fallbacks
