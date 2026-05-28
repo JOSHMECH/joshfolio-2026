@@ -351,6 +351,17 @@ function buildCard(project){
       <p class="project-desc">${project.desc}</p>
       <div class="project-stack">${stackHtml}</div>
     </div>`;
+
+  // Make the entire card body clickable for GitHub repos to ease mobile & desktop navigation
+  if (project.isGitHubRepo) {
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', (e) => {
+      // Ignore if user clicked on Live or Repo overlay buttons directly
+      if (e.target.closest('.overlay-btn')) return;
+      window.open(repoLink, '_blank');
+    });
+  }
+
   return card;
 }
 

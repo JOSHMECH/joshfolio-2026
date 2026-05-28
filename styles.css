@@ -897,7 +897,12 @@ input,textarea,select{font-family:inherit;}
 
 /* ── Touch devices: disable hover-only states ─────── */
 @media(hover:none){
-  .project-overlay{display:none;}
+  .project-overlay{
+    opacity:1;
+    background:linear-gradient(to top, rgba(8,8,8,0.95) 0%, rgba(8,8,8,0.5) 75%, transparent 100%);
+    align-items:flex-end;
+    padding-bottom:10px;
+  }
   .project-thumb img{transform:none!important;}
   .about-card:hover{transform:none;box-shadow:none;}
   .btn-primary:hover,.btn-ghost:hover{transform:none;box-shadow:none;}
