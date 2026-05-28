@@ -115,6 +115,67 @@ function playAudioEffect(type, param) {
         });
         break;
       }
+      case 'boot': {
+        const freqs = [130.81, 164.81, 196.00, 261.63, 329.63, 392.00, 523.25];
+        freqs.forEach((f, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(f, now + idx * 0.08);
+          
+          gain.gain.setValueAtTime(0, now + idx * 0.08);
+          gain.gain.linearRampToValueAtTime(0.04, now + idx * 0.08 + 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.08 + 0.6);
+          
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + idx * 0.08);
+          osc.stop(now + idx * 0.08 + 0.6);
+        });
+        break;
+      }
+      case 'diag': {
+        const osc = audioCtx.createOscillator();
+        const filter = audioCtx.createBiquadFilter();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(100, now);
+        osc.frequency.exponentialRampToValueAtTime(1200, now + 1.2);
+        
+        filter.type = 'peaking';
+        filter.frequency.setValueAtTime(300, now);
+        filter.frequency.exponentialRampToValueAtTime(2000, now + 1.2);
+        filter.Q.value = 8;
+        
+        gain.gain.setValueAtTime(0.03, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.5);
+        
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start(now);
+        osc.stop(now + 1.5);
+        
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(440, now + 0.4);
+        osc2.frequency.setValueAtTime(554.37, now + 0.6);
+        osc2.frequency.setValueAtTime(659.25, now + 0.8);
+        osc2.frequency.setValueAtTime(880, now + 1.0);
+        
+        gain2.gain.setValueAtTime(0, now + 0.4);
+        gain2.gain.linearRampToValueAtTime(0.03, now + 0.4 + 0.05);
+        gain2.gain.exponentialRampToValueAtTime(0.0001, now + 1.4);
+        
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.start(now + 0.4);
+        osc2.stop(now + 1.4);
+        break;
+      }
     }
   } catch(e) {
     console.warn('Audio effect failed to play:', e);
@@ -1890,7 +1951,173 @@ function initInteractiveMockups() {
   }
 }
 
+/* ─── Preloader Loader system ───────────────────────────── */
+function initPreloader() {
+  const preloader = document.getElementById('preloader');
+  const fill = document.getElementById('preloaderFill');
+  const percent = document.getElementById('preloaderPercent');
+  const log = document.getElementById('preloaderLog');
+  const btn = document.getElementById('preloaderBtn');
+  
+  if (!preloader) return;
+  
+  let progress = 0;
+  let hasLoaded = false;
+  
+  const statusLogs = [
+    { threshold: 0, text: "guest@josh_d_guru:~$ system_init --verbose" },
+    { threshold: 10, text: "[BOOT] Initializing Josh_d_Guru kernel node..." },
+    { threshold: 25, text: "[SYS] Connecting to Firebase Firestore DB..." },
+    { threshold: 45, text: "[AUDIO] Loading synthesizers and oscillator nodes..." },
+    { threshold: 65, text: "[3D] Calculating location coordinates (hologram)..." },
+    { threshold: 80, text: "[KNN] Building ML neighbor classification grids..." },
+    { threshold: 95, text: "[DECRYPT] Mapping security key bypass hashes..." },
+    { threshold: 100, text: "[SUCCESS] Decryption complete. Access authorization keys loaded." }
+  ];
+  
+  window.addEventListener('load', () => {
+    hasLoaded = true;
+  });
+  
+  const timer = setInterval(() => {
+    let increment = Math.floor(Math.random() * 8) + 2;
+    progress += increment;
+    
+    if (progress >= 92 && !hasLoaded) {
+      progress = 92;
+    }
+    
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(timer);
+      
+      if (fill) fill.style.width = '100%';
+      if (percent) percent.textContent = '100%';
+      const match = statusLogs.find(l => l.threshold === 100);
+      if (log && match) log.textContent = match.text;
+      
+      if (btn) {
+        btn.style.display = 'inline-flex';
+        btn.focus();
+      }
+    } else {
+      if (fill) fill.style.width = progress + '%';
+      if (percent) percent.textContent = progress + '%';
+      
+      const match = [...statusLogs].reverse().find(l => progress >= l.threshold);
+      if (log && match) {
+        log.textContent = match.text;
+      }
+    }
+  }, 100);
+  
+  if (btn) {
+    btn.addEventListener('click', () => {
+      playAudioEffect('boot');
+      preloader.classList.add('fade-out-loader');
+      document.body.classList.remove('preloader-active');
+      setTimeout(() => {
+        preloader.remove();
+      }, 800);
+    });
+  }
+}
+
+/* ─── Footer Telemetry Dashboard ────────────────────────── */
+function initFooterTelemetry() {
+  const dbNode = document.getElementById('telDbNode');
+  const audioSynth = document.getElementById('telAudioSynth');
+  const latency = document.getElementById('telLatency');
+  const uptime = document.getElementById('telUptime');
+  const diagBtn = document.getElementById('telDiagBtn');
+  const scanOverlay = document.getElementById('scanOverlay');
+  const scanBar = document.getElementById('scanBar');
+  
+  function updateDbStatus() {
+    if (!dbNode) return;
+    const { firebaseReady } = window.joshFirebase || {};
+    if (firebaseReady) {
+      dbNode.innerHTML = '<span class="tel-dot pulsing"></span> CLOUD_FIREBASE';
+    } else {
+      dbNode.innerHTML = '<span class="tel-dot pulsing-amber"></span> LOCAL_FALLBACK';
+    }
+  }
+  
+  setTimeout(updateDbStatus, 1000);
+  
+  function updateAudioStatus() {
+    if (!audioSynth) return;
+    if (isMuted) {
+      audioSynth.innerHTML = '<span class="tel-dot muted"></span> MUTED';
+    } else {
+      audioSynth.innerHTML = '<span class="tel-dot pulsing-gold"></span> SYNTH_ACTIVE';
+    }
+  }
+  
+  updateAudioStatus();
+  
+  const soundToggle = document.getElementById('soundToggle');
+  if (soundToggle) {
+    soundToggle.addEventListener('click', () => {
+      setTimeout(updateAudioStatus, 50);
+    });
+  }
+  
+  if (latency) {
+    setInterval(() => {
+      const baseLatency = Math.floor(Math.random() * 30) + 25;
+      latency.textContent = baseLatency + 'ms';
+    }, 2000);
+  }
+  
+  if (uptime) {
+    const startTime = Date.now();
+    setInterval(() => {
+      const diff = Math.floor((Date.now() - startTime) / 1000);
+      const hrs = String(Math.floor(diff / 3600)).padStart(2, '0');
+      const mins = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+      const secs = String(diff % 60).padStart(2, '0');
+      uptime.textContent = `${hrs}:${mins}:${secs}`;
+    }, 1000);
+  }
+  
+  if (diagBtn) {
+    diagBtn.addEventListener('click', () => {
+      if (diagBtn.disabled) return;
+      diagBtn.disabled = true;
+      diagBtn.textContent = "⚡ SYSTEM SCANNING...";
+      
+      playAudioEffect('diag');
+      
+      if (latency) latency.textContent = '824ms';
+      if (scanOverlay) scanOverlay.classList.add('scanning');
+      if (scanBar) scanBar.classList.add('scanning');
+      
+      setTimeout(() => {
+        diagBtn.disabled = false;
+        diagBtn.innerHTML = '<span class="diag-icon">✓</span> SCAN COMPLETE (CLEAN)';
+        
+        if (scanOverlay) scanOverlay.classList.remove('scanning');
+        if (scanBar) scanBar.classList.remove('scanning');
+        if (latency) latency.textContent = '35ms';
+        
+        if (typeof showToast === 'function') {
+          showToast('✦ Telemetry scan complete. System registers 100% clean!');
+        } else {
+          alert('✦ Telemetry diagnostics scan complete. All system nodes green!');
+        }
+        
+        setTimeout(() => {
+          diagBtn.innerHTML = '<span class="diag-icon">⚡</span> RUN TELEMETRY DIAGNOSTICS';
+        }, 3000);
+      }, 2000);
+    });
+  }
+}
+
 /* ─── Init ───────────────────────────────────────────── */
+initPreloader();
+initFooterTelemetry();
 initSoundToggle();
 initRegressionLab();
 initStatsLabTabs();

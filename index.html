@@ -17,7 +17,32 @@
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
  
 </head>
-<body>
+<body class="preloader-active">
+
+  <!-- ─── Preloader ────────────────────────────────────── -->
+  <div id="preloader" class="preloader">
+    <div class="preloader-glass">
+      <div class="preloader-logo">
+        <span class="logo-bracket">[</span>Josh_d_Guru<span class="logo-bracket">]</span>
+      </div>
+      <div class="preloader-visual">
+        <div class="preloader-hex-orbit">
+          <div class="hex-ring"></div>
+          <div class="hex-ring-inner"></div>
+          <div class="preloader-core">✦</div>
+        </div>
+      </div>
+      <div class="preloader-progress-wrap">
+        <div class="preloader-bar"><div class="preloader-fill" id="preloaderFill"></div></div>
+        <div class="preloader-percent" id="preloaderPercent">0%</div>
+      </div>
+      <div class="preloader-log" id="preloaderLog">guest@josh_d_guru:~$ system_init</div>
+      <button class="preloader-btn" id="preloaderBtn" style="display: none;">DECRYPT PORTFOLIO</button>
+    </div>
+  </div>
+
+  <div class="screen-scan-overlay" id="scanOverlay"></div>
+  <div class="scan-bar" id="scanBar"></div>
 
   <div class="cursor" id="cursor"></div>
   <div class="cursor-trail" id="cursorTrail"></div>
@@ -751,8 +776,37 @@
           <a href="#projects">Projects</a><a href="#contact">Contact</a>
           <a href="admin.html">Admin</a>
         </nav>
-        <p class="footer-copy">© 2026 Idowu Joshua Victor. All rights reserved.</p>
       </div>
+
+      <div class="footer-telemetry">
+        <div class="telemetry-grid">
+          <div class="tel-item">
+            <span class="tel-label">SYSTEM_NODE</span>
+            <span class="tel-val">josh_v2.0.26</span>
+          </div>
+          <div class="tel-item">
+            <span class="tel-label">DATABASE_NODE</span>
+            <span class="tel-val" id="telDbNode"><span class="tel-dot pulsing"></span> CONNECTING</span>
+          </div>
+          <div class="tel-item">
+            <span class="tel-label">AUDIO_SYNTH</span>
+            <span class="tel-val" id="telAudioSynth"><span class="tel-dot pulsing-gold"></span> ACTIVE</span>
+          </div>
+          <div class="tel-item">
+            <span class="tel-label">CORE_LATENCY</span>
+            <span class="tel-val" id="telLatency">0ms</span>
+          </div>
+          <div class="tel-item">
+            <span class="tel-label">SYS_UPTIME</span>
+            <span class="tel-val" id="telUptime">00:00:00</span>
+          </div>
+        </div>
+        <button class="btn-tel-diag" id="telDiagBtn">
+          <span class="diag-icon">⚡</span> RUN TELEMETRY DIAGNOSTICS
+        </button>
+      </div>
+
+      <p class="footer-copy" style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.03); padding-top: 1.5rem;">© 2026 Idowu Joshua Victor. All rights reserved.</p>
     </div>
   </footer>
 
