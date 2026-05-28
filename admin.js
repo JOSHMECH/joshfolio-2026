@@ -211,8 +211,8 @@ sidebarOverlay.addEventListener('click', closeSidebar);
 /* ─── Sidebar Nav ─────────────────────────────────────────── */
 const snavLinks = document.querySelectorAll('.snav-link');
 const views     = document.querySelectorAll('.view');
-const pageTitles = { overview:'Overview', add:'Add Project', manage:'Manage Projects', github:'GitHub Repos', messages: 'Messages' };
-const pageSubs   = { overview:'Welcome back, Josh.', add:'Upload and publish new work.', manage:'Edit or delete existing projects.', github:'Manage the visibility of your public GitHub repositories.', messages: 'View all your messages.' };
+const pageTitles = { overview:'Overview', add:'Add Project', manage:'Manage Projects', github:'GitHub Repos', messages: 'Messages', social: 'Social Links' };
+const pageSubs   = { overview:'Welcome back, Josh.', add:'Upload and publish new work.', manage:'Edit or delete existing projects.', github:'Manage the visibility of your public GitHub repositories.', messages: 'View all your messages.', social: 'Configure your social profile links.' };
 
 function switchView(viewId){
   views.forEach(v=>v.style.display='none');
@@ -227,6 +227,7 @@ function switchView(viewId){
   if(viewId==='overview') renderRecent();
   if(viewId==='messages') renderMessagesGrid();
   if(viewId==='github') renderGitHubGrid();
+  if(viewId==='social') loadSocialSettingsForm();
   closeSidebar();
 }
 
@@ -1002,6 +1003,105 @@ if (ghOverrideForm) {
 const ghSearch = document.getElementById('githubSearch');
 if (ghSearch) {
   ghSearch.addEventListener('input', e => renderGitHubGrid(e.target.value));
+}
+
+/* ─── Social Links Admin Logic ───────────────────────────── */
+function defaultSocials() {
+  return {
+    github: "https://github.com/JOSHMECH",
+    linkedin: "https://linkedin.com",
+    twitter: "https://x.com",
+    behance: "https://behance.net",
+    instagram: "https://instagram.com",
+    email: "joshmech851@gmail.com",
+    phone: "+234 816 1523 407"
+  };
+}
+
+async function getSocialSettings() {
+  if (fbReady()) {
+    try {
+      const doc = await getDB().collection('settings').doc('socials').get();
+      if (doc.exists) {
+        return { ...defaultSocials(), ...doc.data() };
+      }
+    } catch (err) {
+      console.warn('Failed to fetch socials from Firestore, using localStorage:', err);
+    }
+  }
+  return lsGetSocials();
+}
+
+function lsGetSocials() {
+  try {
+    const local = JSON.parse(localStorage.getItem('josh_socials') || '{}');
+    return { ...defaultSocials(), ...local };
+  } catch {
+    return defaultSocials();
+  }
+}
+
+async function saveSocialSettings(data) {
+  if (fbReady()) {
+    try {
+      await getDB().collection('settings').doc('socials').set({
+        ...data,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (err) {
+      console.warn('Failed to save socials to Firestore, falling back to localStorage:', err);
+      localStorage.setItem('josh_socials', JSON.stringify(data));
+    }
+  } else {
+    localStorage.setItem('josh_socials', JSON.stringify(data));
+  }
+}
+
+async function loadSocialSettingsForm() {
+  const settings = await getSocialSettings();
+  
+  document.getElementById('socGithub').value = settings.github || '';
+  document.getElementById('socLinkedin').value = settings.linkedin || '';
+  document.getElementById('socTwitter').value = settings.twitter || '';
+  document.getElementById('socBehance').value = settings.behance || '';
+  document.getElementById('socInstagram').value = settings.instagram || '';
+  document.getElementById('socEmail').value = settings.email || '';
+  document.getElementById('socPhone').value = settings.phone || '';
+}
+
+const socialForm = document.getElementById('socialForm');
+if (socialForm) {
+  socialForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const saveBtn = document.getElementById('saveSocialBtn');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+    }
+    
+    const settings = {
+      github: document.getElementById('socGithub').value.trim(),
+      linkedin: document.getElementById('socLinkedin').value.trim(),
+      twitter: document.getElementById('socTwitter').value.trim(),
+      behance: document.getElementById('socBehance').value.trim(),
+      instagram: document.getElementById('socInstagram').value.trim(),
+      email: document.getElementById('socEmail').value.trim(),
+      phone: document.getElementById('socPhone').value.trim()
+    };
+    
+    try {
+      await saveSocialSettings(settings);
+      showToast('Social links saved successfully!');
+    } catch (err) {
+      console.error(err);
+      showToast('⚠ Failed to save social links: ' + err.message, true);
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Social Links →';
+      }
+    }
+  });
 }
 
 /* ─── Init ───────────────────────────────────────────────── */

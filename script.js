@@ -1710,13 +1710,16 @@ function initTerminalCLI() {
       "DOTTED GRID NODES: 852 landmass coordinates projected",
       "SPIN STATE: Drag interaction enabled"
     ],
-    contact: () => [
-      "CONTACT ENDPOINTS:",
-      "------------------------------------",
-      "  email: joshmech851@gmail.com",
-      "  phone: +234 816 1523 407",
-      "  github: github.com/JOSHMECH"
-    ],
+    contact: () => {
+      const s = window.joshSocials || { email: "joshmech851@gmail.com", phone: "+234 816 1523 407", github: "https://github.com/JOSHMECH" };
+      return [
+        "CONTACT ENDPOINTS:",
+        "------------------------------------",
+        `  email: ${s.email}`,
+        `  phone: ${s.phone}`,
+        `  github: ${s.github.replace('https://', '').replace('http://', '')}`
+      ];
+    },
     skills: () => [
       "DEVELOPER CORE SKILLS:",
       "------------------------------------",
@@ -2443,3 +2446,86 @@ initLocationGlobe();
 initStartupWaitlist();
 initStartupMetrics();
 initInteractiveMockups();
+initSocialSettings();
+
+/* ─── Social Settings Fetcher & Populator ────────────── */
+async function initSocialSettings() {
+  const settings = await getSocialSettings();
+  window.joshSocials = settings;
+  
+  const emailVal = settings.email || 'joshmech851@gmail.com';
+  const phoneVal = settings.phone || '+234 816 1523 407';
+  
+  // About email button
+  const aboutMailLink = document.getElementById('aboutMailLink');
+  if (aboutMailLink) aboutMailLink.href = `mailto:${emailVal}`;
+  
+  // Contact email links
+  const contactEmailLink = document.getElementById('contactEmailLink');
+  if (contactEmailLink) {
+    contactEmailLink.href = `mailto:${emailVal}`;
+    const mailText = contactEmailLink.querySelector('.email-val');
+    if (mailText) mailText.textContent = emailVal;
+  }
+  
+  // Contact phone link
+  const contactPhoneLink = document.getElementById('contactPhoneLink');
+  if (contactPhoneLink) {
+    contactPhoneLink.href = `tel:${phoneVal.replace(/\s+/g, '')}`;
+    const phoneText = contactPhoneLink.querySelector('.phone-val');
+    if (phoneText) phoneText.textContent = phoneVal;
+  }
+  
+  // Social row buttons
+  const socialGithub = document.getElementById('socialGithub');
+  if (socialGithub) socialGithub.href = settings.github || '#';
+  
+  const socialLinkedin = document.getElementById('socialLinkedin');
+  if (socialLinkedin) socialLinkedin.href = settings.linkedin || '#';
+  
+  const socialTwitter = document.getElementById('socialTwitter');
+  if (socialTwitter) socialTwitter.href = settings.twitter || '#';
+  
+  const socialBehance = document.getElementById('socialBehance');
+  if (socialBehance) socialBehance.href = settings.behance || '#';
+  
+  const socialInstagram = document.getElementById('socialInstagram');
+  if (socialInstagram) socialInstagram.href = settings.instagram || '#';
+}
+
+async function getSocialSettings() {
+  const { db, firebaseReady } = window.joshFirebase || {};
+  const local = lsGetSocials();
+  if (firebaseReady && db) {
+    try {
+      const doc = await db.collection('settings').doc('socials').get();
+      if (doc.exists) {
+        return { ...local, ...doc.data() };
+      }
+    } catch (err) {
+      console.warn('Failed to fetch socials from Firestore, using localStorage:', err);
+    }
+  }
+  return local;
+}
+
+function lsGetSocials() {
+  try {
+    const local = JSON.parse(localStorage.getItem('josh_socials') || '{}');
+    return { ...defaultSocials(), ...local };
+  } catch {
+    return defaultSocials();
+  }
+}
+
+function defaultSocials() {
+  return {
+    github: "https://github.com/JOSHMECH",
+    linkedin: "https://linkedin.com",
+    twitter: "https://x.com",
+    behance: "https://behance.net",
+    instagram: "https://instagram.com",
+    email: "joshmech851@gmail.com",
+    phone: "+234 816 1523 407"
+  };
+}
