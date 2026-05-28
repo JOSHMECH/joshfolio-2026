@@ -402,6 +402,44 @@
           <div class="playground-card">
             <h3 class="pg-title">Configurator</h3>
             
+            <!-- Style Presets -->
+            <div class="pg-control-group">
+              <label>Style Presets</label>
+              <div class="pg-presets-group">
+                <button type="button" class="btn-preset active" id="preset-gold" data-preset="gold">Gold Mech</button>
+                <button type="button" class="btn-preset" id="preset-lagos" data-preset="lagos">Lagos Neo</button>
+                <button type="button" class="btn-preset" id="preset-ai" data-preset="ai">AI Overlord</button>
+                <button type="button" class="btn-preset" id="preset-minimal" data-preset="minimal">Minimalist</button>
+              </div>
+            </div>
+
+            <!-- Custom Text Initials -->
+            <div class="pg-control-group">
+              <label for="pg-text">Badge Initials (Max 4 chars)</label>
+              <input type="text" id="pg-text" class="pg-text-input" value="JOSH" maxlength="4" placeholder="DEV" autocomplete="off" />
+            </div>
+
+            <!-- Frame Selection -->
+            <div class="pg-control-group">
+              <label for="pg-frame">Outer Frame Shape</label>
+              <select id="pg-frame" class="pg-select">
+                <option value="hexagon" selected>Hexagon Core</option>
+                <option value="circle">Orbital Circle</option>
+                <option value="shield">Secure Shield</option>
+              </select>
+            </div>
+
+            <!-- Symbol Selection -->
+            <div class="pg-control-group">
+              <label for="pg-symbol">Central Symbol</label>
+              <select id="pg-symbol" class="pg-select">
+                <option value="apex" selected>Apex Node</option>
+                <option value="hacker">Hacker Core</option>
+                <option value="star">Data Star</option>
+                <option value="wave">Creative Wave</option>
+              </select>
+            </div>
+            
             <div class="pg-control-group">
               <label for="pg-rotate">Symbol Rotation</label>
               <div class="pg-slider-wrap">
@@ -421,8 +459,8 @@
             <div class="pg-control-group">
               <label for="pg-stroke">Line Thickness</label>
               <div class="pg-slider-wrap">
-                <input type="range" id="pg-stroke" min="4" max="16" value="8" />
-                <span class="pg-slider-val" id="pg-stroke-val">8px</span>
+                <input type="range" id="pg-stroke" min="4" max="16" value="12" />
+                <span class="pg-slider-val" id="pg-stroke-val">12px</span>
               </div>
             </div>
             
@@ -838,6 +876,26 @@
   <button class="cli-toggle-btn" id="cliToggleBtn" aria-label="Toggle command line interface">
     <span class="cli-btn-icon">&gt;_</span>
   </button>
+
+  <!-- ─── Custom Alert Modal ──────────────────────────── -->
+  <div class="sys-modal-overlay" id="sysModal" role="dialog" aria-modal="true" aria-labelledby="sysModalTitle">
+    <div class="sys-modal-card">
+      <div class="sys-modal-header">
+        <div class="sm-dot"></div>
+        <span class="sys-modal-title-tag" id="sysModalTitle">SYSTEM REPORT</span>
+        <button class="sys-modal-close" id="sysModalCloseBtn" aria-label="Close modal">✕</button>
+      </div>
+      <div class="sys-modal-body">
+        <div class="sys-modal-icon-wrap">
+          <span class="sys-modal-icon" id="sysModalIcon">✦</span>
+        </div>
+        <p class="sys-modal-text" id="sysModalText"></p>
+      </div>
+      <div class="sys-modal-footer">
+        <button class="btn-primary" id="sysModalConfirmBtn">ACKNOWLEDGE REPORT</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ── Firebase SDK (compat v10) ─────────────────────── -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>

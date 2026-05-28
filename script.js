@@ -182,6 +182,57 @@ function playAudioEffect(type, param) {
   }
 }
 
+/* ─── Custom System Modal Alerts ────────────────────────── */
+function showSystemModal(title, text, isSuccess = true) {
+  const modal = document.getElementById('sysModal');
+  const modalTitle = document.getElementById('sysModalTitle');
+  const modalText = document.getElementById('sysModalText');
+  const modalIcon = document.getElementById('sysModalIcon');
+  const modalDot = modal ? modal.querySelector('.sm-dot') : null;
+  const confirmBtn = document.getElementById('sysModalConfirmBtn');
+  const closeBtn = document.getElementById('sysModalCloseBtn');
+  
+  if (!modal) return;
+  
+  if (modalTitle) modalTitle.textContent = title;
+  if (modalText) modalText.textContent = text;
+  if (modalIcon) {
+    modalIcon.textContent = isSuccess ? '✦' : '⚠';
+    modalIcon.style.color = isSuccess ? 'var(--gold)' : '#FF5F56';
+  }
+  if (modalDot) {
+    modalDot.className = 'sm-dot' + (isSuccess ? ' green' : '');
+  }
+  if (confirmBtn) {
+    confirmBtn.textContent = isSuccess ? 'ACKNOWLEDGE REPORT' : 'DISMISS WARNING';
+  }
+  
+  if (typeof playAudioEffect === 'function') {
+    playAudioEffect('chord');
+  }
+  
+  modal.classList.add('open');
+  
+  function closeModal() {
+    modal.classList.remove('open');
+    if (typeof playAudioEffect === 'function') {
+      playAudioEffect('click');
+    }
+  }
+  
+  if (confirmBtn) {
+    confirmBtn.onclick = closeModal;
+  }
+  if (closeBtn) {
+    closeBtn.onclick = closeModal;
+  }
+}
+
+// Override default window.alert globally
+window.alert = function(message) {
+  showSystemModal("SYSTEM REPORT", message, true);
+};
+
 function initSoundToggle() {
   const toggle = document.getElementById('soundToggle');
   if (!toggle) return;
@@ -1179,9 +1230,14 @@ function initKnnLab() {
 }
 
 /* ─── Brand Identity Playground SVG Customizer ──────── */
+/* ─── Brand Identity Playground SVG Customizer ──────── */
 function initDesignPlayground() {
   const svgWrap = document.getElementById('svgWrap');
   if (!svgWrap) return;
+  
+  const symbolSelect = document.getElementById('pg-symbol');
+  const frameSelect = document.getElementById('pg-frame');
+  const textInput = document.getElementById('pg-text');
   
   const rotSlider = document.getElementById('pg-rotate');
   const rotVal = document.getElementById('pg-rotate-val');
@@ -1200,18 +1256,132 @@ function initDesignPlayground() {
   
   const exportBtn = document.getElementById('exportSvgBtn');
   
+  // Presets
+  const presets = {
+    gold: {
+      hue: 38,
+      symbol: 'apex',
+      frame: 'hexagon',
+      scale: 1.0,
+      rotate: 0,
+      strokeWidth: 12,
+      glowIntensity: 8,
+      text: 'JOSH'
+    },
+    lagos: {
+      hue: 155,
+      symbol: 'hacker',
+      frame: 'shield',
+      scale: 1.1,
+      rotate: 45,
+      strokeWidth: 10,
+      glowIntensity: 12,
+      text: 'LGS'
+    },
+    ai: {
+      hue: 280,
+      symbol: 'star',
+      frame: 'hexagon',
+      scale: 0.95,
+      rotate: 90,
+      strokeWidth: 8,
+      glowIntensity: 15,
+      text: 'CORE'
+    },
+    minimal: {
+      hue: 200,
+      symbol: 'wave',
+      frame: 'circle',
+      scale: 1.0,
+      rotate: -45,
+      strokeWidth: 6,
+      glowIntensity: 0,
+      text: 'DEV'
+    }
+  };
+
   let rotate = 0;
   let scale = 1.0;
-  let strokeWidth = 8;
+  let strokeWidth = 12;
   let glowIntensity = 8;
   let hue = 38;
+  let symbol = 'apex';
+  let frame = 'hexagon';
+  let textInitials = 'JOSH';
   
   function updateSVG() {
-    const colorStart = `hsl(${hue}, 50%, 61%)`;
-    const colorEnd = `hsl(${(hue + 20) % 360}, 65%, 72%)`;
+    const colorStart = `hsl(${hue}, 85%, 60%)`;
+    const colorEnd = `hsl(${(hue + 60) % 360}, 90%, 70%)`;
     
+    // Frame markup
+    let frameMarkup = '';
+    if (frame === 'hexagon') {
+      frameMarkup = `
+      <polygon points="100,18 171,59 171,141 100,182 29,141 29,59" fill="none" stroke="url(#logoGrad)" stroke-width="${strokeWidth}" stroke-linejoin="round" filter="url(#logoGlow)" />
+      <polygon points="100,24 166,62 166,138 100,176 34,138 34,62" fill="none" stroke="url(#logoGrad)" stroke-width="1" opacity="0.3" />`;
+    } else if (frame === 'circle') {
+      frameMarkup = `
+      <circle cx="100" cy="100" r="82" fill="none" stroke="url(#logoGrad)" stroke-width="${strokeWidth}" filter="url(#logoGlow)" />
+      <circle cx="100" cy="100" r="76" fill="none" stroke="url(#logoGrad)" stroke-width="1" stroke-dasharray="4 4" opacity="0.4" />`;
+    } else if (frame === 'shield') {
+      frameMarkup = `
+      <path d="M 100,18 C 135,18 171,28 171,58 C 171,118 141,162 100,182 C 59,162 29,118 29,58 C 29,28 65,18 100,18 Z" fill="none" stroke="url(#logoGrad)" stroke-width="${strokeWidth}" stroke-linejoin="round" filter="url(#logoGlow)" />
+      <path d="M 100,24 C 131,24 165,33 165,60 C 165,114 137,155 100,174 C 63,155 35,114 35,60 C 35,33 69,24 100,24 Z" fill="none" stroke="url(#logoGrad)" stroke-width="1" opacity="0.3" />`;
+    }
+
+    // Symbol markup
+    let symbolMarkup = '';
+    if (symbol === 'apex') {
+      symbolMarkup = `
+      <g transform="translate(100, 95) rotate(${rotate}) scale(${scale})">
+        <circle cx="0" cy="0" r="${strokeWidth * 1.5}" fill="url(#logoGrad)" opacity="0.15" />
+        <circle cx="0" cy="0" r="${strokeWidth * 0.8}" fill="url(#logoGrad)" />
+        <line x1="0" y1="0" x2="0" y2="-38" stroke="url(#logoGrad)" stroke-width="${strokeWidth}" stroke-linecap="round" />
+        <line x1="0" y1="0" x2="-33" y2="23" stroke="url(#logoGrad)" stroke-width="${strokeWidth}" stroke-linecap="round" />
+        <line x1="0" y1="0" x2="33" y2="23" stroke="url(#logoGrad)" stroke-width="${strokeWidth}" stroke-linecap="round" />
+        <circle cx="0" cy="-38" r="${strokeWidth * 0.6}" fill="#080808" stroke="url(#logoGrad)" stroke-width="2.5" />
+        <circle cx="-33" cy="23" r="${strokeWidth * 0.6}" fill="#080808" stroke="url(#logoGrad)" stroke-width="2.5" />
+        <circle cx="33" cy="23" r="${strokeWidth * 0.6}" fill="#080808" stroke="url(#logoGrad)" stroke-width="2.5" />
+      </g>`;
+    } else if (symbol === 'hacker') {
+      symbolMarkup = `
+      <g transform="translate(100, 95) rotate(${rotate}) scale(${scale})">
+        <circle cx="0" cy="0" r="38" fill="none" stroke="url(#logoGrad)" stroke-width="${strokeWidth * 0.4}" stroke-dasharray="6 6" />
+        <circle cx="0" cy="0" r="22" fill="none" stroke="url(#logoGrad)" stroke-width="${strokeWidth}" />
+        <circle cx="0" cy="0" r="${strokeWidth * 0.8}" fill="url(#logoGrad)" />
+        <line x1="-45" y1="0" x2="-30" y2="0" stroke="url(#logoGrad)" stroke-width="${strokeWidth * 0.6}" stroke-linecap="round" />
+        <line x1="30" y1="0" x2="45" y2="0" stroke="url(#logoGrad)" stroke-width="${strokeWidth * 0.6}" stroke-linecap="round" />
+        <line x1="0" y1="-45" x2="0" y2="-30" stroke="url(#logoGrad)" stroke-width="${strokeWidth * 0.6}" stroke-linecap="round" />
+        <line x1="0" y1="30" x2="0" y2="45" stroke="url(#logoGrad)" stroke-width="${strokeWidth * 0.6}" stroke-linecap="round" />
+      </g>`;
+    } else if (symbol === 'star') {
+      symbolMarkup = `
+      <g transform="translate(100, 95) rotate(${rotate}) scale(${scale})">
+        <path d="M 0,-42 Q 0,0 -42,0 Q 0,0 0,42 Q 0,0 42,0 Q 0,0 0,-42 Z" fill="url(#logoGrad)" />
+        <circle cx="0" cy="0" r="${strokeWidth * 1.1}" fill="#080808" stroke="url(#logoGrad)" stroke-width="2.5" />
+        <circle cx="0" cy="0" r="${strokeWidth * 0.6}" fill="url(#logoGrad)" />
+      </g>`;
+    } else if (symbol === 'wave') {
+      symbolMarkup = `
+      <g transform="translate(100, 95) rotate(${rotate}) scale(${scale})">
+        <path d="M -38,-12 Q -19,15 0,-12 T 38,-12" fill="none" stroke="url(#logoGrad)" stroke-width="${strokeWidth}" stroke-linecap="round" />
+        <path d="M -38,12 Q -19,-15 0,12 T 38,12" fill="none" stroke="url(#logoGrad)" stroke-width="${strokeWidth}" stroke-linecap="round" opacity="0.6" />
+        <circle cx="-19" cy="0" r="${strokeWidth * 0.6}" fill="url(#logoGrad)" />
+        <circle cx="19" cy="0" r="${strokeWidth * 0.6}" fill="url(#logoGrad)" />
+      </g>`;
+    }
+
+    // Centered Initials Text at the bottom third
+    const sanitizedText = (textInitials || '').trim().toUpperCase();
+    const textMarkup = sanitizedText ? `
+      <!-- Ribbon backdrop -->
+      <rect x="50" y="146" width="100" height="24" rx="4" fill="#080808" opacity="0.8" />
+      <text x="100" y="162" fill="var(--text)" font-family="var(--font-mono)" font-size="14" font-weight="700" letter-spacing="3" text-anchor="middle" filter="url(#logoGlow)">${sanitizedText}</text>
+      <text x="100" y="162" fill="var(--text)" font-family="var(--font-mono)" font-size="14" font-weight="700" letter-spacing="3" text-anchor="middle">${sanitizedText}</text>
+    ` : '';
+
     const svgCode = `
-<svg id="playgroundSVG" width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+<svg id="playgroundSVG" width="220" height="220" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="${colorStart}" id="gradStart" />
@@ -1222,30 +1392,52 @@ function initDesignPlayground() {
       <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
   </defs>
-  <!-- Background subtle grid -->
-  <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(200, 169, 110, 0.12)" stroke-width="1" stroke-dasharray="4 4" />
-  <circle cx="100" cy="100" r="60" fill="none" stroke="rgba(200, 169, 110, 0.05)" stroke-width="1" />
   
-  <!-- Main dynamic symbol group -->
-  <g id="logoGroup" transform="translate(100, 100) rotate(${rotate}) scale(${scale})">
-    <!-- Outer accent arc -->
-    <path d="M -45,-45 A 60 60 0 0 1 45,-45" fill="none" stroke="url(#logoGrad)" stroke-width="${strokeWidth / 2}" stroke-linecap="round" opacity="0.4" />
-    
-    <!-- Central stylized "J" / "G" geometric curve -->
-    <!-- Glow layer -->
-    <path d="M -25,-30 L 20,-30 L 20,20 C 20,35 5,45 -20,45 L -25,45" fill="none" stroke="url(#logoGrad)" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" opacity="0.35" filter="url(#logoGlow)" />
-    
-    <!-- Main crisp path -->
-    <path d="M -25,-30 L 20,-30 L 20,20 C 20,35 5,45 -20,45 L -25,45" fill="none" stroke="url(#logoGrad)" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" />
-    
-    <!-- Design detail terminal nodes -->
-    <circle cx="-25" cy="-30" r="${strokeWidth / 2.5}" fill="#080808" stroke="url(#logoGrad)" stroke-width="2" />
-    <circle cx="-25" cy="45" r="${strokeWidth / 2.5}" fill="#080808" stroke="url(#logoGrad)" stroke-width="2" />
-  </g>
+  <!-- Outer badge frame border -->
+  ${frameMarkup}
+  
+  <!-- Central Symbol -->
+  ${symbolMarkup}
+  
+  <!-- Initials Text -->
+  ${textMarkup}
 </svg>
     `;
     
     svgWrap.innerHTML = svgCode.trim();
+  }
+  
+  // Custom Controls listeners
+  if (symbolSelect) {
+    symbolSelect.addEventListener('change', (e) => {
+      symbol = e.target.value;
+      updateSVG();
+      playAudioEffect('click');
+      // Deselect presets
+      document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+    });
+  }
+  
+  if (frameSelect) {
+    frameSelect.addEventListener('change', (e) => {
+      frame = e.target.value;
+      updateSVG();
+      playAudioEffect('click');
+      // Deselect presets
+      document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+    });
+  }
+  
+  if (textInput) {
+    textInput.addEventListener('input', (e) => {
+      textInitials = e.target.value;
+      updateSVG();
+      if (textInitials.length > 0) {
+        playAudioEffect('hover');
+      }
+      // Deselect presets
+      document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+    });
   }
   
   if (rotSlider && rotVal) {
@@ -1255,13 +1447,15 @@ function initDesignPlayground() {
       updateSVG();
     });
   }
+  
   if (scaleSlider && scaleVal) {
     scaleSlider.addEventListener('input', (e) => {
-      scale = (parseInt(e.target.value) / 100).toFixed(1);
-      scaleVal.textContent = `${scale}x`;
+      scale = (parseInt(e.target.value) / 100).toFixed(2);
+      scaleVal.textContent = `${parseFloat(scale).toFixed(1)}x`;
       updateSVG();
     });
   }
+  
   if (strokeSlider && strokeVal) {
     strokeSlider.addEventListener('input', (e) => {
       strokeWidth = parseInt(e.target.value);
@@ -1269,6 +1463,7 @@ function initDesignPlayground() {
       updateSVG();
     });
   }
+  
   if (glowSlider && glowVal) {
     glowSlider.addEventListener('input', (e) => {
       glowIntensity = parseInt(e.target.value);
@@ -1276,6 +1471,7 @@ function initDesignPlayground() {
       updateSVG();
     });
   }
+  
   if (hueSlider && hueVal) {
     hueSlider.addEventListener('input', (e) => {
       hue = parseInt(e.target.value);
@@ -1283,6 +1479,53 @@ function initDesignPlayground() {
       updateSVG();
     });
   }
+  
+  // Preset Buttons
+  document.querySelectorAll('.btn-preset').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const presetName = e.target.dataset.preset;
+      const config = presets[presetName];
+      if (!config) return;
+      
+      playAudioEffect('click');
+      
+      // Update state
+      hue = config.hue;
+      symbol = config.symbol;
+      frame = config.frame;
+      scale = config.scale;
+      rotate = config.rotate;
+      strokeWidth = config.strokeWidth;
+      glowIntensity = config.glowIntensity;
+      textInitials = config.text;
+      
+      // Update UI Controls
+      if (symbolSelect) symbolSelect.value = symbol;
+      if (frameSelect) frameSelect.value = frame;
+      if (textInput) textInput.value = textInitials;
+      
+      if (rotSlider) rotSlider.value = rotate;
+      if (rotVal) rotVal.textContent = `${rotate}°`;
+      
+      if (scaleSlider) scaleSlider.value = Math.round(scale * 100);
+      if (scaleVal) scaleVal.textContent = `${scale}x`;
+      
+      if (strokeSlider) strokeSlider.value = strokeWidth;
+      if (strokeVal) strokeVal.textContent = `${strokeWidth}px`;
+      
+      if (glowSlider) glowSlider.value = glowIntensity;
+      if (glowVal) glowVal.textContent = `${glowIntensity}px`;
+      
+      if (hueSlider) hueSlider.value = hue;
+      if (hueVal) hueVal.textContent = `${hue}°`;
+      
+      // Toggle active class
+      document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      updateSVG();
+    });
+  });
   
   if (exportBtn) {
     exportBtn.addEventListener('click', () => {
@@ -1300,7 +1543,7 @@ function initDesignPlayground() {
       
       const downloadLink = document.createElement("a");
       downloadLink.href = url;
-      downloadLink.download = "josh_logo.svg";
+      downloadLink.download = `josh_badge_${textInitials.toLowerCase() || 'dev'}.svg`;
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
