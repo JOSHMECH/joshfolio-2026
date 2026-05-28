@@ -459,9 +459,7 @@ function renderProjects(filter='all'){
     } else {
       const curated = allAdminProjects.filter(p => !p.isGitHubRepo);
       projectsToRender = curated.filter(p => filter === 'all' || p.category === filter);
-      if (note && curated.length > 0) {
-        note.textContent = `✦ ${projectsToRender.length} project${projectsToRender.length !== 1 ? 's' : ''} added via admin panel`;
-      } else if (note) {
+      if (note) {
         note.textContent = '';
       }
     }
