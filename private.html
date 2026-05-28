@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Vault Access Restricted — Josh_d_Guru</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Vault Page Base Styles ─── */
+    body {
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    .vault-navbar {
+      height: var(--nav-h);
+      border-bottom: 1px solid var(--border-dim);
+      background: rgba(8, 8, 8, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+    }
+    .vault-nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+    .back-btn-link {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .back-btn-link:hover {
+      color: var(--gold);
+    }
+    
+    .vault-main {
+      margin-top: calc(var(--nav-h) + 2rem);
+      flex: 1;
+      padding-bottom: 5rem;
+    }
+
+    /* ─── Lock Card ─── */
+    .lock-card {
+      background: var(--surface);
+      border: 1px solid var(--border-dim);
+      border-radius: var(--radius-lg);
+      padding: 3rem 2rem;
+      max-width: 650px;
+      margin: 0 auto 3rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .lock-card::before {
+      content: '';
+      position: absolute;
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(200, 169, 110, 0.05), transparent 70%);
+      top: -50px;
+      left: 50%;
+      transform: translateX(-50%);
+      filter: blur(10px);
+      pointer-events: none;
+    }
+    .lock-graphic {
+      width: 70px;
+      height: 70px;
+      margin: 0 auto 1.5rem;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lock-shackle {
+      width: 44px;
+      height: 35px;
+      border: 6px solid var(--gold);
+      border-bottom: none;
+      border-radius: 22px 22px 0 0;
+      position: absolute;
+      top: 5px;
+      left: 13px;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .lock-body {
+      width: 58px;
+      height: 44px;
+      background: var(--surface-2);
+      border: 2px solid var(--gold);
+      border-radius: 8px;
+      position: absolute;
+      bottom: 5px;
+      left: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+    .lock-keyhole {
+      width: 6px;
+      height: 12px;
+      background: var(--bg);
+      border-radius: 3px;
+      position: relative;
+    }
+    .lock-keyhole::after {
+      content: '';
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: var(--bg);
+      border-radius: 50%;
+      top: -4px;
+      left: -2px;
+    }
+    
+    /* Opened Lock State */
+    .lock-card.unlocked .lock-shackle {
+      transform: translateY(-8px) rotate(-15deg);
+      border-color: #10B981;
+    }
+    .lock-card.unlocked .lock-body {
+      border-color: #10B981;
+    }
+    
+    .lock-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    .lock-repo {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--gold);
+      background: rgba(200, 169, 110, 0.08);
+      border: 1px dashed var(--border);
+      padding: 0.3rem 0.8rem;
+      border-radius: 6px;
+      display: inline-block;
+      margin-bottom: 1.5rem;
+    }
+    .lock-desc {
+      color: var(--text-muted);
+      font-size: 1rem;
+      max-width: 480px;
+      margin: 0 auto 2rem;
+      line-height: 1.6;
+    }
+    .lock-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .lock-actions .btn-primary,
+    .lock-actions .btn-ghost {
+      min-width: 180px;
+      justify-content: center;
+    }
+
+    /* ─── Arcade Dashboard ─── */
+    .arcade-section {
+      max-width: 900px;
+      margin: 0 auto 5rem;
+    }
+    .arcade-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    .arcade-tag {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+    .arcade-title {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+    
+    .arcade-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 0.8rem;
+      margin-bottom: 1.5rem;
+    }
+    .arcade-tab-btn {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.6rem 1.4rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-dim);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .arcade-tab-btn:hover {
+      border-color: var(--border);
+      color: var(--text);
+    }
+    .arcade-tab-btn.active {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: #080808;
+      font-weight: 600;
+    }
+    
+    .arcade-box {
+      background: var(--surface);
+      border: 1px solid var(--border-dim);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      min-height: 450px;
+      display: none;
+    }
+    .arcade-box.active {
+      display: block;
+    }
+
+    /* ─── Game: Gold Snake ─── */
+    .snake-layout {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+    .canvas-container {
+      position: relative;
+      background: #050505;
+      border: 2px solid var(--border-dim);
+      border-radius: var(--radius);
+      overflow: hidden;
+      width: 100%;
+      aspect-ratio: 4/3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+    }
+    #snakeCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: transparent;
+    }
+    .canvas-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(8, 8, 8, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      text-align: center;
+      z-index: 5;
+    }
+    .co-title {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+      color: var(--gold);
+    }
+    .co-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      max-width: 280px;
+      line-height: 1.5;
+    }
+    .snake-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .snake-score-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border-dim);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+    }
+    .ssc-row {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px dashed rgba(255,255,255,0.05);
+    }
+    .ssc-row:last-child {
+      border-bottom: none;
+    }
+    .ssc-val {
+      color: var(--gold);
+      font-weight: 700;
+    }
+    .snake-controls {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      border-left: 2px solid var(--gold);
+      padding-left: 1rem;
+    }
+
+    /* ─── Game: Cyber Hacking Console ─── */
+    .terminal-container {
+      display: flex;
+      flex-direction: column;
+      background: #030303;
+      border: 1px solid var(--border-dim);
+      border-radius: var(--radius);
+      height: 400px;
+      overflow: hidden;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
+    }
+    .term-header {
+      background: #0e0e0e;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 0.6rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .term-dots {
+      display: flex;
+      gap: 0.4rem;
+    }
+    .term-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+    }
+    .term-dot.green { background: #10B981; }
+    .term-title {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .term-body {
+      flex: 1;
+      padding: 1.2rem;
+      overflow-y: auto;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.5;
+      color: #3DFF6E; /* Classic terminal green */
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .term-input-line {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem 1.2rem;
+      background: #0a0a0a;
+      border-top: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .term-prompt {
+      color: var(--gold);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      user-select: none;
+    }
+    #termInput {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: #3DFF6E;
+    }
+    .term-line-user { color: var(--text); }
+    .term-line-error { color: #FF5F56; }
+    .term-line-gold { color: var(--gold); }
+    .term-line-warn { color: #FFA000; }
+
+    /* ─── Recommendations ─── */
+    .recommends-section {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .rec-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    .rec-title {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .rec-sub {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    .rec-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .rec-card {
+      background: var(--surface);
+      border: 1px solid var(--border-dim);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      transition: all 0.3s;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+    }
+    .rec-card:hover {
+      border-color: var(--border);
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-gold);
+    }
+    .rec-badge {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--gold);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: rgba(200,169,110,0.06);
+      border: 1px solid var(--border);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      align-self: flex-start;
+      margin-bottom: 1.2rem;
+    }
+    .rec-card-title {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+    .rec-card-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      flex: 1;
+    }
+    .rec-link {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--gold);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: gap 0.2s;
+    }
+    .rec-card:hover .rec-link {
+      gap: 0.7rem;
+    }
+
+    /* ─── Responsive Queries ─── */
+    @media (max-width: 900px) {
+      .snake-layout {
+        grid-template-columns: 1fr;
+      }
+      .rec-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 640px) {
+      .rec-grid {
+        grid-template-columns: 1fr;
+      }
+      .lock-card {
+        padding: 2.5rem 1.2rem;
+      }
+      .arcade-box {
+        padding: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Navigation ─── -->
+  <nav class="vault-navbar">
+    <div class="container vault-nav-inner">
+      <a href="index.html" class="nav-logo">
+        <span class="logo-bracket">[</span>Josh_d_Guru<span class="logo-bracket">]</span>
+      </a>
+      <a href="index.html#projects" class="back-btn-link">← Back to Portfolio</a>
+    </div>
+  </nav>
+
+  <!-- ─── Main Vault Area ─── -->
+  <main class="vault-main container">
+    
+    <!-- Lock Warning Card -->
+    <div class="lock-card" id="lockCard">
+      <div class="lock-graphic">
+        <div class="lock-shackle"></div>
+        <div class="lock-body">
+          <div class="lock-keyhole"></div>
+        </div>
+      </div>
+      <h1 class="lock-title">Repository Restructured</h1>
+      <div class="lock-repo" id="lockRepo">Private Code Vault</div>
+      <p class="lock-desc">
+        The source code for this project is hosted in a secure private repository. You can launch the live application deployment below, or engage our terminal algorithms to explore recommendations and play built-in bypass games.
+      </p>
+      <div class="lock-actions">
+        <a href="#" class="btn-primary" id="live-btn" target="_blank" rel="noopener">Launch Live Demo ↗</a>
+        <a href="index.html#projects" class="btn-ghost">View Other Projects</a>
+      </div>
+    </div>
+
+    <!-- Arcade Console -->
+    <section class="arcade-section">
+      <div class="arcade-header">
+        <span class="arcade-tag">Ecosystem Sandbox</span>
+        <h2 class="arcade-title">Interactive Arcade &amp; Terminal</h2>
+      </div>
+
+      <div class="arcade-tabs">
+        <button class="arcade-tab-btn active" data-tab="snake">Gold Snake Game</button>
+        <button class="arcade-tab-btn" data-tab="terminal">Hacking Console</button>
+      </div>
+
+      <!-- Tab content: Snake -->
+      <div class="arcade-box active" id="arcade-snake">
+        <div class="snake-layout">
+          <div class="canvas-container">
+            <canvas id="snakeCanvas"></canvas>
+            <div class="canvas-overlay" id="snakeOverlay">
+              <h3 class="co-title">Gold Snake Game</h3>
+              <p class="co-desc">Navigate the nodes using Arrow keys or WASD. Accumulate 10 score points to bypass the vault lock!</p>
+              <button class="btn-primary" id="startSnakeBtn">Authorize &amp; Start Game</button>
+            </div>
+          </div>
+          <div class="snake-sidebar">
+            <div class="snake-score-card">
+              <div class="ssc-row">
+                <span>Active Target:</span>
+                <span class="ssc-val" style="color:#FFA000;">Gold Node</span>
+              </div>
+              <div class="ssc-row">
+                <span>Current Score:</span>
+                <span class="ssc-val" id="snakeScore">0</span>
+              </div>
+              <div class="ssc-row">
+                <span>All-Time High:</span>
+                <span class="ssc-val" id="snakeHighScore">0</span>
+              </div>
+              <div class="ssc-row">
+                <span>Lock Authorization:</span>
+                <span class="ssc-val" id="lockAuthStatus" style="color:#FF5F56;">RESTRICTED</span>
+              </div>
+            </div>
+            
+            <div class="snake-controls">
+              <p>CONTROLS:</p>
+              <p>• Desktop: Arrow keys or W, A, S, D</p>
+              <p>• Sound synthesis active (runs via Web Audio API)</p>
+            </div>
+            
+            <button class="btn-ghost" id="muteSnakeBtn">Mute Sound Effects</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab content: Hacking Console -->
+      <div class="arcade-box" id="arcade-terminal">
+        <div class="terminal-container">
+          <div class="term-header">
+            <div class="term-dots">
+              <span class="term-dot green"></span>
+              <span class="term-dot"></span>
+              <span class="term-dot"></span>
+            </div>
+            <span class="term-title">system_hacking_bypass.sh</span>
+          </div>
+          
+          <div class="term-body" id="termBody">
+            <div class="term-line-warn">SYSTEM BYPASS INTRUSION DETECTED. AUTHORIZATION REQUIRED.</div>
+            <div>Welcome, visitor. Tap directly on the terminal to write bypass algorithms.</div>
+            <div>Type <span class="term-line-gold">"help"</span> for a list of system console instructions.</div>
+          </div>
+          
+          <div class="term-input-line">
+            <span class="term-prompt">guest@josh_d_guru:~$</span>
+            <input type="text" id="termInput" autocomplete="off" placeholder="type commands..." />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Curated Recommendations -->
+    <section class="recommends-section">
+      <div class="rec-header">
+        <h2 class="rec-title">Recommended Product Showcases</h2>
+        <p class="rec-sub">Explore the core systems built under the GuruLabs parent tech ecosystem.</p>
+      </div>
+      
+      <div class="rec-grid">
+        <!-- Rec Card 1 -->
+        <div class="rec-card">
+          <div>
+            <span class="rec-badge">FinTech + Operations</span>
+            <h3 class="rec-card-title">Kudiflow Wallet</h3>
+            <p class="rec-card-desc">
+              A premium financial operation dashboard designed for student creators and small enterprises. Features dual-currency balance tracking, AI spending checks, and graph visual metrics.
+            </p>
+          </div>
+          <a href="index.html#startup" class="rec-link">Launch Kudiflow Showcase →</a>
+        </div>
+        
+        <!-- Rec Card 2 -->
+        <div class="rec-card">
+          <div>
+            <span class="rec-badge">EdTech + Research AI</span>
+            <h3 class="rec-card-title">ScholarLens</h3>
+            <p class="rec-card-desc">
+              An artificial intelligence research sandbox optimizing academic notes, citation mapping, and statistical SPSS regressions alongside visual predictive GPA analysis.
+            </p>
+          </div>
+          <a href="index.html#startup" class="rec-link">Launch ScholarLens AI →</a>
+        </div>
+        
+        <!-- Rec Card 3 -->
+        <div class="rec-card">
+          <div>
+            <span class="rec-badge">UI/UX + Brand Asset</span>
+            <h3 class="rec-card-title">Design Playground</h3>
+            <p class="rec-card-desc">
+              An interactive logo customization vector platform. Adjust rotating coordinates, scales, stroke parameters, and HSL neon glows, exporting custom brand emblems as clean standalone XML SVGs.
+            </p>
+          </div>
+          <a href="index.html#design-playground" class="rec-link">Launch SVG Configurator →</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="noise-overlay"></div>
+
+  <!-- ─── Core Vault Page Scripts ─── -->
+  <script>
+    /* ════════════════════════════════════════════════════════
+       1. URL PARAMETERS EXTRACTION
+       ════════════════════════════════════════════════════════ */
+    const urlParams = new URLSearchParams(window.location.search);
+    const rawRepo = urlParams.get('repo') || '';
+    const rawLive = urlParams.get('live') || '';
+    
+    const formattedRepoName = rawRepo ? rawRepo.trim() : 'Public GitHub Repo';
+    
+    // Display repo name
+    const repoEl = document.getElementById('lockRepo');
+    if (repoEl) repoEl.textContent = `Vault: ${formattedRepoName}`;
+    
+    // Setup live button
+    const liveBtn = document.getElementById('live-btn');
+    if (liveBtn) {
+      if (rawLive) {
+        liveBtn.href = rawLive;
+        liveBtn.style.display = 'inline-flex';
+      } else {
+        liveBtn.style.display = 'none';
+      }
+    }
+
+    /* ════════════════════════════════════════════════════════
+       2. TAB SWITCHER SYSTEM
+       ════════════════════════════════════════════════════════ */
+    const tabs = document.querySelectorAll('.arcade-tab-btn');
+    const snakeBox = document.getElementById('arcade-snake');
+    const termBox = document.getElementById('arcade-terminal');
+    const termInput = document.getElementById('termInput');
+    
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        playClickSound();
+        
+        const mode = tab.dataset.tab;
+        if (mode === 'snake') {
+          snakeBox.classList.add('active');
+          termBox.classList.remove('active');
+        } else {
+          snakeBox.classList.remove('active');
+          termBox.classList.add('active');
+          setTimeout(() => { if (termInput) termInput.focus(); }, 50);
+        }
+      });
+    });
+
+    /* ════════════════════════════════════════════════════════
+       3. SYNTH AUDIO SYSTEM (Web Audio API)
+       ════════════════════════════════════════════════════════ */
+    let audioCtx = null;
+    let isGameMuted = false;
+    
+    function initSynthAudio() {
+      if (audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    function playClickSound() {
+      if (isGameMuted) return;
+      try {
+        initSynthAudio();
+        if (!audioCtx) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(350, now);
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.08);
+        
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(now + 0.08);
+      } catch(e) {}
+    }
+    
+    function playEatSound(scoreVal) {
+      if (isGameMuted) return;
+      try {
+        initSynthAudio();
+        if (!audioCtx) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        const baseFreq = 480 + (scoreVal * 18);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(baseFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, now + 0.12);
+        
+        gain.gain.setValueAtTime(0.04, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(now + 0.12);
+      } catch(e) {}
+    }
+    
+    function playBypassSound() {
+      if (isGameMuted) return;
+      try {
+        initSynthAudio();
+        if (!audioCtx) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const now = audioCtx.currentTime;
+        const notes = [261.63, 329.63, 392.00, 523.25]; // C major chord
+        
+        notes.forEach((f, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = f;
+          
+          gain.gain.setValueAtTime(0, now + idx * 0.1);
+          gain.gain.linearRampToValueAtTime(0.04, now + idx * 0.1 + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.1 + 0.5);
+          
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + idx * 0.1);
+          osc.stop(now + idx * 0.1 + 0.5);
+        });
+      } catch(e) {}
+    }
+    
+    function playGameOverSound() {
+      if (isGameMuted) return;
+      try {
+        initSynthAudio();
+        if (!audioCtx) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(160, now);
+        osc.frequency.linearRampToValueAtTime(50, now + 0.38);
+        
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.38);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(now + 0.38);
+      } catch(e) {}
+    }
+    
+    function playKeydownSound() {
+      if (isGameMuted) return;
+      try {
+        initSynthAudio();
+        if (!audioCtx) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(750, now);
+        osc.frequency.exponentialRampToValueAtTime(150, now + 0.02);
+        
+        gain.gain.setValueAtTime(0.012, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.02);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(now + 0.02);
+      } catch(e) {}
+    }
+
+    const muteBtn = document.getElementById('muteSnakeBtn');
+    if (muteBtn) {
+      muteBtn.addEventListener('click', () => {
+        isGameMuted = !isGameMuted;
+        muteBtn.textContent = isGameMuted ? 'Unmute Sound Effects' : 'Mute Sound Effects';
+        muteBtn.classList.toggle('muted', isGameMuted);
+      });
+    }
+
+    /* ════════════════════════════════════════════════════════
+       4. RETRO CANVAS GAME: GOLD SNAKE
+       ════════════════════════════════════════════════════════ */
+    const canvas = document.getElementById('snakeCanvas');
+    const startBtn = document.getElementById('startSnakeBtn');
+    const overlay = document.getElementById('snakeOverlay');
+    const scoreValSpan = document.getElementById('snakeScore');
+    const highScoreSpan = document.getElementById('snakeHighScore');
+    const lockAuthStatus = document.getElementById('lockAuthStatus');
+    const lockCard = document.getElementById('lockCard');
+    
+    // Scale canvas resolution based on display bounding client rect
+    const cellCountX = 20;
+    const cellCountY = 15;
+    let cellSize = 20;
+    
+    if (canvas) {
+      canvas.width = cellCountX * cellSize;
+      canvas.height = cellCountY * cellSize;
+    }
+    
+    const ctx = canvas ? canvas.getContext('2d') : null;
+    
+    let snake = [];
+    let food = { x: 0, y: 0 };
+    let dir = 'right';
+    let nextDir = 'right';
+    let gameLoopInterval = null;
+    let score = 0;
+    let highScore = parseInt(localStorage.getItem('josh_snake_highscore') || '0');
+    let isSnakeRunning = false;
+    
+    if (highScoreSpan) highScoreSpan.textContent = highScore;
+    
+    function spawnFood() {
+      let valid = false;
+      while (!valid) {
+        food.x = Math.floor(Math.random() * cellCountX);
+        food.y = Math.floor(Math.random() * cellCountY);
+        valid = !snake.some(segment => segment.x === food.x && segment.y === food.y);
+      }
+    }
+    
+    function startSnakeGame() {
+      initSynthAudio();
+      overlay.style.display = 'none';
+      snake = [
+        { x: 5, y: 7 },
+        { x: 4, y: 7 },
+        { x: 3, y: 7 }
+      ];
+      dir = 'right';
+      nextDir = 'right';
+      score = 0;
+      if (scoreValSpan) scoreValSpan.textContent = 0;
+      spawnFood();
+      isSnakeRunning = true;
+      
+      if (gameLoopInterval) clearInterval(gameLoopInterval);
+      gameLoopInterval = setInterval(updateSnake, 120);
+      
+      canvas.focus();
+    }
+    
+    function unlockVaultSequence() {
+      playBypassSound();
+      if (lockAuthStatus) {
+        lockAuthStatus.textContent = 'AUTHORIZED ✓';
+        lockAuthStatus.style.color = '#10B981';
+      }
+      if (lockCard) {
+        lockCard.classList.add('unlocked');
+        const lockDesc = lockCard.querySelector('.lock-desc');
+        if (lockDesc) lockDesc.textContent = `ACCESS SYSTEM SECURED. Bypass key successfully loaded via Golden Snake Algorithm. You can now launch the demo portal!`;
+      }
+    }
+    
+    function drawSnake() {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw grid backgrounds
+      ctx.strokeStyle = 'rgba(200, 169, 110, 0.04)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= cellCountX; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * cellSize, 0);
+        ctx.lineTo(i * cellSize, canvas.height);
+        ctx.stroke();
+      }
+      for (let j = 0; j <= cellCountY; j++) {
+        ctx.beginPath();
+        ctx.moveTo(0, j * cellSize);
+        ctx.lineTo(canvas.width, j * cellSize);
+        ctx.stroke();
+      }
+      
+      // Draw food (Golden target)
+      ctx.fillStyle = '#C8A96E';
+      ctx.shadowColor = '#C8A96E';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(food.x * cellSize + cellSize/2, food.y * cellSize + cellSize/2, cellSize/2.5, 0, Math.PI*2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      
+      // Draw snake
+      snake.forEach((seg, idx) => {
+        ctx.fillStyle = idx === 0 ? '#FAF6EE' : '#C8A96E';
+        ctx.globalAlpha = idx === 0 ? 1 : 0.8 - (idx / snake.length) * 0.4;
+        
+        ctx.fillRect(seg.x * cellSize + 2, seg.y * cellSize + 2, cellSize - 4, cellSize - 4);
+      });
+      ctx.globalAlpha = 1;
+    }
+    
+    function updateSnake() {
+      dir = nextDir;
+      const head = { ...snake[0] };
+      
+      if (dir === 'right') head.x++;
+      else if (dir === 'left') head.x--;
+      else if (dir === 'up') head.y--;
+      else if (dir === 'down') head.y++;
+      
+      // Collision check: wall or self
+      const isWallCollision = head.x < 0 || head.x >= cellCountX || head.y < 0 || head.y >= cellCountY;
+      const isSelfCollision = snake.some((seg, idx) => idx !== 0 && seg.x === head.x && seg.y === head.y);
+      
+      if (isWallCollision || isSelfCollision) {
+        gameOver();
+        return;
+      }
+      
+      snake.unshift(head);
+      
+      // Eat check
+      if (head.x === food.x && head.y === food.y) {
+        score++;
+        if (scoreValSpan) scoreValSpan.textContent = score;
+        playEatSound(score);
+        spawnFood();
+        
+        if (score >= 10 && !lockCard.classList.contains('unlocked')) {
+          unlockVaultSequence();
+        }
+      } else {
+        snake.pop();
+      }
+      
+      drawSnake();
+    }
+    
+    function gameOver() {
+      isSnakeRunning = false;
+      clearInterval(gameLoopInterval);
+      playGameOverSound();
+      
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('josh_snake_highscore', highScore);
+        if (highScoreSpan) highScoreSpan.textContent = highScore;
+      }
+      
+      // Setup overlay
+      const coTitle = overlay.querySelector('.co-title');
+      const coDesc = overlay.querySelector('.co-desc');
+      const startButton = overlay.querySelector('#startSnakeBtn');
+      
+      if (coTitle) coTitle.textContent = 'Grid System Crash';
+      if (coDesc) coDesc.textContent = `Crash score: ${score}. Reach 10 points to unlock vault credentials.`;
+      if (startButton) startButton.textContent = 'Initialize Re-auth System';
+      
+      overlay.style.display = 'flex';
+    }
+    
+    // Bind Controls
+    window.addEventListener('keydown', e => {
+      if (!isSnakeRunning) return;
+      
+      const key = e.key.toLowerCase();
+      if ((key === 'arrowup' || key === 'w') && dir !== 'down') {
+        nextDir = 'up';
+        e.preventDefault();
+      } else if ((key === 'arrowdown' || key === 's') && dir !== 'up') {
+        nextDir = 'down';
+        e.preventDefault();
+      } else if ((key === 'arrowleft' || key === 'a') && dir !== 'right') {
+        nextDir = 'left';
+        e.preventDefault();
+      } else if ((key === 'arrowright' || key === 'd') && dir !== 'left') {
+        nextDir = 'right';
+        e.preventDefault();
+      }
+    });
+    
+    if (startBtn) startBtn.addEventListener('click', startSnakeGame);
+
+    /* ════════════════════════════════════════════════════════
+       5. CYBER HACKING TERMINAL SIMULATOR
+       ════════════════════════════════════════════════════════ */
+    const termBody = document.getElementById('termBody');
+    const hackInput = document.getElementById('termInput');
+    
+    const termCommands = {
+      help: () => [
+        "VAULT INTRUSION COMMAND CONSOLE v2.4",
+        "--------------------------------------",
+        "Available commands:",
+        "  help      - Print available instruction nodes",
+        "  decrypt   - Perform algorithmic signature sweep",
+        "  bypass    - Force firewall override keygen",
+        "  status    - Retrieve query repo metadata stats",
+        "  recommends - Show suggested ecosystem project nodes",
+        "  clear     - Wipe command terminal stdout lines",
+        "  exit      - Force terminate override session"
+      ],
+      decrypt: () => {
+        setTimeout(simulateDecryption, 150);
+        return ["Initializing signature decryption sequence...", "[Sweep module 82b loaded]"];
+      },
+      bypass: () => {
+        if (lockCard && lockCard.classList.contains('unlocked')) {
+          return [
+            "✦ BYPASS STATUS: GRANTED",
+            "Firewall bypass is already active. Launch the live demo deployment using the main panel!"
+          ];
+        }
+        return [
+          "⚠ BYPASS ERROR: AUTHENTICATION REQUIRED",
+          "Decryption module failed. Authorize lock credentials first.",
+          "INSTRUCTION: Start Gold Snake Game and accumulate 10 points to load the security bypass signature key."
+        ];
+      },
+      status: () => [
+        "REPOSITORY DIAGNOSTIC DATA LOG:",
+        "---------------------------------",
+        `Name:      ${formattedRepoName}`,
+        "Security:  Restricted Vault Core [Locked]",
+        "Owner:     Idowu Joshua Victor (@Josh_d_Guru)",
+        `Source:    https://github.com/JOSHMECH/${formattedRepoName.replace(/\s+/g, '-').toLowerCase()}`,
+        `Live:      ${rawLive ? rawLive : 'Null/Unavailable'}`
+      ],
+      recommends: () => [
+        "GURULABS INTEGRATION RECOMMENDED NODES:",
+        "---------------------------------------",
+        "• Kudiflow Smart Wallet (Fintech dashboard)",
+        "  Command node path: index.html#startup",
+        "• ScholarLens AI Sandbox (Edtech + statistics)",
+        "  Command node path: index.html#startup",
+        "• Design Playground Configurator (SVG customize)",
+        "  Command node path: index.html#design-playground",
+        "---------------------------------------",
+        "Launch nodes directly from the recommendation cards below."
+      ],
+      clear: () => {
+        if (termBody) termBody.innerHTML = '';
+        return [];
+      },
+      exit: () => {
+        window.location.href = 'index.html#projects';
+        return ["Terminating secure shell session... Done."];
+      }
+    };
+    
+    function addTermLine(text, className = '') {
+      if (!termBody) return;
+      const line = document.createElement('div');
+      line.className = className;
+      line.textContent = text;
+      termBody.appendChild(line);
+      termBody.scrollTop = termBody.scrollHeight;
+    }
+    
+    function simulateDecryption() {
+      const frames = [
+        "Searching encryption headers...",
+        "MD5 key detected: 0x8a92fb420e...",
+        "Cracking matrix grid array [0.08 density]...",
+        "Bypassing Firebase lock nodes...",
+        "Injecting credentials signature key...",
+        "CRITICAL ALERT: DECRYPTION CORE THREAD BLOCKED BY FIREWALL.",
+        "Error 403: Security restricted repo code vault. Key check mismatch.",
+        "AUTHORIZATION KEY NOT FOUND IN SYSTEM STORAGE.",
+        "Please authorize manually via Golden Snake algorithm (Score >= 10)."
+      ];
+      
+      frames.forEach((txt, idx) => {
+        setTimeout(() => {
+          const isErr = txt.includes('ALERT') || txt.includes('Error') || txt.includes('BLOCKED');
+          addTermLine(txt, isErr ? 'term-line-error' : 'term-line-gold');
+        }, idx * 300);
+      });
+    }
+    
+    if (hackInput) {
+      hackInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          const rawInput = hackInput.value;
+          const cmd = rawInput.trim().toLowerCase();
+          hackInput.value = '';
+          
+          if (!cmd) return;
+          
+          addTermLine(`guest@josh_d_guru:~$ ${rawInput}`, 'term-line-user');
+          
+          if (termCommands[cmd]) {
+            const output = termCommands[cmd]();
+            output.forEach(line => {
+              let clName = '';
+              if (line.startsWith('⚠') || line.startsWith('✕')) clName = 'term-line-error';
+              else if (line.startsWith('✦') || line.startsWith('✓')) clName = 'term-line-gold';
+              addTermLine(line, clName);
+            });
+          } else {
+            addTermLine(`✕ Intrusive shell command not found: '${cmd}'. Type 'help' for support.`, 'term-line-error');
+          }
+        } else {
+          if (!e.metaKey && !e.ctrlKey && !e.altKey && e.key.length === 1) {
+            playKeydownSound();
+          }
+        }
+      });
+    }
+    
+    // Auto-focus input when terminal container clicked
+    const termContainer = document.querySelector('.terminal-container');
+    if (termContainer && hackInput) {
+      termContainer.addEventListener('click', () => {
+        hackInput.focus();
+      });
+    }
+  </script>
+</body>
+</html>

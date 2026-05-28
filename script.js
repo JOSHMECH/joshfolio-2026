@@ -327,9 +327,13 @@ function buildCard(project){
         </div>`;
   }
 
+  const repoLink = project.isGitHubRepo
+    ? `private.html?repo=${encodeURIComponent(project.title)}&live=${project.liveUrl ? encodeURIComponent(project.liveUrl) : ''}`
+    : project.repoUrl;
+
   const overlayBtns = [
     project.liveUrl ? `<a href="${project.liveUrl}" class="overlay-btn" target="_blank" rel="noopener">Live ↗</a>` : '',
-    project.repoUrl ? `<a href="${project.repoUrl}" class="overlay-btn ghost" target="_blank" rel="noopener">Repo</a>` : ''
+    repoLink ? `<a href="${repoLink}" class="overlay-btn ghost" target="_blank" rel="noopener">Repo</a>` : ''
   ].filter(Boolean).join('');
 
   const stackHtml = (project.stack||[]).map(s=>`<span class="stack-tag">${s}</span>`).join('');
