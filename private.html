@@ -683,6 +683,18 @@
               <button class="btn-primary" id="startSnakeBtn">Authorize &amp; Start Game</button>
             </div>
           </div>
+
+          <!-- Mobile D-pad controls -->
+          <div class="snake-mobile-controls" id="snakeMobileControls">
+            <button class="btn-dpad dpad-up" id="dpad-up" aria-label="Up">▲</button>
+            <div class="dpad-middle-row">
+              <button class="btn-dpad dpad-left" id="dpad-left" aria-label="Left">◀</button>
+              <div class="dpad-center"></div>
+              <button class="btn-dpad dpad-right" id="dpad-right" aria-label="Right">▶</button>
+            </div>
+            <button class="btn-dpad dpad-down" id="dpad-down" aria-label="Down">▼</button>
+          </div>
+
           <div class="snake-sidebar">
             <div class="snake-score-card">
               <div class="ssc-row">
@@ -706,6 +718,7 @@
             <div class="snake-controls">
               <p>CONTROLS:</p>
               <p>• Desktop: Arrow keys or W, A, S, D</p>
+              <p>• Mobile: Touch Directional D-Pad</p>
               <p>• Sound synthesis active (runs via Web Audio API)</p>
             </div>
             
@@ -1393,6 +1406,36 @@
       } else if ((key === 'arrowright' || key === 'd') && dir !== 'left') {
         nextDir = 'right';
         e.preventDefault();
+      }
+    });
+
+    // Touch D-Pad Controls
+    function handleDpadPress(direction) {
+      if (!isSnakeRunning) return;
+      
+      if (direction === 'up' && dir !== 'down') {
+        nextDir = 'up';
+      } else if (direction === 'down' && dir !== 'up') {
+        nextDir = 'down';
+      } else if (direction === 'left' && dir !== 'right') {
+        nextDir = 'left';
+      } else if (direction === 'right' && dir !== 'left') {
+        nextDir = 'right';
+      }
+    }
+
+    const dpadDirections = ['up', 'down', 'left', 'right'];
+    dpadDirections.forEach(direction => {
+      const btn = document.getElementById(`dpad-${direction}`);
+      if (btn) {
+        btn.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          handleDpadPress(direction);
+        }, { passive: false });
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          handleDpadPress(direction);
+        });
       }
     });
     
