@@ -237,6 +237,43 @@
     </div>
   </div>
 
+  <!-- ── GitHub Repo Override Modal ───────────────── -->
+  <div class="modal-overlay" id="githubOverrideOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="ghOverrideTitle">
+    <div class="modal">
+      <h3 class="del-title" id="ghOverrideTitle">Configure GitHub Overrides</h3>
+      <p class="del-sub" id="ghOverrideSub" style="margin-bottom:1.5rem;">Override live demo link and custom preview card thumbnail.</p>
+      
+      <form id="githubOverrideForm" novalidate>
+        <input type="hidden" id="ghOverrideId" />
+        
+        <div class="pf-group" style="margin-bottom:1.2rem; text-align:left;">
+          <label for="ghLiveUrl" style="display:block; margin-bottom:0.4rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--gold); text-transform:uppercase;">Live Demo URL</label>
+          <input type="url" id="ghLiveUrl" placeholder="https://my-live-demo.vercel.app" style="width:100%; background:rgba(8,8,8,0.6); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; border-radius:6px; outline:none; font-family:var(--font-body);" />
+        </div>
+        
+        <div class="pf-group" style="margin-bottom:1.2rem; text-align:left;">
+          <label style="display:block; margin-bottom:0.4rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--gold); text-transform:uppercase;">Preview Image</label>
+          <div class="img-drop-zone" id="ghDropZone" role="button" tabindex="0" aria-label="Upload preview image" style="border:1px dashed var(--border); padding:1.5rem; text-align:center; border-radius:6px; cursor:pointer; transition:all 0.3s; background:rgba(255,255,255,0.01);">
+            <div class="dz-icon" style="font-size:1.8rem; margin-bottom:0.5rem;">📁</div>
+            <p style="font-size:0.85rem; margin-bottom:0.2rem;">Drag &amp; drop or <label for="ghImgFile" class="dz-browse" style="color:var(--gold); cursor:pointer; text-decoration:underline;">browse</label></p>
+            <p class="dz-hint" style="font-size:0.7rem; color:var(--text-muted);">PNG, JPG, WebP — Max image size auto-scaled</p>
+            <input type="file" id="ghImgFile" accept="image/*" hidden />
+          </div>
+          
+          <div class="img-preview-wrap" id="ghImgPreviewWrap" style="display:none; margin-top:1rem; position:relative;">
+            <img id="ghImgPreview" alt="Preview" style="max-height:140px; width:auto; border-radius:6px; border:1px solid var(--border);" />
+            <button type="button" class="img-remove" id="ghImgRemove" style="position:absolute; top:0.5rem; right:0.5rem; background:rgba(255,95,86,0.85); color:#fff; padding:0.3rem 0.6rem; border-radius:4px; font-size:0.75rem; cursor:pointer; border:none; font-family:var(--font-mono);">✕ Remove</button>
+          </div>
+        </div>
+        
+        <div class="del-actions" style="margin-top:2rem;">
+          <button type="button" class="btn-outline" id="ghOverrideCancel">Cancel</button>
+          <button type="submit" class="btn-gold" id="ghOverrideSave">Save Overrides</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ── Toast ────────────────────────────────────── -->
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 

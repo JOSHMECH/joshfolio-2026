@@ -401,7 +401,7 @@ if(skillsSec) skillsObs.observe(skillsSec);
 /* ─── Project Card Builder ───────────────────────────── */
 function buildCard(project){
   let thumbHtml = '';
-  if (project.isGitHubRepo) {
+  if (project.isGitHubRepo && !project.image) {
     thumbHtml = `
       <div class="github-preview-thumb">
         <div class="gh-preview-grid"></div>
@@ -653,6 +653,29 @@ function getLocalHiddenRepos() {
   catch { return []; }
 }
 
+async function getGitHubOverrides() {
+  const { db, firebaseReady } = window.joshFirebase || {};
+  if (firebaseReady && db) {
+    try {
+      const snap = await db.collection('github_overrides').get();
+      const overrides = {};
+      snap.forEach(doc => {
+        overrides[doc.id] = doc.data();
+      });
+      return overrides;
+    } catch (err) {
+      console.warn('Failed to fetch github overrides, using localStorage:', err);
+      return lsGetGitHubOverrides();
+    }
+  }
+  return lsGetGitHubOverrides();
+}
+
+function lsGetGitHubOverrides() {
+  try { return JSON.parse(localStorage.getItem('josh_github_overrides') || '{}'); }
+  catch { return {}; }
+}
+
 /* ─── Merge Firestore and local projects ─────────────────── */
 function mergeProjects(fbList, localList) {
   const mergedMap = new Map();
@@ -707,6 +730,25 @@ async function loadAdminProjects(){
     return !hiddenRepoIds.has(String(rawId));
   });
 
+  // Apply overrides (Live URL and Preview image overrides)
+  try {
+    const overrides = await getGitHubOverrides();
+    githubProjects = githubProjects.map(gh => {
+      const rawId = gh.id.replace('gh-', '');
+      const o = overrides[rawId];
+      if (o) {
+        return {
+          ...gh,
+          liveUrl: o.liveUrl || gh.liveUrl,
+          image: o.previewUrl || gh.image || ''
+        };
+      }
+      return gh;
+    });
+  } catch (err) {
+    console.warn('Failed to apply GitHub overrides:', err);
+  }
+
   // Merge Firestore projects with local projects overrides/fallbacks
   const localProjects = getLocalProjects();
   const mergedCurated = mergeProjects(firebaseProjects, localProjects);
@@ -724,7 +766,7 @@ async function loadAdminProjects(){
   });
 
   // Combine lists: curated projects first, then github repositories
-  allAdminProjects = [...firebaseProjects, ...filteredGitHub];
+  allAdminProjects = [...mergedCurated, ...filteredGitHub];
 
   if(loading) loading.style.display='none';
   renderProjects('all');

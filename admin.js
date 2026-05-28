@@ -707,6 +707,7 @@ async function renderGitHubGrid(search = '') {
     
     const hiddenIds = await getHiddenRepos();
     const hiddenSet = new Set(hiddenIds.map(String));
+    const overrides = await getGitHubOverrides();
     
     if (loading) loading.style.display = 'none';
     
@@ -723,6 +724,8 @@ async function renderGitHubGrid(search = '') {
     
     filtered.forEach(r => {
       const isHidden = hiddenSet.has(String(r.id));
+      const override = overrides[String(r.id)];
+      const hasOverride = !!override;
       const card = document.createElement('div');
       card.className = 'manage-card';
       
@@ -735,7 +738,7 @@ async function renderGitHubGrid(search = '') {
       card.innerHTML = `
         <div class="mc-thumb" style="font-size:2.5rem;">${emoji}</div>
         <div class="mc-body">
-          <p class="mc-cat">${lang}</p>
+          <p class="mc-cat">${lang} ${hasOverride ? '<span class="override-tag" style="color:var(--gold); font-size:0.65rem; margin-left:0.5rem; border:1px solid var(--border); padding:0.1rem 0.3rem; border-radius:4px;">✦ Overridden</span>' : ''}</p>
           <h3 class="mc-title">${r.name}</h3>
           <p class="mc-desc">${r.description || 'Public GitHub repository.'}</p>
           <div class="mc-actions">
@@ -743,6 +746,7 @@ async function renderGitHubGrid(search = '') {
               ? `<button class="btn-gold btn-sm toggle-github-btn" data-id="${r.id}" data-action="show">Include</button>`
               : `<button class="btn-outline btn-sm toggle-github-btn" data-id="${r.id}" data-action="hide">Exclude</button>`
             }
+            <button class="btn-outline btn-sm edit-github-btn" data-id="${r.id}" data-name="${r.name}">Configure Overrides</button>
           </div>
         </div>`;
       grid.appendChild(card);
@@ -771,12 +775,192 @@ async function renderGitHubGrid(search = '') {
         }
       });
     });
+
+    grid.querySelectorAll('.edit-github-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const name = btn.dataset.name;
+        const override = overrides[String(id)] || {};
+        
+        const modalTitle = document.getElementById('ghOverrideTitle');
+        if (modalTitle) modalTitle.textContent = `Configure Overrides: ${name}`;
+        
+        ghOverrideId.value = id;
+        ghLiveUrl.value = override.liveUrl || '';
+        
+        if (override.previewUrl) {
+          pendingGhImageBase64 = override.previewUrl;
+          ghImgPreview.src = override.previewUrl;
+          ghImgPreviewWrap.style.display = 'block';
+          ghDropZone.style.display = 'none';
+        } else {
+          pendingGhImageBase64 = null;
+          ghImgPreviewWrap.style.display = 'none';
+          ghDropZone.style.display = 'block';
+          ghImgFile.value = '';
+        }
+        
+        ghOverrideOverlay.style.display = 'flex';
+      });
+    });
     
   } catch (err) {
     if (loading) loading.style.display = 'none';
     console.error('Error rendering GitHub repos:', err);
     grid.innerHTML = `<p style="color:var(--accent-r);text-align:center;grid-column:1/-1;padding:3rem;font-family:var(--font-mono);font-size:.85rem;">Failed to load GitHub repositories: ${err.message}</p>`;
   }
+}
+
+let pendingGhImageBase64 = null;
+
+async function getGitHubOverrides() {
+  if (fbReady()) {
+    try {
+      const snap = await getDB().collection('github_overrides').get();
+      const overrides = {};
+      snap.forEach(doc => {
+        overrides[doc.id] = doc.data();
+      });
+      return overrides;
+    } catch (err) {
+      console.warn('Failed to fetch github overrides, using localStorage:', err);
+      return lsGetGitHubOverrides();
+    }
+  } else {
+    return lsGetGitHubOverrides();
+  }
+}
+
+function lsGetGitHubOverrides() {
+  try { return JSON.parse(localStorage.getItem('josh_github_overrides') || '{}'); }
+  catch { return {}; }
+}
+
+async function saveGitHubOverrides(repoId, liveUrl, previewUrl) {
+  if (fbReady()) {
+    await getDB().collection('github_overrides').doc(String(repoId)).set({
+      liveUrl: liveUrl || '',
+      previewUrl: previewUrl || '',
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } else {
+    const overrides = lsGetGitHubOverrides();
+    overrides[String(repoId)] = {
+      liveUrl: liveUrl || '',
+      previewUrl: previewUrl || ''
+    };
+    localStorage.setItem('josh_github_overrides', JSON.stringify(overrides));
+  }
+}
+
+// GitHub Overrides Modal Element Bindings
+const ghOverrideOverlay = document.getElementById('githubOverrideOverlay');
+const ghOverrideForm    = document.getElementById('githubOverrideForm');
+const ghOverrideId      = document.getElementById('ghOverrideId');
+const ghLiveUrl         = document.getElementById('ghLiveUrl');
+const ghDropZone        = document.getElementById('ghDropZone');
+const ghImgFile         = document.getElementById('ghImgFile');
+const ghImgPreview      = document.getElementById('ghImgPreview');
+const ghImgPreviewWrap  = document.getElementById('ghImgPreviewWrap');
+const ghImgRemove       = document.getElementById('ghImgRemove');
+const ghOverrideCancel  = document.getElementById('ghOverrideCancel');
+
+if (ghDropZone && ghImgFile) {
+  ghDropZone.addEventListener('click', () => ghImgFile.click());
+  ghDropZone.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' ') ghImgFile.click(); });
+  ghDropZone.addEventListener('dragover', e => { e.preventDefault(); ghDropZone.classList.add('drag-over'); });
+  ghDropZone.addEventListener('dragleave', () => ghDropZone.classList.remove('drag-over'));
+  ghDropZone.addEventListener('drop', e => {
+    e.preventDefault(); ghDropZone.classList.remove('drag-over');
+    if(e.dataTransfer.files[0]) processGhImageFile(e.dataTransfer.files[0]);
+  });
+  ghImgFile.addEventListener('change', () => { if(ghImgFile.files[0]) processGhImageFile(ghImgFile.files[0]); });
+}
+
+if (ghImgRemove) {
+  ghImgRemove.addEventListener('click', () => {
+    pendingGhImageBase64 = null;
+    ghImgPreviewWrap.style.display = 'none';
+    ghDropZone.style.display = 'block';
+    ghImgFile.value = '';
+  });
+}
+
+function processGhImageFile(file) {
+  if(file.size > 10*1024*1024){ showToast('⚠ Image too large — max 10 MB', true); return; }
+  if(!file.type.startsWith('image/')){ showToast('⚠ File must be an image.', true); return; }
+  
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const MAX_WIDTH = 960;
+      const MAX_HEIGHT = 540;
+      let width = img.width;
+      let height = img.height;
+      
+      if (width > height) {
+        if (width > MAX_WIDTH) {
+          height = Math.round((height * MAX_WIDTH) / width);
+          width = MAX_WIDTH;
+        }
+      } else {
+        if (height > MAX_HEIGHT) {
+          width = Math.round((width * MAX_HEIGHT) / height);
+          height = MAX_HEIGHT;
+        }
+      }
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
+      pendingGhImageBase64 = compressedBase64;
+      ghImgPreview.src = compressedBase64;
+      ghImgPreviewWrap.style.display = 'block';
+      ghDropZone.style.display = 'none';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+if (ghOverrideCancel) {
+  ghOverrideCancel.addEventListener('click', () => {
+    ghOverrideOverlay.style.display = 'none';
+  });
+}
+
+if (ghOverrideForm) {
+  ghOverrideForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const saveBtn = document.getElementById('ghOverrideSave');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving overrides...';
+    }
+    
+    try {
+      const repoId = ghOverrideId.value;
+      const live = ghLiveUrl.value.trim();
+      const preview = pendingGhImageBase64 || '';
+      
+      await saveGitHubOverrides(repoId, live, preview);
+      showToast('GitHub repository overrides saved!');
+      ghOverrideOverlay.style.display = 'none';
+      await renderGitHubGrid(document.getElementById('githubSearch').value);
+    } catch (err) {
+      console.error(err);
+      showToast('⚠ Save overrides failed: ' + err.message, true);
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Overrides';
+      }
+    }
+  });
 }
 
 const ghSearch = document.getElementById('githubSearch');
