@@ -1138,6 +1138,11 @@ input,textarea,select{font-family:inherit;}
 .terminal-output-line-error {
   color: #FF6B6B;
 }
+.matrix-green {
+  color: #3DFF6E;
+  text-shadow: 0 0 5px rgba(61, 255, 110, 0.6);
+  opacity: 0.85;
+}
 .terminal-input-line {
   background: #0e0e0e;
   padding: 0.8rem 1.2rem;

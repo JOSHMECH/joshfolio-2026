@@ -1660,6 +1660,10 @@ function initTerminalCLI() {
       "  startup  - Show GuruLabs ecosystem details",
       "  globe    - Print location and globe telemetry",
       "  contact  - Retrieve messaging endpoints",
+      "  skills   - Display tech competency levels",
+      "  neofetch - Print terminal system overview",
+      "  synth    - Play synthesizer audio sequence",
+      "  matrix   - Trigger system decryption stream",
       "  clear    - Clear console log stack",
       "  exit     - Shutdown console session"
     ],
@@ -1713,6 +1717,82 @@ function initTerminalCLI() {
       "  phone: +234 816 1523 407",
       "  github: github.com/JOSHMECH"
     ],
+    skills: () => [
+      "DEVELOPER CORE SKILLS:",
+      "------------------------------------",
+      "  Frontend / JS      [█████████░] 90%",
+      "  UI/UX Design       [████████░░] 80%",
+      "  Python / Data Sci  [████████░░] 80%",
+      "  Holographic Canvas [█████████░] 90%",
+      "  Ecosystem Design   [████████░░] 80%"
+    ],
+    neofetch: () => {
+      const uptimeSec = Math.floor((Date.now() - performance.timeOrigin) / 1000);
+      const m = Math.floor(uptimeSec / 60);
+      const s = uptimeSec % 60;
+      const uptimeStr = m > 0 ? `${m}m ${s}s` : `${s}s`;
+      
+      const userAgent = navigator.userAgent;
+      let os = "Unknown OS";
+      if (userAgent.indexOf("Win") !== -1) os = "Windows";
+      else if (userAgent.indexOf("Mac") !== -1) os = "macOS";
+      else if (userAgent.indexOf("Linux") !== -1) os = "Linux";
+      else if (userAgent.indexOf("Android") !== -1) os = "Android";
+      else if (userAgent.indexOf("like Mac") !== -1) os = "iOS";
+      
+      const dbStr = (window.joshFirebase && window.joshFirebase.firebaseReady) ? "Cloud Firestore (Connected)" : "Local Storage Fallback";
+      const audioStr = isMuted ? "MUTED" : "Active (Web Audio Synthesizer)";
+      const projectsCount = allAdminProjects.length;
+      
+      return [
+        "      /\\       guest@josh_d_guru",
+        "     /  \\      -----------------",
+        `    /\\  /\\     OS: ${os}`,
+        `   /  \\/  \\    Uptime: ${uptimeStr}`,
+        `   \\  /\\  /    Database: ${dbStr}`,
+        `    \\/  \\/     Synth Audio: ${audioStr}`,
+        `     \\  /      Loaded Projects: ${projectsCount} items`,
+        "      \\/       Terminal Version: 2.6.0-gold"
+      ];
+    },
+    synth: () => {
+      if (typeof playAudioEffect === 'function') {
+        playAudioEffect('boot');
+      }
+      return [
+        "SYNTH MODULE INITIALIZED",
+        "------------------------------------",
+        "Triggering synthesized arpeggio scale...",
+        "  C4  (130.8 Hz)  ██░░░░░░░░",
+        "  E4  (164.8 Hz)  ████░░░░░░",
+        "  G4  (196.0 Hz)  ██████░░░░",
+        "  C5  (261.6 Hz)  ████████░░",
+        "  E5  (329.6 Hz)  ██████████",
+        "Sound arpeggio complete. Engine status: ONLINE"
+      ];
+    },
+    matrix: () => {
+      let count = 0;
+      const interval = setInterval(() => {
+        if (count >= 20 || !termOverlay.classList.contains('open')) {
+          clearInterval(interval);
+          if (typeof addLine === 'function') {
+            addLine("SYSTEM SCAN CLEAN. ENCRYPTED LINK SECURED.", "matrix-green");
+          }
+          return;
+        }
+        const chars = "0123456789ABCDEF@#$%&*+=?:";
+        let str = "";
+        for (let i = 0; i < 35; i++) {
+          str += chars[Math.floor(Math.random() * chars.length)] + " ";
+        }
+        if (typeof addLine === 'function') {
+          addLine(str, "matrix-green");
+        }
+        count++;
+      }, 70);
+      return ["DECRYPTING MATRIX SYSTEM DATA..."];
+    },
     clear: () => {
       termBody.innerHTML = '';
       return [];
