@@ -2192,77 +2192,6 @@ function initInteractiveMockups() {
   }
 }
 
-/* ─── Preloader Loader system ───────────────────────────── */
-function initPreloader() {
-  const preloader = document.getElementById('preloader');
-  const fill = document.getElementById('preloaderFill');
-  const percent = document.getElementById('preloaderPercent');
-  const log = document.getElementById('preloaderLog');
-  const btn = document.getElementById('preloaderBtn');
-  
-  if (!preloader) return;
-  
-  let progress = 0;
-  let hasLoaded = false;
-  
-  const statusLogs = [
-    { threshold: 0, text: "guest@josh_d_guru:~$ system_init --verbose" },
-    { threshold: 10, text: "[BOOT] Initializing Josh_d_Guru kernel node..." },
-    { threshold: 25, text: "[SYS] Connecting to Firebase Firestore DB..." },
-    { threshold: 45, text: "[AUDIO] Loading synthesizers and oscillator nodes..." },
-    { threshold: 65, text: "[3D] Calculating location coordinates (hologram)..." },
-    { threshold: 80, text: "[KNN] Building ML neighbor classification grids..." },
-    { threshold: 95, text: "[DECRYPT] Mapping security key bypass hashes..." },
-    { threshold: 100, text: "[SUCCESS] Decryption complete. Access authorization keys loaded." }
-  ];
-  
-  window.addEventListener('load', () => {
-    hasLoaded = true;
-  });
-  
-  const timer = setInterval(() => {
-    let increment = Math.floor(Math.random() * 8) + 2;
-    progress += increment;
-    
-    if (progress >= 92 && !hasLoaded) {
-      progress = 92;
-    }
-    
-    if (progress >= 100) {
-      progress = 100;
-      clearInterval(timer);
-      
-      if (fill) fill.style.width = '100%';
-      if (percent) percent.textContent = '100%';
-      const match = statusLogs.find(l => l.threshold === 100);
-      if (log && match) log.textContent = match.text;
-      
-      if (btn) {
-        btn.style.display = 'inline-flex';
-        btn.focus();
-      }
-    } else {
-      if (fill) fill.style.width = progress + '%';
-      if (percent) percent.textContent = progress + '%';
-      
-      const match = [...statusLogs].reverse().find(l => progress >= l.threshold);
-      if (log && match) {
-        log.textContent = match.text;
-      }
-    }
-  }, 100);
-  
-  if (btn) {
-    btn.addEventListener('click', () => {
-      playAudioEffect('boot');
-      preloader.classList.add('fade-out-loader');
-      document.body.classList.remove('preloader-active');
-      setTimeout(() => {
-        preloader.remove();
-      }, 800);
-    });
-  }
-}
 
 /* ─── Footer Telemetry Dashboard ────────────────────────── */
 function initFooterTelemetry() {
@@ -2357,7 +2286,7 @@ function initFooterTelemetry() {
 }
 
 /* ─── Init ───────────────────────────────────────────── */
-initPreloader();
+
 initFooterTelemetry();
 initSoundToggle();
 initRegressionLab();
