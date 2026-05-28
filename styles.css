@@ -2788,6 +2788,11 @@ input,textarea,select{font-family:inherit;}
   border-radius: 50%;
 }
 
+.download-link:hover {
+  color: var(--gold) !important;
+  text-shadow: 0 0 8px rgba(200, 169, 110, 0.3);
+}
+
 /* ── Print ───────────────────────────────────────── */
 @media print{
   .noise-overlay,.cursor,.cursor-trail,#navbar,
