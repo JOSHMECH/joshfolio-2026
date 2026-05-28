@@ -543,6 +543,29 @@ function getLocalHiddenRepos() {
   catch { return []; }
 }
 
+/* ─── Merge Firestore and local projects ─────────────────── */
+function mergeProjects(fbList, localList) {
+  const mergedMap = new Map();
+  fbList.forEach(p => mergedMap.set(p.id, p));
+  localList.forEach(p => {
+    if (!mergedMap.has(p.id)) {
+      mergedMap.set(p.id, p);
+    } else {
+      const fbProj = mergedMap.get(p.id);
+      const fbTime = fbProj.updatedAt ? (fbProj.updatedAt.toDate ? fbProj.updatedAt.toDate().getTime() : new Date(fbProj.updatedAt).getTime()) : 0;
+      const localTime = p.updatedAt ? new Date(p.updatedAt).getTime() : (p.createdAt ? new Date(p.createdAt).getTime() : 0);
+      if (localTime > fbTime) {
+        mergedMap.set(p.id, p);
+      }
+    }
+  });
+  return Array.from(mergedMap.values()).sort((a, b) => {
+    const timeA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt).getTime()) : 0;
+    const timeB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime()) : 0;
+    return timeB - timeA;
+  });
+}
+
 /* ─── Load Projects from Firebase or localStorage ────── */
 async function loadAdminProjects(){
   const loading = document.getElementById('projectsLoading');
@@ -574,9 +597,13 @@ async function loadAdminProjects(){
     return !hiddenRepoIds.has(String(rawId));
   });
 
-  // Merge: Curated Firebase projects take precedence.
+  // Merge Firestore projects with local projects overrides/fallbacks
+  const localProjects = getLocalProjects();
+  const mergedCurated = mergeProjects(firebaseProjects, localProjects);
+
+  // Merge: Curated projects take precedence.
   const firebaseRepos = new Set(
-    firebaseProjects
+    mergedCurated
       .map(p => normalizeRepoUrl(p.repoUrl))
       .filter(Boolean)
   );

@@ -81,11 +81,68 @@ function updateFirebaseStatus(){
   }
 }
 
+/* ─── Merge Firestore and local projects ─────────────────── */
+function mergeProjects(fbList, localList) {
+  const mergedMap = new Map();
+  fbList.forEach(p => mergedMap.set(p.id, p));
+  localList.forEach(p => {
+    if (!mergedMap.has(p.id)) {
+      mergedMap.set(p.id, p);
+    } else {
+      const fbProj = mergedMap.get(p.id);
+      const fbTime = fbProj.updatedAt ? (fbProj.updatedAt.toDate ? fbProj.updatedAt.toDate().getTime() : new Date(fbProj.updatedAt).getTime()) : 0;
+      const localTime = p.updatedAt ? new Date(p.updatedAt).getTime() : (p.createdAt ? new Date(p.createdAt).getTime() : 0);
+      if (localTime > fbTime) {
+        mergedMap.set(p.id, p);
+      }
+    }
+  });
+  return Array.from(mergedMap.values()).sort((a, b) => {
+    const timeA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt).getTime()) : 0;
+    const timeB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime()) : 0;
+    return timeB - timeA;
+  });
+}
+
 /* ─── Load Projects ──────────────────────────────────────── */
 async function loadProjects(){
   try{
-    if(fbReady()){ projects = await fbGetAll(); }
-    else { projects = lsGet(); }
+    if(fbReady()){
+      const fbList = await fbGetAll();
+      const localList = lsGet();
+      
+      // Auto-sync local-only projects to Firestore
+      const localOnly = localList.filter(p => String(p.id).startsWith('local-'));
+      if (localOnly.length > 0) {
+        console.log(`[Sync] Found ${localOnly.length} local-only projects. Uploading to Firestore...`);
+        for (const lp of localOnly) {
+          try {
+            // Check for duplicates by title
+            const exists = fbList.some(fp => fp.title.toLowerCase() === lp.title.toLowerCase());
+            if (!exists) {
+              const cleanedPayload = { ...lp };
+              delete cleanedPayload.id;
+              cleanedPayload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+              cleanedPayload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+              await getDB().collection('projects').add(cleanedPayload);
+              console.log(`[Sync] Successfully uploaded local project: ${lp.title}`);
+            }
+            // Remove from localList (since it's now synced or duplicate)
+            const idx = localList.findIndex(p => p.id === lp.id);
+            if (idx > -1) localList.splice(idx, 1);
+          } catch (syncErr) {
+            console.warn(`[Sync] Failed to upload ${lp.title}:`, syncErr);
+          }
+        }
+        lsSet(localList);
+        const updatedFbList = await fbGetAll();
+        projects = mergeProjects(updatedFbList, localList);
+      } else {
+        projects = mergeProjects(fbList, localList);
+      }
+    } else {
+      projects = lsGet();
+    }
   } catch(err){
     console.warn('Load failed, falling back:', err);
     projects = lsGet();
@@ -220,7 +277,21 @@ projectForm.addEventListener('submit', async e=>{
       if(!pendingImageBase64 && existing?.image) payload.image = existing.image;
 
       if(fbReady()){
-        await fbUpdate(id, payload);
+        if (String(id).startsWith('local-')) {
+          // If it was a local fallback project, add it to Firestore as a new document
+          const newId = await fbAdd(payload);
+          payload.id = newId;
+          payload.createdAt = new Date().toISOString();
+          
+          // Remove the local one from localStorage
+          const localList = lsGet().filter(p => p.id !== id);
+          lsSet(localList);
+        } else {
+          await fbUpdate(id, payload);
+          // Remove local override for this ID from localStorage since it's now in Firestore
+          const localList = lsGet().filter(p => p.id !== id);
+          lsSet(localList);
+        }
       } else {
         const idx = projects.findIndex(p=>p.id===id);
         if(idx>-1){ projects[idx]={...projects[idx],...payload}; lsSet(projects); }
@@ -232,6 +303,10 @@ projectForm.addEventListener('submit', async e=>{
         const newId = await fbAdd(payload);
         payload.id = newId;
         payload.createdAt = new Date().toISOString();
+        
+        // Remove any local duplicate from localStorage
+        const localList = lsGet().filter(p => p.title.toLowerCase() !== title.toLowerCase());
+        lsSet(localList);
       } else {
         payload.id = 'local-'+Date.now();
         payload.createdAt = new Date().toISOString();
@@ -246,7 +321,44 @@ projectForm.addEventListener('submit', async e=>{
     switchView('manage');
   } catch(err){
     console.error('Save error:', err);
-    setPFStatus('⚠ Save failed: '+err.message,'error');
+    
+    let userMsg = err.message || '';
+    if (userMsg.toLowerCase().includes('permission') || userMsg.toLowerCase().includes('authorized')) {
+      userMsg = 'Check your Firestore security rules (they may have expired if they were in test mode).';
+    } else if (userMsg.toLowerCase().includes('size') || userMsg.toLowerCase().includes('large') || userMsg.toLowerCase().includes('limit')) {
+      userMsg = 'Payload too large. The image size exceeds Firestore limits.';
+    }
+    
+    // Automatically save to local storage as a fallback so their work isn't lost
+    try {
+      const payloadFallback = {
+        ...payload,
+        id: id || 'local-' + Date.now(),
+        createdAt: new Date().toISOString()
+      };
+      
+      if (id) {
+        const idx = projects.findIndex(p => p.id === id);
+        if (idx > -1) {
+          projects[idx] = { ...projects[idx], ...payloadFallback };
+        }
+      } else {
+        projects.unshift(payloadFallback);
+      }
+      lsSet(projects);
+      
+      setPFStatus(`⚠ Firestore failed: ${userMsg} Saved to localStorage fallback!`, 'error');
+      showToast('Saved to local storage fallback.');
+      
+      setTimeout(async () => {
+        await loadProjects();
+        refreshAll();
+        resetForm();
+        switchView('manage');
+      }, 3500);
+    } catch (localErr) {
+      setPFStatus('✕ Save failed: ' + userMsg, 'error');
+    }
   } finally{
     saveBtn.disabled=false;
     saveBtn.textContent = document.getElementById('editId').value ? 'Update Project →' : 'Save Project →';
@@ -296,14 +408,47 @@ imgRemove.addEventListener('click',()=>{
 });
 
 function processImageFile(file){
-  if(file.size > 5*1024*1024){ showToast('⚠ Image too large — max 5 MB', true); return; }
+  if(file.size > 10*1024*1024){ showToast('⚠ Image too large — max 10 MB', true); return; }
   if(!file.type.startsWith('image/')){ showToast('⚠ File must be an image.', true); return; }
+  
   const reader = new FileReader();
-  reader.onload = e=>{
-    pendingImageBase64 = e.target.result;
-    imgPreview.src = pendingImageBase64;
-    imgPreviewWrap.style.display='block';
-    dropZone.style.display='none';
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Target a maximum resolution of 960x540 (ideal 16:9 for card previews)
+      const MAX_WIDTH = 960;
+      const MAX_HEIGHT = 540;
+      let width = img.width;
+      let height = img.height;
+      
+      if (width > height) {
+        if (width > MAX_WIDTH) {
+          height = Math.round((height * MAX_WIDTH) / width);
+          width = MAX_WIDTH;
+        }
+      } else {
+        if (height > MAX_HEIGHT) {
+          width = Math.round((width * MAX_HEIGHT) / height);
+          height = MAX_HEIGHT;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // Convert to compressed JPEG data URL (typical size is < 80KB, safe for Firestore 1MB limit)
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
+      
+      pendingImageBase64 = compressedBase64;
+      imgPreview.src = compressedBase64;
+      imgPreviewWrap.style.display = 'block';
+      dropZone.style.display = 'none';
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
@@ -344,8 +489,21 @@ delConfirm.addEventListener('click', async()=>{
   if(!deleteTarget){ deleteOverlay.style.display='none'; return; }
   delConfirm.disabled=true; delConfirm.textContent='Deleting…';
   try{
-    if(fbReady()){ await fbDelete(deleteTarget); }
-    else { projects=projects.filter(p=>p.id!==deleteTarget); lsSet(projects); }
+    if(fbReady()){
+      if (String(deleteTarget).startsWith('local-')) {
+        // Local-only project fallback
+        const localList = lsGet().filter(p => p.id !== deleteTarget);
+        lsSet(localList);
+      } else {
+        await fbDelete(deleteTarget);
+        // Also remove from localStorage if synced or overridden
+        const localList = lsGet().filter(p => p.id !== deleteTarget);
+        lsSet(localList);
+      }
+    } else {
+      projects=projects.filter(p=>p.id!==deleteTarget);
+      lsSet(projects);
+    }
     await loadProjects();
     refreshAll();
     renderManageGrid();
