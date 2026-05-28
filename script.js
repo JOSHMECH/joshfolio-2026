@@ -636,16 +636,18 @@ function normalizeRepoUrl(url) {
 
 async function getHiddenRepoIds() {
   const { db, firebaseReady } = window.joshFirebase || {};
+  const localSet = getLocalHiddenRepos();
   if (firebaseReady && db) {
     try {
       const snap = await db.collection('hidden_repos').get();
-      return new Set(snap.docs.map(d => String(d.id)));
+      const dbIds = snap.docs.map(d => String(d.id));
+      return new Set([...localSet, ...dbIds]);
     } catch (err) {
       console.warn('Failed to fetch hidden repos, using localStorage:', err);
-      return new Set(getLocalHiddenRepos());
+      return new Set(localSet);
     }
   }
-  return new Set(getLocalHiddenRepos());
+  return new Set(localSet);
 }
 
 function getLocalHiddenRepos() {
@@ -655,6 +657,7 @@ function getLocalHiddenRepos() {
 
 async function getGitHubOverrides() {
   const { db, firebaseReady } = window.joshFirebase || {};
+  const local = lsGetGitHubOverrides();
   if (firebaseReady && db) {
     try {
       const snap = await db.collection('github_overrides').get();
@@ -662,13 +665,13 @@ async function getGitHubOverrides() {
       snap.forEach(doc => {
         overrides[doc.id] = doc.data();
       });
-      return overrides;
+      return { ...local, ...overrides };
     } catch (err) {
       console.warn('Failed to fetch github overrides, using localStorage:', err);
-      return lsGetGitHubOverrides();
+      return local;
     }
   }
-  return lsGetGitHubOverrides();
+  return local;
 }
 
 function lsGetGitHubOverrides() {

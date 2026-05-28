@@ -646,7 +646,9 @@ async function getHiddenRepos() {
   if (fbReady()) {
     try {
       const snap = await getDB().collection('hidden_repos').get();
-      return snap.docs.map(d => String(d.id));
+      const dbHidden = snap.docs.map(d => String(d.id));
+      const localHidden = lsGetHiddenRepos();
+      return Array.from(new Set([...dbHidden, ...localHidden]));
     } catch (err) {
       console.warn('Failed to fetch hidden repos from Firestore, using localStorage:', err);
       return lsGetHiddenRepos();
@@ -658,26 +660,44 @@ async function getHiddenRepos() {
 
 async function hideRepo(repoId) {
   if (fbReady()) {
-    await getDB().collection('hidden_repos').doc(String(repoId)).set({
-      hiddenAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  } else {
-    const arr = lsGetHiddenRepos();
-    if (!arr.includes(String(repoId))) {
-      arr.push(String(repoId));
-      localStorage.setItem('josh_hidden_repos', JSON.stringify(arr));
+    try {
+      await getDB().collection('hidden_repos').doc(String(repoId)).set({
+        hiddenAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (err) {
+      console.warn('Failed to hide repo in Firestore, falling back to localStorage:', err);
+      fallbackLocalHide(repoId);
     }
+  } else {
+    fallbackLocalHide(repoId);
+  }
+}
+
+function fallbackLocalHide(repoId) {
+  const arr = lsGetHiddenRepos();
+  if (!arr.includes(String(repoId))) {
+    arr.push(String(repoId));
+    localStorage.setItem('josh_hidden_repos', JSON.stringify(arr));
   }
 }
 
 async function showRepo(repoId) {
   if (fbReady()) {
-    await getDB().collection('hidden_repos').doc(String(repoId)).delete();
+    try {
+      await getDB().collection('hidden_repos').doc(String(repoId)).delete();
+    } catch (err) {
+      console.warn('Failed to delete/show repo in Firestore, falling back to localStorage:', err);
+      fallbackLocalShow(repoId);
+    }
   } else {
-    const arr = lsGetHiddenRepos();
-    const filtered = arr.filter(id => id !== String(repoId));
-    localStorage.setItem('josh_hidden_repos', JSON.stringify(filtered));
+    fallbackLocalShow(repoId);
   }
+}
+
+function fallbackLocalShow(repoId) {
+  const arr = lsGetHiddenRepos();
+  const filtered = arr.filter(id => id !== String(repoId));
+  localStorage.setItem('josh_hidden_repos', JSON.stringify(filtered));
 }
 
 function lsGetHiddenRepos() {
@@ -821,7 +841,7 @@ async function getGitHubOverrides() {
       snap.forEach(doc => {
         overrides[doc.id] = doc.data();
       });
-      return overrides;
+      return { ...lsGetGitHubOverrides(), ...overrides };
     } catch (err) {
       console.warn('Failed to fetch github overrides, using localStorage:', err);
       return lsGetGitHubOverrides();
@@ -838,19 +858,28 @@ function lsGetGitHubOverrides() {
 
 async function saveGitHubOverrides(repoId, liveUrl, previewUrl) {
   if (fbReady()) {
-    await getDB().collection('github_overrides').doc(String(repoId)).set({
-      liveUrl: liveUrl || '',
-      previewUrl: previewUrl || '',
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    try {
+      await getDB().collection('github_overrides').doc(String(repoId)).set({
+        liveUrl: liveUrl || '',
+        previewUrl: previewUrl || '',
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (err) {
+      console.warn('Failed to save github overrides to Firestore, falling back to localStorage:', err);
+      saveLocalGitHubOverride(repoId, liveUrl, previewUrl);
+    }
   } else {
-    const overrides = lsGetGitHubOverrides();
-    overrides[String(repoId)] = {
-      liveUrl: liveUrl || '',
-      previewUrl: previewUrl || ''
-    };
-    localStorage.setItem('josh_github_overrides', JSON.stringify(overrides));
+    saveLocalGitHubOverride(repoId, liveUrl, previewUrl);
   }
+}
+
+function saveLocalGitHubOverride(repoId, liveUrl, previewUrl) {
+  const overrides = lsGetGitHubOverrides();
+  overrides[String(repoId)] = {
+    liveUrl: liveUrl || '',
+    previewUrl: previewUrl || ''
+  };
+  localStorage.setItem('josh_github_overrides', JSON.stringify(overrides));
 }
 
 // GitHub Overrides Modal Element Bindings
