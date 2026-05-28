@@ -514,6 +514,111 @@
         padding: 1.2rem;
       }
     }
+
+    /* ─── Ecosystem Match (Memory Match) ─── */
+    .memory-container {
+      position: relative;
+      background: #050505;
+      border: 2px solid var(--border-dim);
+      border-radius: var(--radius);
+      overflow: hidden;
+      width: 100%;
+      aspect-ratio: 4/3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+      padding: 1.2rem;
+    }
+    .memory-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 0.8rem;
+      width: 100%;
+      height: 100%;
+      max-width: 320px;
+      max-height: 240px;
+    }
+    .memory-card-item {
+      background: var(--surface-2);
+      border: 1px solid var(--border-dim);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: transparent;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
+    }
+    .memory-card-item:hover {
+      border-color: var(--border);
+    }
+    .memory-card-item.flipped {
+      background: var(--surface-3);
+      border-color: var(--gold);
+      color: var(--gold);
+      transform: scale(1.02);
+    }
+    .memory-card-item.matched {
+      background: rgba(200, 169, 110, 0.08);
+      border-color: #10B981;
+      color: #10B981;
+      cursor: default;
+      transform: none;
+    }
+    
+    /* ─── AI Tic-Tac-Toe ─── */
+    .tictactoe-container {
+      position: relative;
+      background: #050505;
+      border: 2px solid var(--border-dim);
+      border-radius: var(--radius);
+      overflow: hidden;
+      width: 100%;
+      aspect-ratio: 4/3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+      padding: 1rem;
+    }
+    .tictactoe-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 0.8rem;
+      width: 100%;
+      height: 100%;
+      max-width: 240px;
+      max-height: 240px;
+    }
+    .ttt-cell {
+      background: var(--surface-2);
+      border: 1px solid var(--border-dim);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      font-weight: bold;
+      font-family: var(--font-display);
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .ttt-cell:hover {
+      border-color: var(--border);
+      background: var(--surface-3);
+    }
+    .ttt-cell.x {
+      color: var(--gold);
+    }
+    .ttt-cell.o {
+      color: var(--text);
+    }
   </style>
 </head>
 <body>
@@ -559,6 +664,8 @@
 
       <div class="arcade-tabs">
         <button class="arcade-tab-btn active" data-tab="snake">Gold Snake Game</button>
+        <button class="arcade-tab-btn" data-tab="memory">Ecosystem Match</button>
+        <button class="arcade-tab-btn" data-tab="tictactoe">AI Tic-Tac-Toe</button>
         <button class="arcade-tab-btn" data-tab="terminal">Hacking Console</button>
       </div>
 
@@ -600,6 +707,86 @@
             </div>
             
             <button class="btn-ghost" id="muteSnakeBtn">Mute Sound Effects</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab content: Memory Match -->
+      <div class="arcade-box" id="arcade-memory">
+        <div class="snake-layout">
+          <div class="memory-container">
+            <div class="memory-grid" id="memoryGrid"></div>
+            <div class="canvas-overlay" id="memoryOverlay" style="display:none;">
+              <h3 class="co-title">Grid Decrypted!</h3>
+              <p class="co-desc">Nice work! You matched all pairs in <span id="memoryMovesCount">0</span> moves.</p>
+              <button class="btn-primary" id="restartMemoryBtn">Play Again</button>
+            </div>
+          </div>
+          <div class="snake-sidebar">
+            <div class="snake-score-card">
+              <div class="ssc-row">
+                <span>Game Name:</span>
+                <span class="ssc-val" style="color:#FFA000;">Ecosystem Match</span>
+              </div>
+              <div class="ssc-row">
+                <span>Current Moves:</span>
+                <span class="ssc-val" id="memoryMoves">0</span>
+              </div>
+              <div class="ssc-row">
+                <span>Best Record:</span>
+                <span class="ssc-val" id="memoryBestRecord">--</span>
+              </div>
+            </div>
+            <div class="snake-controls">
+              <p>INSTRUCTIONS:</p>
+              <p>Match identical ecosystem nodes. Pairs locked successfully will play synthesizer chirps. Try to solve the matrix in minimal moves!</p>
+            </div>
+            <button class="btn-primary" id="resetMemoryGameBtn">Reset Grid</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab content: Tic-Tac-Toe -->
+      <div class="arcade-box" id="arcade-tictactoe">
+        <div class="snake-layout">
+          <div class="tictactoe-container">
+            <div class="tictactoe-grid" id="tictactoeGrid">
+              <div class="ttt-cell" data-index="0"></div>
+              <div class="ttt-cell" data-index="1"></div>
+              <div class="ttt-cell" data-index="2"></div>
+              <div class="ttt-cell" data-index="3"></div>
+              <div class="ttt-cell" data-index="4"></div>
+              <div class="ttt-cell" data-index="5"></div>
+              <div class="ttt-cell" data-index="6"></div>
+              <div class="ttt-cell" data-index="7"></div>
+              <div class="ttt-cell" data-index="8"></div>
+            </div>
+            <div class="canvas-overlay" id="tttOverlay" style="display:none;">
+              <h3 class="co-title" id="tttOverlayTitle">Tie Game!</h3>
+              <p class="co-desc" id="tttOverlayDesc">System node parity maintained.</p>
+              <button class="btn-primary" id="restartTttBtn">Play Again</button>
+            </div>
+          </div>
+          <div class="snake-sidebar">
+            <div class="snake-score-card">
+              <div class="ssc-row">
+                <span>Game Name:</span>
+                <span class="ssc-val" style="color:#FFA000;">AI Tic-Tac-Toe</span>
+              </div>
+              <div class="ssc-row">
+                <span>Opponent:</span>
+                <span class="ssc-val">Gemini AI Subroutine</span>
+              </div>
+              <div class="ssc-row">
+                <span>Record:</span>
+                <span class="ssc-val" id="tttRecord">W: 0 - L: 0</span>
+              </div>
+            </div>
+            <div class="snake-controls">
+              <p>INSTRUCTIONS:</p>
+              <p>Align three X nodes (horizontal, vertical, or diagonal). You place X (gold), AI places O (white). The AI move delay is 500ms.</p>
+            </div>
+            <button class="btn-primary" id="resetTttGameBtn">Reset Board</button>
           </div>
         </div>
       </div>
@@ -710,6 +897,8 @@
        ════════════════════════════════════════════════════════ */
     const tabs = document.querySelectorAll('.arcade-tab-btn');
     const snakeBox = document.getElementById('arcade-snake');
+    const memoryBox = document.getElementById('arcade-memory');
+    const tttBox = document.getElementById('arcade-tictactoe');
     const termBox = document.getElementById('arcade-terminal');
     const termInput = document.getElementById('termInput');
     
@@ -721,13 +910,17 @@
         playClickSound();
         
         const mode = tab.dataset.tab;
-        if (mode === 'snake') {
-          snakeBox.classList.add('active');
-          termBox.classList.remove('active');
-        } else {
-          snakeBox.classList.remove('active');
-          termBox.classList.add('active');
+        snakeBox.classList.toggle('active', mode === 'snake');
+        memoryBox.classList.toggle('active', mode === 'memory');
+        tttBox.classList.toggle('active', mode === 'tictactoe');
+        termBox.classList.toggle('active', mode === 'terminal');
+        
+        if (mode === 'terminal') {
           setTimeout(() => { if (termInput) termInput.focus(); }, 50);
+        } else if (mode === 'memory') {
+          initMemoryGame();
+        } else if (mode === 'tictactoe') {
+          initTttGame();
         }
       });
     });
@@ -1078,6 +1271,287 @@
     });
     
     if (startBtn) startBtn.addEventListener('click', startSnakeGame);
+
+    /* ════════════════════════════════════════════════════════
+       6. GAME: ECOSYSTEM MATCH (Memory Match)
+       ════════════════════════════════════════════════════════ */
+    let memorySymbols = ['💻', '💻', '🎨', '🎨', '📊', '📊', '🧠', '🧠', '✦', '✦', '⚙', '⚙', '💾', '💾', '🔒', '🔒'];
+    let firstCard = null;
+    let secondCard = null;
+    let lockMemoryBoard = false;
+    let memoryMoves = 0;
+    let memoryPairsMatched = 0;
+    let memoryBestRecord = parseInt(localStorage.getItem('josh_memory_best') || '--') || '--';
+    
+    const memoryGrid = document.getElementById('memoryGrid');
+    const memoryOverlay = document.getElementById('memoryOverlay');
+    const memoryMovesSpan = document.getElementById('memoryMoves');
+    const memoryBestSpan = document.getElementById('memoryBestRecord');
+    const memoryMovesCount = document.getElementById('memoryMovesCount');
+    
+    if (memoryBestSpan) memoryBestSpan.textContent = memoryBestRecord;
+    
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+    
+    function initMemoryGame() {
+      if (!memoryGrid) return;
+      memoryGrid.innerHTML = '';
+      if (memoryOverlay) memoryOverlay.style.display = 'none';
+      memoryMoves = 0;
+      memoryPairsMatched = 0;
+      if (memoryMovesSpan) memoryMovesSpan.textContent = 0;
+      firstCard = null;
+      secondCard = null;
+      lockMemoryBoard = false;
+      
+      const shuffled = shuffleArray([...memorySymbols]);
+      shuffled.forEach((symbol, index) => {
+        const cardEl = document.createElement('div');
+        cardEl.className = 'memory-card-item';
+        cardEl.dataset.symbol = symbol;
+        cardEl.dataset.index = index;
+        cardEl.textContent = symbol;
+        cardEl.addEventListener('click', flipMemoryCard);
+        memoryGrid.appendChild(cardEl);
+      });
+    }
+    
+    function flipMemoryCard() {
+      if (lockMemoryBoard) return;
+      if (this === firstCard) return;
+      if (this.classList.contains('matched')) return;
+      
+      this.classList.add('flipped');
+      playClickSound();
+      
+      if (!firstCard) {
+        firstCard = this;
+        return;
+      }
+      
+      secondCard = this;
+      lockMemoryBoard = true;
+      memoryMoves++;
+      if (memoryMovesSpan) memoryMovesSpan.textContent = memoryMoves;
+      
+      checkForMemoryMatch();
+    }
+    
+    function checkForMemoryMatch() {
+      const isMatch = firstCard.dataset.symbol === secondCard.dataset.symbol;
+      if (isMatch) {
+        disableMemoryCards();
+      } else {
+        unflipMemoryCards();
+      }
+    }
+    
+    function disableMemoryCards() {
+      firstCard.classList.add('matched');
+      secondCard.classList.add('matched');
+      
+      playEatSound(memoryPairsMatched + 1);
+      
+      memoryPairsMatched++;
+      if (memoryPairsMatched === 8) {
+        setTimeout(winMemoryGame, 400);
+      }
+      
+      resetMemoryBoard();
+    }
+    
+    function unflipMemoryCards() {
+      setTimeout(() => {
+        firstCard.classList.remove('flipped');
+        secondCard.classList.remove('flipped');
+        playGameOverSound();
+        resetMemoryBoard();
+      }, 700);
+    }
+    
+    function resetMemoryBoard() {
+      [firstCard, secondCard] = [null, null];
+      lockMemoryBoard = false;
+    }
+    
+    function winMemoryGame() {
+      playBypassSound();
+      if (memoryOverlay) memoryOverlay.style.display = 'flex';
+      if (memoryMovesCount) memoryMovesCount.textContent = memoryMoves;
+      
+      if (memoryBestRecord === '--' || memoryMoves < memoryBestRecord) {
+        memoryBestRecord = memoryMoves;
+        localStorage.setItem('josh_memory_best', memoryBestRecord);
+        if (memoryBestSpan) memoryBestSpan.textContent = memoryBestRecord;
+      }
+      
+      if (!lockCard.classList.contains('unlocked')) {
+        unlockVaultSequence();
+      }
+    }
+    
+    document.getElementById('restartMemoryBtn')?.addEventListener('click', initMemoryGame);
+    document.getElementById('resetMemoryGameBtn')?.addEventListener('click', initMemoryGame);
+
+    /* ════════════════════════════════════════════════════════
+       7. GAME: AI TIC-TAC-TOE
+       ════════════════════════════════════════════════════════ */
+    let tttBoard = ['', '', '', '', '', '', '', '', ''];
+    let isTttRunning = false;
+    let lockTttBoard = false;
+    let tttWins = parseInt(localStorage.getItem('josh_ttt_wins') || '0') || 0;
+    let tttLosses = parseInt(localStorage.getItem('josh_ttt_losses') || '0') || 0;
+    
+    const tttCells = document.querySelectorAll('.ttt-cell');
+    const tttOverlay = document.getElementById('tttOverlay');
+    const tttOverlayTitle = document.getElementById('tttOverlayTitle');
+    const tttOverlayDesc = document.getElementById('tttOverlayDesc');
+    const tttRecordSpan = document.getElementById('tttRecord');
+    
+    if (tttRecordSpan) tttRecordSpan.textContent = `W: ${tttWins} - L: ${tttLosses}`;
+    
+    function initTttGame() {
+      tttBoard = ['', '', '', '', '', '', '', '', ''];
+      isTttRunning = true;
+      lockTttBoard = false;
+      if (tttOverlay) tttOverlay.style.display = 'none';
+      
+      tttCells.forEach(cell => {
+        cell.textContent = '';
+        cell.className = 'ttt-cell';
+      });
+    }
+    
+    tttCells.forEach(cell => {
+      cell.addEventListener('click', () => {
+        const index = parseInt(cell.dataset.index);
+        if (tttBoard[index] !== '' || !isTttRunning || lockTttBoard) return;
+        
+        makeTttMove(index, 'X');
+        
+        const win = checkTttWin(tttBoard);
+        if (win) {
+          endTttGame(win);
+          return;
+        }
+        if (tttBoard.every(c => c !== '')) {
+          endTttGame('draw');
+          return;
+        }
+        
+        // AI's turn
+        lockTttBoard = true;
+        setTimeout(playTttAiTurn, 500);
+      });
+    });
+    
+    function makeTttMove(index, player) {
+      tttBoard[index] = player;
+      const cell = tttCells[index];
+      cell.textContent = player;
+      cell.classList.add(player.toLowerCase());
+      playClickSound();
+    }
+    
+    function playTttAiTurn() {
+      if (!isTttRunning) return;
+      const bestMove = getTttBestMove();
+      if (bestMove !== null) {
+        makeTttMove(bestMove, 'O');
+        playKeydownSound();
+        
+        const win = checkTttWin(tttBoard);
+        if (win) {
+          endTttGame(win);
+          return;
+        }
+        if (tttBoard.every(c => c !== '')) {
+          endTttGame('draw');
+          return;
+        }
+      }
+      lockTttBoard = false;
+    }
+    
+    function checkTttWin(board) {
+      const wins = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+      ];
+      for (let i = 0; i < wins.length; i++) {
+        const [a, b, c] = wins[i];
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          return board[a];
+        }
+      }
+      return null;
+    }
+    
+    function getTttBestMove() {
+      for (let i = 0; i < 9; i++) {
+        if (tttBoard[i] === '') {
+          const temp = [...tttBoard];
+          temp[i] = 'O';
+          if (checkTttWin(temp) === 'O') return i;
+        }
+      }
+      for (let i = 0; i < 9; i++) {
+        if (tttBoard[i] === '') {
+          const temp = [...tttBoard];
+          temp[i] = 'X';
+          if (checkTttWin(temp) === 'X') return i;
+        }
+      }
+      if (tttBoard[4] === '') return 4;
+      const corners = [0, 2, 6, 8].filter(idx => tttBoard[idx] === '');
+      if (corners.length > 0) {
+        return corners[Math.floor(Math.random() * corners.length)];
+      }
+      const sides = [1, 3, 5, 7].filter(idx => tttBoard[idx] === '');
+      if (sides.length > 0) {
+        return sides[Math.floor(Math.random() * sides.length)];
+      }
+      return null;
+    }
+    
+    function endTttGame(result) {
+      isTttRunning = false;
+      if (tttOverlay) tttOverlay.style.display = 'flex';
+      
+      if (result === 'X') {
+        playBypassSound();
+        if (tttOverlayTitle) tttOverlayTitle.textContent = 'Vault Bypassed!';
+        if (tttOverlayDesc) tttOverlayDesc.textContent = 'Gemini AI defeated. Key loaded successfully!';
+        tttWins++;
+        localStorage.setItem('josh_ttt_wins', tttWins);
+        
+        if (!lockCard.classList.contains('unlocked')) {
+          unlockVaultSequence();
+        }
+      } else if (result === 'O') {
+        playGameOverSound();
+        if (tttOverlayTitle) tttOverlayTitle.textContent = 'Decryption Blocked!';
+        if (tttOverlayDesc) tttOverlayDesc.textContent = 'Gemini AI successfully defended the firewall.';
+        tttLosses++;
+        localStorage.setItem('josh_ttt_losses', tttLosses);
+      } else {
+        playClickSound();
+        if (tttOverlayTitle) tttOverlayTitle.textContent = 'System Node Parity!';
+        if (tttOverlayDesc) tttOverlayDesc.textContent = 'Tie Game. Firewall intact.';
+      }
+      
+      if (tttRecordSpan) tttRecordSpan.textContent = `W: ${tttWins} - L: ${tttLosses}`;
+    }
+    
+    document.getElementById('restartTttBtn')?.addEventListener('click', initTttGame);
+    document.getElementById('resetTttGameBtn')?.addEventListener('click', initTttGame);
 
     /* ════════════════════════════════════════════════════════
        5. CYBER HACKING TERMINAL SIMULATOR
