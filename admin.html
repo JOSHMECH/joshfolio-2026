@@ -68,6 +68,7 @@
         <a href="#" class="snav-link" data-view="github"><span class="sn-icon">⚙</span>GitHub Repos</a>
         <a href="#" class="snav-link" data-view="messages"><span class="sn-icon">✉</span>Messages</a>
         <a href="#" class="snav-link" data-view="social"><span class="sn-icon">★</span>Social Links</a>
+        <a href="#" class="snav-link" data-view="email"><span class="sn-icon">🔔</span>Email Alerts</a>
       </nav>
       <div class="sidebar-footer">
         <div class="firebase-status" id="fbStatus">
@@ -224,6 +225,54 @@
         <p class="empty-msg" id="messagesEmpty" style="display:none">No messages yet.</p>
       </div>
 
+      <!-- ── Email Alerts ────────────────────────── -->
+      <div class="view" id="view-email" style="display:none">
+        <div class="form-panel">
+          <h3 class="fp-title">Configure Email Alerts</h3>
+          <p class="manage-sub" style="margin-bottom:1.5rem;">Get instant email notifications when users submit the contact form on your portfolio (via secure EmailJS client integration).</p>
+          <form id="emailSettingsForm" novalidate>
+            <div class="pf-group" style="margin-bottom:1.5rem; display:flex; align-items:center; gap:0.5rem; text-align:left;">
+              <input type="checkbox" id="emailEnabled" style="width:auto; height:auto; margin:0; cursor:pointer;" />
+              <label for="emailEnabled" style="margin:0; cursor:pointer; font-weight:700; font-family:var(--font-mono); font-size:0.75rem; color:var(--gold); text-transform:uppercase;">Enable Email Notifications</label>
+            </div>
+            
+            <div id="emailJSFields" style="display:none;">
+              <div class="pf-group" style="margin-bottom:1.2rem; text-align:left;">
+                <label for="emailJSKey" style="display:block; margin-bottom:0.4rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--gold); text-transform:uppercase;">EmailJS Public Key</label>
+                <input type="text" id="emailJSKey" placeholder="e.g. user_xxxxxxxxxxxxxx" style="width:100%; background:rgba(8,8,8,0.6); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; border-radius:6px; outline:none;" />
+                <p class="dz-hint" style="font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem;">Found in your EmailJS Dashboard under Account -> Public Key</p>
+              </div>
+              <div class="pf-group" style="margin-bottom:1.2rem; text-align:left;">
+                <label for="emailJSService" style="display:block; margin-bottom:0.4rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--gold); text-transform:uppercase;">EmailJS Service ID</label>
+                <input type="text" id="emailJSService" placeholder="e.g. service_xxxxxxx" style="width:100%; background:rgba(8,8,8,0.6); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; border-radius:6px; outline:none;" />
+                <p class="dz-hint" style="font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem;">Found in your EmailJS Dashboard under Email Services</p>
+              </div>
+              <div class="pf-group" style="margin-bottom:1.2rem; text-align:left;">
+                <label for="emailJSTemplate" style="display:block; margin-bottom:0.4rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--gold); text-transform:uppercase;">EmailJS Template ID</label>
+                <input type="text" id="emailJSTemplate" placeholder="e.g. template_xxxxxxx" style="width:100%; background:rgba(8,8,8,0.6); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; border-radius:6px; outline:none;" />
+                <p class="dz-hint" style="font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem;">Found in your EmailJS Dashboard under Email Templates. Your template should contain variables: <code>{{from_name}}</code>, <code>{{reply_to}}</code>, <code>{{subject}}</code>, and <code>{{message}}</code>.</p>
+              </div>
+              
+              <div class="pf-group" style="margin-bottom:1.2rem; display:flex; align-items:center; gap:0.5rem; text-align:left;">
+                <input type="checkbox" id="emailAutoReplyEnabled" style="width:auto; height:auto; margin:0; cursor:pointer;" />
+                <label for="emailAutoReplyEnabled" style="margin:0; cursor:pointer; font-weight:700; font-family:var(--font-mono); font-size:0.75rem; color:var(--gold); text-transform:uppercase;">Enable Auto-Reply to Sender</label>
+              </div>
+              
+              <div id="emailJSAutoReplyFields" style="display:none; margin-bottom:1.2rem; text-align:left;">
+                <label for="emailJSAutoReplyTemplate" style="display:block; margin-bottom:0.4rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--gold); text-transform:uppercase;">Auto-Reply Template ID</label>
+                <input type="text" id="emailJSAutoReplyTemplate" placeholder="e.g. template_yyyyyyy" style="width:100%; background:rgba(8,8,8,0.6); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; border-radius:6px; outline:none;" />
+                <p class="dz-hint" style="font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem;">Found in your EmailJS Dashboard. Remember to set the "To Email" field in this template to <code>{{reply_to}}</code> so it is dispatched to the visitor.</p>
+              </div>
+            </div>
+            
+            <div class="pf-actions" style="margin-top:2rem; display:flex; gap:1rem;">
+              <button type="button" class="btn-outline" id="testEmailBtn" style="display:none;">Send Test Email ✉</button>
+              <button type="submit" class="btn-gold" id="saveEmailSettingsBtn">Save Settings →</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <!-- ── Social Links ────────────────────────── -->
       <div class="view" id="view-social" style="display:none">
         <div class="form-panel">
@@ -323,6 +372,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>

@@ -835,6 +835,41 @@ if(contactForm){
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
       }
+      
+      // Send EmailJS alert / auto-reply if enabled
+      try {
+        const emailSettings = await getEmailSettings();
+        if (emailSettings && emailSettings.enabled && emailSettings.publicJSKey && emailSettings.serviceID) {
+          if (typeof emailjs !== 'undefined') {
+            emailjs.init(emailSettings.publicJSKey);
+            
+            // 1. Send alert notification to Josh
+            if (emailSettings.templateID) {
+              await emailjs.send(emailSettings.serviceID, emailSettings.templateID, {
+                from_name: name,
+                reply_to: email,
+                subject: subject || '(No subject)',
+                message: message
+              });
+            }
+            
+            // 2. Send Auto-Reply to visitor
+            if (emailSettings.autoReplyEnabled && emailSettings.autoReplyTemplateID) {
+              await emailjs.send(emailSettings.serviceID, emailSettings.autoReplyTemplateID, {
+                from_name: name,
+                reply_to: email,
+                subject: subject || '(No subject)',
+                message: message
+              });
+            }
+          } else {
+            console.warn('EmailJS SDK not loaded when sending message.');
+          }
+        }
+      } catch (emailErr) {
+        console.warn('Failed to send EmailJS alert/auto-reply (non-blocking):', emailErr);
+      }
+
       setStatus('✓ Message sent! I\'ll be in touch soon.','');
       contactForm.reset();
     } catch(err){
@@ -2528,4 +2563,41 @@ function defaultSocials() {
     email: "joshmech851@gmail.com",
     phone: "+234 816 1523 407"
   };
+}
+
+/* ─── Email Alerts Settings Fetcher ──────────────────────── */
+function defaultEmailSettings() {
+  return {
+    enabled: false,
+    publicJSKey: "",
+    serviceID: "",
+    templateID: "",
+    autoReplyEnabled: false,
+    autoReplyTemplateID: ""
+  };
+}
+
+function lsGetEmailSettings() {
+  try {
+    const local = JSON.parse(localStorage.getItem('josh_email_settings') || '{}');
+    return { ...defaultEmailSettings(), ...local };
+  } catch {
+    return defaultEmailSettings();
+  }
+}
+
+async function getEmailSettings() {
+  const { db, firebaseReady } = window.joshFirebase || {};
+  const local = lsGetEmailSettings();
+  if (firebaseReady && db) {
+    try {
+      const doc = await db.collection('settings').doc('email').get();
+      if (doc.exists) {
+        return { ...local, ...doc.data() };
+      }
+    } catch (err) {
+      console.warn('Failed to fetch email settings from Firestore, using localStorage:', err);
+    }
+  }
+  return local;
 }

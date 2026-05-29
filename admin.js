@@ -211,8 +211,8 @@ sidebarOverlay.addEventListener('click', closeSidebar);
 /* ─── Sidebar Nav ─────────────────────────────────────────── */
 const snavLinks = document.querySelectorAll('.snav-link');
 const views     = document.querySelectorAll('.view');
-const pageTitles = { overview:'Overview', add:'Add Project', manage:'Manage Projects', github:'GitHub Repos', messages: 'Messages', social: 'Social Links' };
-const pageSubs   = { overview:'Welcome back, Josh.', add:'Upload and publish new work.', manage:'Edit or delete existing projects.', github:'Manage the visibility of your public GitHub repositories.', messages: 'View all your messages.', social: 'Configure your social profile links.' };
+const pageTitles = { overview:'Overview', add:'Add Project', manage:'Manage Projects', github:'GitHub Repos', messages: 'Messages', social: 'Social Links', email: 'Email Alerts' };
+const pageSubs   = { overview:'Welcome back, Josh.', add:'Upload and publish new work.', manage:'Edit or delete existing projects.', github:'Manage the visibility of your public GitHub repositories.', messages: 'View all your messages.', social: 'Configure your social profile links.', email: 'Configure instant email notifications when someone messages you.' };
 
 function switchView(viewId){
   views.forEach(v=>v.style.display='none');
@@ -228,6 +228,7 @@ function switchView(viewId){
   if(viewId==='messages') renderMessagesGrid();
   if(viewId==='github') renderGitHubGrid();
   if(viewId==='social') loadSocialSettingsForm();
+  if(viewId==='email') loadEmailSettingsForm();
   closeSidebar();
 }
 
@@ -1100,6 +1101,215 @@ if (socialForm) {
         saveBtn.disabled = false;
         saveBtn.textContent = 'Save Social Links →';
       }
+    }
+  });
+}
+
+/* ─── Email Alerts Admin Logic ───────────────────────────── */
+function defaultEmailSettings() {
+  return {
+    enabled: false,
+    publicJSKey: "",
+    serviceID: "",
+    templateID: "",
+    autoReplyEnabled: false,
+    autoReplyTemplateID: ""
+  };
+}
+
+async function getEmailSettings() {
+  if (fbReady()) {
+    try {
+      const doc = await getDB().collection('settings').doc('email').get();
+      if (doc.exists) {
+        return { ...defaultEmailSettings(), ...doc.data() };
+      }
+    } catch (err) {
+      console.warn('Failed to fetch email settings from Firestore, using localStorage:', err);
+    }
+  }
+  return lsGetEmailSettings();
+}
+
+function lsGetEmailSettings() {
+  try {
+    const local = JSON.parse(localStorage.getItem('josh_email_settings') || '{}');
+    return { ...defaultEmailSettings(), ...local };
+  } catch {
+    return defaultEmailSettings();
+  }
+}
+
+async function saveEmailSettings(data) {
+  if (fbReady()) {
+    try {
+      await getDB().collection('settings').doc('email').set({
+        ...data,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (err) {
+      console.warn('Failed to save email settings to Firestore, falling back to localStorage:', err);
+      localStorage.setItem('josh_email_settings', JSON.stringify(data));
+    }
+  } else {
+    localStorage.setItem('josh_email_settings', JSON.stringify(data));
+  }
+}
+
+async function loadEmailSettingsForm() {
+  const settings = await getEmailSettings();
+  
+  const enabledCb = document.getElementById('emailEnabled');
+  const fieldsDiv = document.getElementById('emailJSFields');
+  const testBtn = document.getElementById('testEmailBtn');
+  
+  const autoReplyCb = document.getElementById('emailAutoReplyEnabled');
+  const autoReplyFieldsDiv = document.getElementById('emailJSAutoReplyFields');
+  
+  if (enabledCb) enabledCb.checked = settings.enabled || false;
+  document.getElementById('emailJSKey').value = settings.publicJSKey || '';
+  document.getElementById('emailJSService').value = settings.serviceID || '';
+  document.getElementById('emailJSTemplate').value = settings.templateID || '';
+  
+  if (autoReplyCb) autoReplyCb.checked = settings.autoReplyEnabled || false;
+  document.getElementById('emailJSAutoReplyTemplate').value = settings.autoReplyTemplateID || '';
+  
+  if (fieldsDiv) {
+    fieldsDiv.style.display = settings.enabled ? 'block' : 'none';
+  }
+  if (testBtn) {
+    testBtn.style.display = settings.enabled ? 'block' : 'none';
+  }
+  if (autoReplyFieldsDiv) {
+    autoReplyFieldsDiv.style.display = (settings.enabled && settings.autoReplyEnabled) ? 'block' : 'none';
+  }
+}
+
+// Toggle fields and test button visibility when checkbox state changes
+const emailEnabledCb = document.getElementById('emailEnabled');
+if (emailEnabledCb) {
+  emailEnabledCb.addEventListener('change', (e) => {
+    const fieldsDiv = document.getElementById('emailJSFields');
+    const testBtn = document.getElementById('testEmailBtn');
+    const autoReplyFieldsDiv = document.getElementById('emailJSAutoReplyFields');
+    const autoReplyCb = document.getElementById('emailAutoReplyEnabled');
+    
+    if (fieldsDiv) {
+      fieldsDiv.style.display = e.target.checked ? 'block' : 'none';
+    }
+    if (testBtn) {
+      testBtn.style.display = e.target.checked ? 'block' : 'none';
+    }
+    if (autoReplyFieldsDiv) {
+      autoReplyFieldsDiv.style.display = (e.target.checked && autoReplyCb && autoReplyCb.checked) ? 'block' : 'none';
+    }
+  });
+}
+
+const emailAutoReplyCb = document.getElementById('emailAutoReplyEnabled');
+if (emailAutoReplyCb) {
+  emailAutoReplyCb.addEventListener('change', (e) => {
+    const autoReplyFieldsDiv = document.getElementById('emailJSAutoReplyFields');
+    if (autoReplyFieldsDiv) {
+      autoReplyFieldsDiv.style.display = e.target.checked ? 'block' : 'none';
+    }
+  });
+}
+
+// Save handler
+const emailSettingsForm = document.getElementById('emailSettingsForm');
+if (emailSettingsForm) {
+  emailSettingsForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const saveBtn = document.getElementById('saveEmailSettingsBtn');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+    }
+    
+    const enabled = document.getElementById('emailEnabled').checked;
+    const autoReplyEnabled = document.getElementById('emailAutoReplyEnabled').checked;
+    const settings = {
+      enabled: enabled,
+      publicJSKey: document.getElementById('emailJSKey').value.trim(),
+      serviceID: document.getElementById('emailJSService').value.trim(),
+      templateID: document.getElementById('emailJSTemplate').value.trim(),
+      autoReplyEnabled: autoReplyEnabled,
+      autoReplyTemplateID: document.getElementById('emailJSAutoReplyTemplate').value.trim()
+    };
+    
+    if (enabled && (!settings.publicJSKey || !settings.serviceID || !settings.templateID)) {
+      showToast('⚠ If enabled, all EmailJS fields must be filled.', true);
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Settings →';
+      }
+      return;
+    }
+    
+    if (enabled && autoReplyEnabled && !settings.autoReplyTemplateID) {
+      showToast('⚠ If Auto-Reply is enabled, the Auto-Reply Template ID must be filled.', true);
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Settings →';
+      }
+      return;
+    }
+    
+    try {
+      await saveEmailSettings(settings);
+      showToast('Email alert settings saved successfully!');
+    } catch (err) {
+      console.error(err);
+      showToast('⚠ Failed to save email settings: ' + err.message, true);
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Settings →';
+      }
+    }
+  });
+}
+
+// Send Test Email handler
+const testEmailBtn = document.getElementById('testEmailBtn');
+if (testEmailBtn) {
+  testEmailBtn.addEventListener('click', async () => {
+    const publicJSKey = document.getElementById('emailJSKey').value.trim();
+    const serviceID = document.getElementById('emailJSService').value.trim();
+    const templateID = document.getElementById('emailJSTemplate').value.trim();
+    
+    if (!publicJSKey || !serviceID || !templateID) {
+      showToast('⚠ Please fill in Public Key, Service ID, and Template ID first.', true);
+      return;
+    }
+    
+    testEmailBtn.disabled = true;
+    testEmailBtn.textContent = 'Sending Test...';
+    
+    try {
+      if (typeof emailjs === 'undefined') {
+        throw new Error('EmailJS SDK is not loaded. Check network connection.');
+      }
+      
+      // Initialize EmailJS dynamically with user keys
+      emailjs.init(publicJSKey);
+      
+      // Send a test template with descriptive parameters
+      await emailjs.send(serviceID, templateID, {
+        from_name: "Portfolio System Test",
+        reply_to: "no-reply@portfolio.test",
+        subject: "SMTP / Email alerts test",
+        message: "This is a test notification from your Admin Dashboard. If you see this, your EmailJS configuration works perfectly!"
+      });
+      
+      showToast('✓ Test email sent successfully! Check your inbox.');
+    } catch (err) {
+      console.error('Test email failed:', err);
+      showToast('⚠ Test failed: ' + (err.text || err.message || err), true);
+    } finally {
+      testEmailBtn.disabled = false;
+      testEmailBtn.textContent = 'Send Test Email ✉';
     }
   });
 }
