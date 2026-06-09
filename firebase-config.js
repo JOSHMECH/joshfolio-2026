@@ -1,15 +1,9 @@
 /* ════════════════════════════════════════════════════════
-   Josh_d_Guru — Firebase Configuration
+   Josh_d_Guru — Firebase Configuration & Initialization
    ────────────────────────────────────────────────────────
-   HOW TO SET UP:
-   1. Go to https://console.firebase.google.com/
-   2. Create a project → Add app → Web (</>)
-   3. Copy your firebaseConfig object
-   4. Replace the placeholder values below with your keys
-   5. In Firestore → Create database (test mode to start)
-      Collections auto-created:
-        • "projects"  → admin portfolio projects
-        • "messages"  → contact form submissions
+   Features:
+   - App, Firestore, Auth, and Storage connection.
+   - localStorage fallback status reporter.
    ════════════════════════════════════════════════════════ */
 
 const firebaseConfig = {
@@ -22,12 +16,14 @@ const firebaseConfig = {
   measurementId: "G-5J6FRNTB7E"
 };
 
-/* ── Initialize ─────────────────────────────────────── */
 let db = null;
+let auth = null;
+let storage = null;
 let firebaseReady = false;
 
 try {
   const isConfigured =
+    firebaseConfig.apiKey &&
     firebaseConfig.apiKey !== "YOUR_API_KEY" &&
     firebaseConfig.projectId !== "YOUR_PROJECT_ID";
 
@@ -36,17 +32,18 @@ try {
       firebase.initializeApp(firebaseConfig);
     }
     db = firebase.firestore();
+    auth = firebase.auth();
+    storage = firebase.storage();
     firebaseReady = true;
-    console.log("%c[Josh_d_Guru] Firebase connected ✓", "color:#C8A96E;font-weight:bold;");
+    console.log("%c[JoshFolio] Firebase initialized successfully ✓", "color:#C8A96E;font-weight:bold;");
   } else {
     console.warn(
-      "%c[Josh_d_Guru] Firebase not configured — falling back to localStorage.\n" +
-      "Fill in firebase-config.js with your real project credentials.",
+      "%c[JoshFolio] Firebase placeholder keys detected — falling back to local storage.",
       "color:#FF9900;"
     );
   }
 } catch (err) {
-  console.error("[Josh_d_Guru] Firebase init error:", err);
+  console.error("[JoshFolio] Firebase initialization error:", err);
 }
 
-window.joshFirebase = { db, firebaseReady };
+window.joshFirebase = { db, auth, storage, firebaseReady };

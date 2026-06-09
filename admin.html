@@ -4,13 +4,13 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
   <meta name="robots" content="noindex,nofollow"/>
-  <title>Admin Panel — Josh_d_Guru</title>
-  <link rel="icon" type="image/png" href="josh.png"/>
-  <link rel="shortcut icon" href="josh.png"/>
-  <link rel="stylesheet" href="admin.css"/>
+  <title>CMS Admin Panel — JoshFolio</title>
+  <link rel="icon" type="image/png" href="josh fav.png"/>
+  <link rel="shortcut icon" href="josh fav.png"/>
+  <link rel="stylesheet" href="css/admin.css"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter+Tight:ital,wght@0,300..900;1,300..900&family=Inter:ital,opsz,wght@0,14..32,300..900;1,14..32,300..900&family=JetBrains+Mono:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet"/>
 </head>
 <body>
   <div class="noise-overlay"></div>
@@ -20,25 +20,25 @@
     <div class="login-bg-grid"></div>
     <div class="login-orb"></div>
     <div class="login-card">
-      <div class="login-logo"><span class="logo-bracket">[</span>Admin<span class="logo-bracket">]</span></div>
-      <h1 class="login-title">Welcome Back</h1>
-      <p class="login-sub">Sign in to manage your portfolio.</p>
+      <div class="login-logo"><span class="logo-bracket">[</span>JoshFolio CMS<span class="logo-bracket">]</span></div>
+      <h1 class="login-title">Control Panel</h1>
+      <p class="login-sub">Secure authentication required for administrative access.</p>
       <form id="loginForm" novalidate>
         <div class="lform-group">
-          <label for="luser">Username</label>
-          <input type="text" id="luser" placeholder="josh_d_guru" autocomplete="username"/>
+          <label for="lemail">Email Address</label>
+          <input type="email" id="lemail" placeholder="admin@joshfolio.com" autocomplete="email" required/>
         </div>
         <div class="lform-group">
           <label for="lpass">Password</label>
           <div class="pass-wrap">
-            <input type="password" id="lpass" placeholder="••••••••" autocomplete="current-password"/>
+            <input type="password" id="lpass" placeholder="••••••••" autocomplete="current-password" required/>
             <button type="button" class="pass-toggle" id="passToggle" aria-label="Toggle password">👁</button>
           </div>
         </div>
         <p class="login-error" id="loginError" role="alert"></p>
         <button type="submit" class="login-btn" id="loginBtn">Enter Dashboard →</button>
       </form>
-      <a href="index.html" class="back-link">← Back to Portfolio</a>
+      <a href="index.html" class="back-link">← Return to Website</a>
     </div>
   </div>
 
@@ -50,8 +50,8 @@
       <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
         <span></span><span></span><span></span>
       </button>
-      <span class="mobile-brand"><span class="logo-bracket">[</span>Josh_d_Guru<span class="logo-bracket">]</span></span>
-      <div class="dash-avatar-sm">JV</div>
+      <span class="mobile-brand"><span class="logo-bracket">[</span>JoshFolio CMS<span class="logo-bracket">]</span></span>
+      <div class="dash-avatar-sm" id="userInitialSm">JV</div>
     </div>
 
     <!-- Sidebar Overlay -->
@@ -60,24 +60,31 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
-        <span class="logo-bracket">[</span>Josh_d_Guru<span class="logo-bracket">]</span>
+        <span class="logo-bracket">[</span>JoshFolio CMS<span class="logo-bracket">]</span>
         <span class="sidebar-tag">Admin</span>
       </div>
       <nav class="sidebar-nav" aria-label="Admin navigation">
         <a href="#" class="snav-link active" data-view="overview"><span class="sn-icon">⬡</span>Overview</a>
-        <a href="#" class="snav-link" data-view="add"><span class="sn-icon">+</span>Add Project</a>
-        <a href="#" class="snav-link" data-view="manage"><span class="sn-icon">≡</span>Manage Projects</a>
-        <a href="#" class="snav-link" data-view="github"><span class="sn-icon">⚙</span>GitHub Repos</a>
-        <a href="#" class="snav-link" data-view="messages"><span class="sn-icon">✉</span>Messages</a>
-        <a href="#" class="snav-link" data-view="social"><span class="sn-icon">★</span>Social Links</a>
+        
+        <div class="nav-section-title">Website Content</div>
+        <a href="#" class="snav-link" data-view="projects"><span class="sn-icon">💼</span>Projects CRUD</a>
+        <a href="#" class="snav-link" data-view="services"><span class="sn-icon">🛠</span>Services CRUD</a>
+        <a href="#" class="snav-link" data-view="pricing"><span class="sn-icon">💵</span>Pricing Plans</a>
+        <a href="#" class="snav-link" data-view="testimonials"><span class="sn-icon">★</span>Testimonials</a>
+        <a href="#" class="snav-link" data-view="about"><span class="sn-icon">👤</span>About Info</a>
+        <a href="#" class="snav-link" data-view="blog"><span class="sn-icon">📝</span>Blog CRUD</a>
+        
+        <div class="nav-section-title">Operations</div>
+        <a href="#" class="snav-link" data-view="messages"><span class="sn-icon">✉</span>Inbox Messages</a>
+        <a href="#" class="snav-link" data-view="github"><span class="sn-icon">⚙</span>GitHub Sync</a>
         <a href="#" class="snav-link" data-view="email"><span class="sn-icon">🔔</span>Email Alerts</a>
       </nav>
       <div class="sidebar-footer">
         <div class="firebase-status" id="fbStatus">
-          <span class="fb-dot" id="fbDot"></span>
-          <span id="fbLabel">Checking Firebase…</span>
+          <span class="fb-dot connected" id="fbDot"></span>
+          <span id="fbLabel">Firestore Connected</span>
         </div>
-        <a href="index.html" class="sf-link">← View Portfolio</a>
+        <a href="index.html" class="sf-link">← View Live Site</a>
         <button class="sf-logout" id="logoutBtn">Log Out</button>
       </div>
     </aside>
@@ -87,244 +94,516 @@
       <header class="dash-header">
         <div>
           <h2 class="dash-page-title" id="pageTitle">Overview</h2>
-          <p class="dash-page-sub" id="pageSub">Welcome back, Josh.</p>
+          <p class="dash-page-sub" id="pageSub">Welcome back to your control dashboard.</p>
         </div>
-        <div class="dash-avatar">JV</div>
+        <div class="dash-avatar" id="userInitial">JV</div>
       </header>
 
-      <!-- ── Overview ─────────────────────────────── -->
+      <!-- ── Overview View ─────────────────────────────── -->
       <div class="view" id="view-overview">
         <div class="stats-row">
-          <div class="dash-stat"><div class="ds-icon">📦</div><div><div class="ds-num" id="statTotal">0</div><div class="ds-label">Total Projects</div></div></div>
-          <div class="dash-stat"><div class="ds-icon">💻</div><div><div class="ds-num" id="statDev">0</div><div class="ds-label">Development</div></div></div>
-          <div class="dash-stat"><div class="ds-icon">🎨</div><div><div class="ds-num" id="statDesign">0</div><div class="ds-label">Design</div></div></div>
-          <div class="dash-stat"><div class="ds-icon">📊</div><div><div class="ds-num" id="statData">0</div><div class="ds-label">Data Science</div></div></div>
+          <div class="dash-stat"><div class="ds-icon">💼</div><div><div class="ds-num" id="statTotalProjects">0</div><div class="ds-label">Projects</div></div></div>
+          <div class="dash-stat"><div class="ds-icon">🛠</div><div><div class="ds-num" id="statTotalServices">0</div><div class="ds-label">Services</div></div></div>
+          <div class="dash-stat"><div class="ds-icon">★</div><div><div class="ds-num" id="statTotalTestimonials">0</div><div class="ds-label">Reviews</div></div></div>
+          <div class="dash-stat"><div class="ds-icon">📝</div><div><div class="ds-num" id="statTotalBlog">0</div><div class="ds-label">Blog Posts</div></div></div>
+          <div class="dash-stat"><div class="ds-icon">✉</div><div><div class="ds-num" id="statTotalMessages">0</div><div class="ds-label">Unread Mail</div></div></div>
         </div>
+
         <div class="overview-info">
           <div class="oi-card">
-            <h3>Quick Start</h3>
-            <p>Use the <strong>Add Project</strong> panel to upload new work. Projects are stored in <strong>Firebase Firestore</strong> (or localStorage as fallback) and displayed live on your portfolio.</p>
-            <button class="btn-gold" data-goto="add">Add Your First Project →</button>
+            <h3>CMS Overview</h3>
+            <p>Welcome to your central administration panel. This console is fully integrated with <strong>Firebase Firestore</strong>, <strong>Authentication</strong>, and <strong>Cloud Storage</strong>. You can perform real-time updates across all sections of your portfolio without writing code.</p>
+            <div class="quick-actions-grid">
+              <button class="btn-gold" data-goto="projects">Manage Projects →</button>
+              <button class="btn-outline" data-goto="blog">Write Blog Post →</button>
+            </div>
           </div>
           <div class="oi-card">
-            <h3>Tips</h3>
-            <ul class="tips-list">
-              <li>Use high-resolution images (16:9 ratio works best)</li>
-              <li>Keep descriptions concise but descriptive</li>
-              <li>List your tech stack to highlight expertise</li>
-              <li>Add live &amp; GitHub links when available</li>
-            </ul>
+            <h3>Recent System Activity</h3>
+            <div id="recentActivityList" class="activity-timeline">
+              <p class="empty-msg" style="padding:0; text-align:left;">No recent activity logs available.</p>
+            </div>
           </div>
-        </div>
-        <div class="recent-section">
-          <h3 class="rs-title">Recently Added</h3>
-          <div id="recentProjects" class="recent-list"></div>
         </div>
       </div>
 
-      <!-- ── Add Project ──────────────────────────── -->
-      <div class="view" id="view-add" style="display:none">
-        <div class="form-panel">
-          <h3 class="fp-title" id="formPanelTitle">New Project</h3>
+      <!-- ── Projects CRUD View ────────────────────────── -->
+      <div class="view" id="view-projects" style="display:none">
+        <div class="manage-header">
+          <p class="manage-sub" id="projectsCountSub">Manage your design & dev portfolio cases.</p>
+          <div class="header-actions">
+            <input type="text" id="projectsSearch" placeholder="Search projects…" class="manage-search-input"/>
+            <button class="btn-gold" id="openAddProjectBtn">+ Add Project</button>
+          </div>
+        </div>
+
+        <!-- Add/Edit Form Panel (overlay drawer or toggle-view) -->
+        <div class="form-panel" id="projectFormPanel" style="display:none; margin-bottom:2rem;">
+          <h3 class="fp-title" id="projectFormTitle">Add New Project</h3>
           <form id="projectForm" class="project-form" novalidate>
-            <input type="hidden" id="editId"/>
+            <input type="hidden" id="projectId"/>
             <div class="pf-row">
               <div class="pf-group">
-                <label for="pTitle">Project Title *</label>
-                <input type="text" id="pTitle" placeholder="My Awesome Project" required/>
+                <label for="projTitle">Project Title *</label>
+                <input type="text" id="projTitle" placeholder="ScholarLens AI Sandbox" required/>
               </div>
               <div class="pf-group">
-                <label for="pCategory">Category *</label>
-                <select id="pCategory" required>
-                  <option value="">Select…</option>
+                <label for="projSlug">URL Slug *</label>
+                <input type="text" id="projSlug" placeholder="scholarlens-ai" required/>
+              </div>
+            </div>
+            <div class="pf-row">
+              <div class="pf-group">
+                <label for="projCategory">Category *</label>
+                <select id="projCategory" required>
+                  <option value="">Select...</option>
                   <option value="dev">Development</option>
-                  <option value="design">Design</option>
+                  <option value="design">Creative Design</option>
                   <option value="data">Data Science</option>
                 </select>
               </div>
+              <div class="pf-group">
+                <label for="projCatLabel">Custom Category Label</label>
+                <input type="text" id="projCatLabel" placeholder="e.g. Edtech · Machine Learning"/>
+              </div>
             </div>
             <div class="pf-group">
-              <label for="pCatLabel">Category Label (displayed on card)</label>
-              <input type="text" id="pCatLabel" placeholder="e.g. Development · React"/>
+              <label for="projDesc">Short Description (Card Summary) *</label>
+              <input type="text" id="projDesc" placeholder="An AI-powered academic sandbox accelerating research." required/>
             </div>
             <div class="pf-group">
-              <label for="pDesc">Description *</label>
-              <textarea id="pDesc" rows="4" placeholder="Describe this project in 2–3 sentences…" required></textarea>
+              <label for="projLongDesc">Long Description (Project Details HTML) *</label>
+              <textarea id="projLongDesc" rows="6" placeholder="Provide complete project case details (HTML formatting allowed)..." required></textarea>
             </div>
             <div class="pf-row">
               <div class="pf-group">
-                <label for="pStack">Tech Stack (comma-separated)</label>
-                <input type="text" id="pStack" placeholder="React, Node.js, Firebase"/>
+                <label for="projClient">Client / Entity</label>
+                <input type="text" id="projClient" placeholder="GuruLabs / Personal Case"/>
               </div>
               <div class="pf-group">
-                <label for="pEmoji">Emoji Icon</label>
-                <input type="text" id="pEmoji" placeholder="🚀" maxlength="4"/>
+                <label for="projDate">Completion Date</label>
+                <input type="text" id="projDate" placeholder="May 2026"/>
               </div>
             </div>
             <div class="pf-row">
               <div class="pf-group">
-                <label for="pLive">Live URL</label>
-                <input type="url" id="pLive" placeholder="https://example.com"/>
+                <label for="projUrl">Live Project URL</label>
+                <input type="url" id="projUrl" placeholder="https://scholarlens.com"/>
               </div>
               <div class="pf-group">
-                <label for="pRepo">GitHub / Repo URL</label>
-                <input type="url" id="pRepo" placeholder="https://github.com/…"/>
+                <label for="projRepo">Code Repository URL</label>
+                <input type="url" id="projRepo" placeholder="https://github.com/JOSHMECH/scholarlens"/>
               </div>
             </div>
             <div class="pf-group">
-              <label>Project Image</label>
-              <div class="img-drop-zone" id="dropZone" role="button" tabindex="0" aria-label="Upload image">
+              <label for="projTech">Technologies (comma-separated)</label>
+              <input type="text" id="projTech" placeholder="React, Node.js, Python, SPSS"/>
+            </div>
+            <div class="pf-row" style="grid-template-columns: 1fr 1fr; gap:1.2rem; align-items:center;">
+              <div class="pf-group checkbox-row">
+                <input type="checkbox" id="projFeatured"/>
+                <label for="projFeatured" class="check-label">Feature this project (displays in Featured grid)</label>
+              </div>
+              <div class="pf-group">
+                <label for="projStatus">Publish Status</label>
+                <select id="projStatus">
+                  <option value="published">Published</option>
+                  <option value="draft">Draft</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Upload Cover Image -->
+            <div class="pf-group">
+              <label>Cover Image (Ideal 16:9 ratio) *</label>
+              <div class="img-drop-zone" id="projCoverDropZone">
                 <div class="dz-icon">📁</div>
-                <p>Drag &amp; drop or <label for="imgFile" class="dz-browse">browse</label></p>
-                <p class="dz-hint">PNG, JPG, WebP — max 5 MB</p>
-                <input type="file" id="imgFile" accept="image/*" hidden/>
+                <p>Drag &amp; drop or click to upload cover image</p>
+                <input type="file" id="projCoverFile" accept="image/*" hidden/>
               </div>
-              <div class="img-preview-wrap" id="imgPreviewWrap" style="display:none">
-                <img id="imgPreview" alt="Preview"/>
-                <button type="button" class="img-remove" id="imgRemove">✕ Remove</button>
+              <div class="img-preview-wrap" id="projCoverPreviewWrap" style="display:none">
+                <img id="projCoverPreview" alt="Cover Preview"/>
+                <button type="button" class="img-remove" id="projCoverRemove">✕ Remove</button>
               </div>
+            </div>
+            
+            <div class="pf-actions">
+              <button type="submit" class="btn-gold" id="saveProjBtn">Save Case Study</button>
+              <button type="button" class="btn-outline" id="cancelProjFormBtn">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="manage-grid" id="projectsGrid">
+          <!-- Dynamically loaded project cards -->
+        </div>
+        <p class="empty-msg" id="projectsEmptyMsg" style="display:none">No projects found. Create one to begin.</p>
+      </div>
+
+      <!-- ── Services CRUD View ────────────────────────── -->
+      <div class="view" id="view-services" style="display:none">
+        <div class="manage-header">
+          <p class="manage-sub" id="servicesCountSub">Manage your services offerings.</p>
+          <button class="btn-gold" id="openAddServiceBtn">+ Add Service</button>
+        </div>
+
+        <div class="form-panel" id="serviceFormPanel" style="display:none; margin-bottom:2rem;">
+          <h3 class="fp-title" id="serviceFormTitle">Add New Service</h3>
+          <form id="serviceForm" class="project-form" novalidate>
+            <input type="hidden" id="serviceId"/>
+            <div class="pf-row">
+              <div class="pf-group">
+                <label for="servName">Service Name *</label>
+                <input type="text" id="servName" placeholder="Frontend Engineering" required/>
+              </div>
+              <div class="pf-group">
+                <label for="servIcon">Icon Identifier *</label>
+                <input type="text" id="servIcon" placeholder="💻" required/>
+              </div>
+            </div>
+            <div class="pf-row">
+              <div class="pf-group">
+                <label for="servPrice">Starting Price *</label>
+                <input type="text" id="servPrice" placeholder="$999" required/>
+              </div>
+              <div class="pf-group">
+                <label for="servFeatures">Features List (comma-separated) *</label>
+                <input type="text" id="servFeatures" placeholder="React builds, Clean CSS, Responsive Layout, API integration" required/>
+              </div>
+            </div>
+            <div class="pf-group">
+              <label for="servDesc">Service Description *</label>
+              <textarea id="servDesc" rows="3" placeholder="Provide a summary of what you deliver..." required></textarea>
             </div>
             <div class="pf-actions">
-              <button type="submit" class="btn-gold" id="saveBtn">Save Project →</button>
-              <button type="button" class="btn-outline" id="cancelEdit" style="display:none">Cancel Edit</button>
+              <button type="submit" class="btn-gold" id="saveServBtn">Save Service</button>
+              <button type="button" class="btn-outline" id="cancelServFormBtn">Cancel</button>
             </div>
-            <p class="pf-status" id="pfStatus" role="status"></p>
+          </form>
+        </div>
+
+        <div class="manage-grid" id="servicesGrid"></div>
+        <p class="empty-msg" id="servicesEmptyMsg" style="display:none">No services configured.</p>
+      </div>
+
+      <!-- ── Pricing Plans View ───────────────────────── -->
+      <div class="view" id="view-pricing" style="display:none">
+        <div class="manage-header">
+          <p class="manage-sub" id="plansCountSub">Manage your billing structures.</p>
+          <button class="btn-gold" id="openAddPlanBtn">+ Add Plan</button>
+        </div>
+
+        <div class="form-panel" id="planFormPanel" style="display:none; margin-bottom:2rem;">
+          <h3 class="fp-title" id="planFormTitle">Add New Plan</h3>
+          <form id="planForm" class="project-form" novalidate>
+            <input type="hidden" id="planId"/>
+            <div class="pf-row">
+              <div class="pf-group">
+                <label for="planName">Plan Name *</label>
+                <input type="text" id="planName" placeholder="Core System" required/>
+              </div>
+              <div class="pf-group">
+                <label for="planPrice">Price *</label>
+                <input type="text" id="planPrice" placeholder="$1,499" required/>
+              </div>
+            </div>
+            <div class="pf-row">
+              <div class="pf-group">
+                <label for="planCta">CTA Button Text *</label>
+                <input type="text" id="planCta" placeholder="Select Plan" required/>
+              </div>
+              <div class="pf-group">
+                <label for="planFeatures">Plan Features (comma-separated) *</label>
+                <input type="text" id="planFeatures" placeholder="Full identity system, Custom logomark, Color guidelines, SVG exports" required/>
+              </div>
+            </div>
+            <div class="pf-group checkbox-row">
+              <input type="checkbox" id="planPopular"/>
+              <label for="planPopular" class="check-label">Display 'Popular' badge overlay</label>
+            </div>
+            <div class="pf-actions">
+              <button type="submit" class="btn-gold" id="savePlanBtn">Save Plan</button>
+              <button type="button" class="btn-outline" id="cancelPlanFormBtn">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="manage-grid" id="pricingGrid"></div>
+        <p class="empty-msg" id="pricingEmptyMsg" style="display:none">No billing plans configured.</p>
+      </div>
+
+      <!-- ── Testimonials View ────────────────────────── -->
+      <div class="view" id="view-testimonials" style="display:none">
+        <div class="manage-header">
+          <p class="manage-sub" id="testimonialsCountSub">Manage feedback recommendations.</p>
+          <button class="btn-gold" id="openAddTestBtn">+ Add Recommendation</button>
+        </div>
+
+        <div class="form-panel" id="testimonialFormPanel" style="display:none; margin-bottom:2rem;">
+          <h3 class="fp-title" id="testimonialFormTitle">Add New Recommendation</h3>
+          <form id="testimonialForm" class="project-form" novalidate>
+            <input type="hidden" id="testimonialId"/>
+            <div class="pf-row">
+              <div class="pf-group">
+                <label for="testName">Client Name *</label>
+                <input type="text" id="testName" placeholder="Marcus Chen" required/>
+              </div>
+              <div class="pf-group">
+                <label for="testRating">Rating Scale (1-5) *</label>
+                <input type="number" id="testRating" min="1" max="5" value="5" required/>
+              </div>
+            </div>
+            <div class="pf-row">
+              <div class="pf-group">
+                <label for="testPos">Position *</label>
+                <input type="text" id="testPos" placeholder="Creative Director" required/>
+              </div>
+              <div class="pf-group">
+                <label for="testComp">Company *</label>
+                <input type="text" id="testComp" placeholder="Scope Agency" required/>
+              </div>
+            </div>
+            <div class="pf-group">
+              <label for="testReview">Client Review Text *</label>
+              <textarea id="testReview" rows="4" placeholder="Review details..." required></textarea>
+            </div>
+
+            <!-- Client Avatar Upload -->
+            <div class="pf-group">
+              <label>Client Avatar Image</label>
+              <div class="img-drop-zone" id="testAvatarDropZone">
+                <div class="dz-icon">📁</div>
+                <p>Drag &amp; drop or click to upload photo</p>
+                <input type="file" id="testAvatarFile" accept="image/*" hidden/>
+              </div>
+              <div class="img-preview-wrap" id="testAvatarPreviewWrap" style="display:none">
+                <img id="testAvatarPreview" alt="Avatar Preview"/>
+                <button type="button" class="img-remove" id="testAvatarRemove">✕ Remove</button>
+              </div>
+            </div>
+
+            <div class="pf-actions">
+              <button type="submit" class="btn-gold" id="saveTestBtn">Save Feedback</button>
+              <button type="button" class="btn-outline" id="cancelTestFormBtn">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="manage-grid" id="testimonialsGrid"></div>
+        <p class="empty-msg" id="testimonialsEmptyMsg" style="display:none">No client reviews registered.</p>
+      </div>
+
+      <!-- ── About CMS View ───────────────────────────── -->
+      <div class="view" id="view-about" style="display:none">
+        <div class="form-panel" style="max-width:850px;">
+          <h3 class="fp-title">Modify Profile &amp; Bio Information</h3>
+          <form id="aboutSettingsForm" novalidate>
+            <div class="pf-group" style="margin-bottom:1.5rem;">
+              <label for="aboutBio">Professional Biography *</label>
+              <textarea id="aboutBio" rows="6" required></textarea>
+            </div>
+            
+            <div class="pf-row">
+              <div class="pf-group">
+                <label for="aboutSkills">Core Skills (comma-separated list) *</label>
+                <input type="text" id="aboutSkills" placeholder="React, Node.js, Python, SPSS, Figma" required/>
+              </div>
+              <div class="pf-group">
+                <label for="aboutCerts">Certifications (comma-separated list)</label>
+                <input type="text" id="aboutCerts" placeholder="AWS Certified, Google Data Analyst"/>
+              </div>
+            </div>
+
+            <div class="pf-group" style="margin-top:1.5rem; margin-bottom:1.5rem;">
+              <label>Experience Timeline (Structured List)</label>
+              <div id="experienceTimelineBuilder" style="display:flex; flex-direction:column; gap:1rem;">
+                <!-- Dynamically constructed items row -->
+              </div>
+              <button type="button" class="btn-outline btn-sm" id="addExpRowBtn" style="margin-top:0.8rem; align-self:flex-start;">+ Add Experience Node</button>
+            </div>
+
+            <!-- Profile photo upload -->
+            <div class="pf-group" style="margin-bottom:1.5rem;">
+              <label>Profile Image File</label>
+              <div class="img-drop-zone" id="aboutPhotoDropZone">
+                <div class="dz-icon">📁</div>
+                <p>Drag &amp; drop or click to upload profile image</p>
+                <input type="file" id="aboutPhotoFile" accept="image/*" hidden/>
+              </div>
+              <div class="img-preview-wrap" id="aboutPhotoPreviewWrap" style="display:none">
+                <img id="aboutPhotoPreview" alt="Profile Preview"/>
+                <button type="button" class="img-remove" id="aboutPhotoRemove">✕ Remove</button>
+              </div>
+            </div>
+
+            <!-- CV File upload -->
+            <div class="pf-group" style="margin-bottom:1.5rem;">
+              <label for="aboutResumeUrl">Resume/CV Direct Link</label>
+              <input type="text" id="aboutResumeUrl" placeholder="https://drive.google.com/..." />
+            </div>
+
+            <div class="pf-actions">
+              <button type="submit" class="btn-gold" id="saveAboutBtn">Save About Settings</button>
+            </div>
           </form>
         </div>
       </div>
 
-      <!-- ── Manage Projects ──────────────────────── -->
-      <div class="view" id="view-manage" style="display:none">
+      <!-- ── Blog CRUD View ───────────────────────────── -->
+      <div class="view" id="view-blog" style="display:none">
         <div class="manage-header">
-          <p class="manage-sub" id="manageSub">All admin projects</p>
-          <input type="text" id="manageSearch" placeholder="Search projects…" class="manage-search-input"/>
+          <p class="manage-sub" id="blogCountSub">Publish insights and articles.</p>
+          <div class="header-actions">
+            <input type="text" id="blogSearch" placeholder="Search articles…" class="manage-search-input"/>
+            <button class="btn-gold" id="openAddBlogBtn">+ Add Article</button>
+          </div>
         </div>
-        <div class="manage-grid" id="manageGrid"></div>
-        <p class="empty-msg" id="manageEmpty" style="display:none">No projects yet. <a href="#" data-goto="add">Add one →</a></p>
+
+        <div class="form-panel" id="blogFormPanel" style="display:none; margin-bottom:2rem; max-width:850px;">
+          <h3 class="fp-title" id="blogFormTitle">Add New Article</h3>
+          <form id="blogForm" class="project-form" novalidate>
+            <input type="hidden" id="blogId"/>
+            <div class="pf-row">
+              <div class="pf-group">
+                <label for="blogTitle">Article Title *</label>
+                <input type="text" id="blogTitle" placeholder="Why Code and Statistics Intersect" required/>
+              </div>
+              <div class="pf-group">
+                <label for="blogSlug">Article Slug *</label>
+                <input type="text" id="blogSlug" placeholder="why-code-and-statistics-intersect" required/>
+              </div>
+            </div>
+            <div class="pf-row">
+              <div class="pf-group">
+                <label for="blogAuthor">Author *</label>
+                <input type="text" id="blogAuthor" placeholder="Idowu Joshua Victor" required/>
+              </div>
+              <div class="pf-group">
+                <label for="blogTags">Tags (comma-separated)</label>
+                <input type="text" id="blogTags" placeholder="statistics, programming, engineering"/>
+              </div>
+            </div>
+            <div class="pf-row">
+              <div class="pf-group">
+                <label for="blogStatus">Status</label>
+                <select id="blogStatus">
+                  <option value="published">Published</option>
+                  <option value="draft">Draft</option>
+                </select>
+              </div>
+              <div class="pf-group">
+                <label for="blogDate">Publish Date</label>
+                <input type="date" id="blogDate"/>
+              </div>
+            </div>
+            <div class="pf-group">
+              <label for="blogContent">Article Content (HTML rich text editor) *</label>
+              <textarea id="blogContent" rows="12" placeholder="Write your thoughts here..." required></textarea>
+            </div>
+
+            <!-- Blog Cover upload -->
+            <div class="pf-group">
+              <label>Featured Image *</label>
+              <div class="img-drop-zone" id="blogImgDropZone">
+                <div class="dz-icon">📁</div>
+                <p>Drag &amp; drop or click to upload featured image</p>
+                <input type="file" id="blogImgFile" accept="image/*" hidden/>
+              </div>
+              <div class="img-preview-wrap" id="blogImgPreviewWrap" style="display:none">
+                <img id="blogImgPreview" alt="Blog Featured Preview"/>
+                <button type="button" class="img-remove" id="blogImgRemove">✕ Remove</button>
+              </div>
+            </div>
+
+            <div class="pf-actions">
+              <button type="submit" class="btn-gold" id="saveBlogBtn">Publish Article</button>
+              <button type="button" class="btn-outline" id="cancelBlogFormBtn">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="manage-grid" id="blogGrid"></div>
+        <p class="empty-msg" id="blogEmptyMsg" style="display:none">No blog articles published.</p>
       </div>
 
-      <!-- ── GitHub Repos ────────────────────────── -->
+      <!-- ── Messages View ────────────────────────────── -->
+      <div class="view" id="view-messages" style="display:none">
+        <div class="manage-header">
+          <p class="manage-sub" id="messagesSub">View client queries.</p>
+          <input type="text" id="messagesSearch" placeholder="Search inbox…" class="manage-search-input"/>
+        </div>
+        <div class="message-grid" id="messageGrid"></div>
+        <p class="empty-msg" id="messagesEmpty" style="display:none">Inbox is empty.</p>
+      </div>
+
+      <!-- ── GitHub Sync View ─────────────────────────── -->
       <div class="view" id="view-github" style="display:none">
         <div class="manage-header">
-          <p class="manage-sub" id="githubSub">Sync and toggle visibility of your public repositories</p>
+          <p class="manage-sub" id="githubSub">Sync public repositories visibility status.</p>
           <input type="text" id="githubSearch" placeholder="Search repos…" class="manage-search-input"/>
         </div>
         <div class="projects-loading" id="githubLoading" style="display:none">
           <div class="loading-spinner"></div>
-          <p>Loading repositories from GitHub…</p>
+          <p>Syncing repositories from GitHub...</p>
         </div>
         <div class="manage-grid" id="githubGrid"></div>
-        <p class="empty-msg" id="githubEmpty" style="display:none">No repositories found.</p>
+        <p class="empty-msg" id="githubEmpty" style="display:none">No repos matched.</p>
       </div>
 
-      <!-- ── View Messages ──────────────────────── -->
-      <div class="view" id="view-messages" style="display:none">
-        <div class="manage-header">
-            <p class="manage-sub" id="messagesSub">All messages</p>
-            <input type="text" id="messagesSearch" placeholder="Search messages…" class="manage-search-input"/>
-        </div>
-        <div class="message-grid" id="messageGrid"></div>
-        <p class="empty-msg" id="messagesEmpty" style="display:none">No messages yet.</p>
-      </div>
-
-      <!-- ── Email Alerts ────────────────────────── -->
+      <!-- ── Email Settings View ──────────────────────── -->
       <div class="view" id="view-email" style="display:none">
         <div class="form-panel">
-          <h3 class="fp-title">Configure Email Alerts</h3>
-          <p class="manage-sub" style="margin-bottom:1.5rem;">Get instant email notifications when users submit the contact form on your portfolio (via secure EmailJS client integration).</p>
+          <h3 class="fp-title">Configure Email Alert Integrations</h3>
+          <p class="manage-sub" style="margin-bottom:1.5rem;">Dispatch automatic SMTP alerts when user query posts arrive in Firestore.</p>
           <form id="emailSettingsForm" novalidate>
-            <div class="pf-group" style="margin-bottom:1.5rem; display:flex; align-items:center; gap:0.5rem; text-align:left;">
-              <input type="checkbox" id="emailEnabled" style="width:auto; height:auto; margin:0; cursor:pointer;" />
-              <label for="emailEnabled" style="margin:0; cursor:pointer; font-weight:700; font-family:var(--font-mono); font-size:0.75rem; color:var(--gold); text-transform:uppercase;">Enable Email Notifications</label>
+            <div class="pf-group checkbox-row" style="margin-bottom:1.5rem;">
+              <input type="checkbox" id="emailEnabled" />
+              <label for="emailEnabled" class="check-label">Enable dispatch alerts (uses EmailJS)</label>
             </div>
             
             <div id="emailJSFields" style="display:none;">
-              <div class="pf-group" style="margin-bottom:1.2rem; text-align:left;">
-                <label for="emailJSKey" style="display:block; margin-bottom:0.4rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--gold); text-transform:uppercase;">EmailJS Public Key</label>
-                <input type="text" id="emailJSKey" placeholder="e.g. user_xxxxxxxxxxxxxx" style="width:100%; background:rgba(8,8,8,0.6); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; border-radius:6px; outline:none;" />
-                <p class="dz-hint" style="font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem;">Found in your EmailJS Dashboard under Account -> Public Key</p>
+              <div class="pf-group" style="margin-bottom:1.2rem;">
+                <label for="emailJSKey">EmailJS Public Key</label>
+                <input type="text" id="emailJSKey" placeholder="user_xxxxxxxxxxxxxx" />
               </div>
-              <div class="pf-group" style="margin-bottom:1.2rem; text-align:left;">
-                <label for="emailJSService" style="display:block; margin-bottom:0.4rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--gold); text-transform:uppercase;">EmailJS Service ID</label>
-                <input type="text" id="emailJSService" placeholder="e.g. service_xxxxxxx" style="width:100%; background:rgba(8,8,8,0.6); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; border-radius:6px; outline:none;" />
-                <p class="dz-hint" style="font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem;">Found in your EmailJS Dashboard under Email Services</p>
+              <div class="pf-group" style="margin-bottom:1.2rem;">
+                <label for="emailJSService">EmailJS Service ID</label>
+                <input type="text" id="emailJSService" placeholder="service_xxxxxxx" />
               </div>
-              <div class="pf-group" style="margin-bottom:1.2rem; text-align:left;">
-                <label for="emailJSTemplate" style="display:block; margin-bottom:0.4rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--gold); text-transform:uppercase;">EmailJS Template ID</label>
-                <input type="text" id="emailJSTemplate" placeholder="e.g. template_xxxxxxx" style="width:100%; background:rgba(8,8,8,0.6); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; border-radius:6px; outline:none;" />
-                <p class="dz-hint" style="font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem;">Found in your EmailJS Dashboard under Email Templates. Your template should contain variables: <code>{{from_name}}</code>, <code>{{reply_to}}</code>, <code>{{subject}}</code>, and <code>{{message}}</code>.</p>
+              <div class="pf-group" style="margin-bottom:1.2rem;">
+                <label for="emailJSTemplate">EmailJS Notification Template ID</label>
+                <input type="text" id="emailJSTemplate" placeholder="template_xxxxxxx" />
               </div>
               
-              <div class="pf-group" style="margin-bottom:1.2rem; display:flex; align-items:center; gap:0.5rem; text-align:left;">
-                <input type="checkbox" id="emailAutoReplyEnabled" style="width:auto; height:auto; margin:0; cursor:pointer;" />
-                <label for="emailAutoReplyEnabled" style="margin:0; cursor:pointer; font-weight:700; font-family:var(--font-mono); font-size:0.75rem; color:var(--gold); text-transform:uppercase;">Enable Auto-Reply to Sender</label>
+              <div class="pf-group checkbox-row" style="margin-bottom:1.2rem;">
+                <input type="checkbox" id="emailAutoReplyEnabled" />
+                <label for="emailAutoReplyEnabled" class="check-label">Send auto-response confirmation to visitors</label>
               </div>
               
-              <div id="emailJSAutoReplyFields" style="display:none; margin-bottom:1.2rem; text-align:left;">
-                <label for="emailJSAutoReplyTemplate" style="display:block; margin-bottom:0.4rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--gold); text-transform:uppercase;">Auto-Reply Template ID</label>
-                <input type="text" id="emailJSAutoReplyTemplate" placeholder="e.g. template_yyyyyyy" style="width:100%; background:rgba(8,8,8,0.6); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; border-radius:6px; outline:none;" />
-                <p class="dz-hint" style="font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem;">Found in your EmailJS Dashboard. Remember to set the "To Email" field in this template to <code>{{reply_to}}</code> so it is dispatched to the visitor.</p>
+              <div id="emailJSAutoReplyFields" style="display:none; margin-bottom:1.2rem;">
+                <label for="emailJSAutoReplyTemplate">Auto-Reply Template ID</label>
+                <input type="text" id="emailJSAutoReplyTemplate" placeholder="template_yyyyyyy" />
               </div>
             </div>
             
-            <div class="pf-actions" style="margin-top:2rem; display:flex; gap:1rem;">
-              <button type="button" class="btn-outline" id="testEmailBtn" style="display:none;">Send Test Email ✉</button>
-              <button type="submit" class="btn-gold" id="saveEmailSettingsBtn">Save Settings →</button>
+            <div class="pf-actions" style="margin-top:2rem;">
+              <button type="button" class="btn-outline" id="testEmailBtn" style="display:none;">Send Test Message ✉</button>
+              <button type="submit" class="btn-gold" id="saveEmailSettingsBtn">Save Email Settings</button>
             </div>
           </form>
         </div>
       </div>
 
-      <!-- ── Social Links ────────────────────────── -->
-      <div class="view" id="view-social" style="display:none">
-        <div class="form-panel">
-          <h3 class="fp-title">Configure Social Links</h3>
-          <p class="manage-sub" style="margin-bottom:1.5rem;">Update the social media profile links displayed in your portfolio's footer.</p>
-          <form id="socialForm" novalidate>
-            <div class="pf-group" style="margin-bottom:1.2rem;">
-              <label for="socGithub">GitHub URL</label>
-              <input type="url" id="socGithub" placeholder="https://github.com/your-profile" style="width:100%; background:rgba(8,8,8,0.6); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; border-radius:6px; outline:none;" />
-            </div>
-            <div class="pf-group" style="margin-bottom:1.2rem;">
-              <label for="socLinkedin">LinkedIn URL</label>
-              <input type="url" id="socLinkedin" placeholder="https://linkedin.com/in/your-profile" style="width:100%; background:rgba(8,8,8,0.6); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; border-radius:6px; outline:none;" />
-            </div>
-            <div class="pf-group" style="margin-bottom:1.2rem;">
-              <label for="socTwitter">Twitter/X URL</label>
-              <input type="url" id="socTwitter" placeholder="https://x.com/your-profile" style="width:100%; background:rgba(8,8,8,0.6); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; border-radius:6px; outline:none;" />
-            </div>
-            <div class="pf-group" style="margin-bottom:1.2rem;">
-              <label for="socBehance">Behance URL</label>
-              <input type="url" id="socBehance" placeholder="https://behance.net/your-profile" style="width:100%; background:rgba(8,8,8,0.6); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; border-radius:6px; outline:none;" />
-            </div>
-            <div class="pf-group" style="margin-bottom:1.2rem;">
-              <label for="socInstagram">Instagram URL</label>
-              <input type="url" id="socInstagram" placeholder="https://instagram.com/your-profile" style="width:100%; background:rgba(8,8,8,0.6); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; border-radius:6px; outline:none;" />
-            </div>
-            <div class="pf-group" style="margin-bottom:1.2rem;">
-              <label for="socEmail">Email Address</label>
-              <input type="email" id="socEmail" placeholder="your-email@example.com" style="width:100%; background:rgba(8,8,8,0.6); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; border-radius:6px; outline:none;" />
-            </div>
-            <div class="pf-group" style="margin-bottom:1.2rem;">
-              <label for="socPhone">Phone Number</label>
-              <input type="text" id="socPhone" placeholder="+234 816 152 3407" style="width:100%; background:rgba(8,8,8,0.6); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; border-radius:6px; outline:none;" />
-            </div>
-            <div class="pf-actions" style="margin-top:2rem;">
-              <button type="submit" class="btn-gold" id="saveSocialBtn">Save Social Links →</button>
-            </div>
-          </form>
-        </div>
-      </div>
     </main>
   </div>
 
-  <!-- ── Delete Modal ─────────────────────────────── -->
+  <!-- ── Delete Modal Overlay ─────────────────────── -->
   <div class="modal-overlay" id="deleteOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="delTitle">
     <div class="modal modal-sm">
-      <h3 class="del-title" id="delTitle">Delete Project?</h3>
-      <p class="del-sub">This cannot be undone.</p>
+      <h3 class="del-title" id="delTitle">Delete Confirmation?</h3>
+      <p class="del-sub">This operation will permanently destroy records.</p>
       <div class="del-actions">
-        <button class="btn-outline" id="delCancel">Cancel</button>
+        <button class="btn-outline" id="delCancel">Dismiss</button>
         <button class="btn-danger" id="delConfirm">Yes, Delete</button>
       </div>
     </div>
@@ -332,49 +611,50 @@
 
   <!-- ── GitHub Repo Override Modal ───────────────── -->
   <div class="modal-overlay" id="githubOverrideOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="ghOverrideTitle">
-    <div class="modal">
+    <div class="modal" style="padding: 2rem;">
       <h3 class="del-title" id="ghOverrideTitle">Configure GitHub Overrides</h3>
-      <p class="del-sub" id="ghOverrideSub" style="margin-bottom:1.5rem;">Override live demo link and custom preview card thumbnail.</p>
+      <p class="del-sub" id="ghOverrideSub" style="margin-bottom:1.5rem;">Overlay live deployment details and select specific preview snapshots.</p>
       
       <form id="githubOverrideForm" novalidate>
         <input type="hidden" id="ghOverrideId" />
         
         <div class="pf-group" style="margin-bottom:1.2rem; text-align:left;">
-          <label for="ghLiveUrl" style="display:block; margin-bottom:0.4rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--gold); text-transform:uppercase;">Live Demo URL</label>
-          <input type="url" id="ghLiveUrl" placeholder="https://my-live-demo.vercel.app" style="width:100%; background:rgba(8,8,8,0.6); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; border-radius:6px; outline:none; font-family:var(--font-body);" />
+          <label for="ghLiveUrl">Live Link Override</label>
+          <input type="url" id="ghLiveUrl" placeholder="https://live-deploy.vercel.app" style="width:100%;" />
         </div>
         
         <div class="pf-group" style="margin-bottom:1.2rem; text-align:left;">
-          <label style="display:block; margin-bottom:0.4rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--gold); text-transform:uppercase;">Preview Image</label>
-          <div class="img-drop-zone" id="ghDropZone" role="button" tabindex="0" aria-label="Upload preview image" style="border:1px dashed var(--border); padding:1.5rem; text-align:center; border-radius:6px; cursor:pointer; transition:all 0.3s; background:rgba(255,255,255,0.01);">
-            <div class="dz-icon" style="font-size:1.8rem; margin-bottom:0.5rem;">📁</div>
-            <p style="font-size:0.85rem; margin-bottom:0.2rem;">Drag &amp; drop or <label for="ghImgFile" class="dz-browse" style="color:var(--gold); cursor:pointer; text-decoration:underline;">browse</label></p>
-            <p class="dz-hint" style="font-size:0.7rem; color:var(--text-muted);">PNG, JPG, WebP — Max image size auto-scaled</p>
+          <label>Preview Cover Override</label>
+          <div class="img-drop-zone" id="ghDropZone">
+            <div class="dz-icon">📁</div>
+            <p>Upload replacement project card image</p>
             <input type="file" id="ghImgFile" accept="image/*" hidden />
           </div>
           
-          <div class="img-preview-wrap" id="ghImgPreviewWrap" style="display:none; margin-top:1rem; position:relative;">
-            <img id="ghImgPreview" alt="Preview" style="max-height:140px; width:auto; border-radius:6px; border:1px solid var(--border);" />
-            <button type="button" class="img-remove" id="ghImgRemove" style="position:absolute; top:0.5rem; right:0.5rem; background:rgba(255,95,86,0.85); color:#fff; padding:0.3rem 0.6rem; border-radius:4px; font-size:0.75rem; cursor:pointer; border:none; font-family:var(--font-mono);">✕ Remove</button>
+          <div class="img-preview-wrap" id="ghImgPreviewWrap" style="display:none; margin-top:1rem;">
+            <img id="ghImgPreview" alt="Preview"/>
+            <button type="button" class="img-remove" id="ghImgRemove">✕ Remove</button>
           </div>
         </div>
         
         <div class="del-actions" style="margin-top:2rem;">
-          <button type="button" class="btn-outline" id="ghOverrideCancel">Cancel</button>
+          <button type="button" class="btn-outline" id="ghOverrideCancel">Dismiss</button>
           <button type="submit" class="btn-gold" id="ghOverrideSave">Save Overrides</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- ── Toast ────────────────────────────────────── -->
+  <!-- ── Toast Notifications ──────────────────────── -->
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase SDK compat libraries -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <script src="firebase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script src="admin.js"></script>
+  <script src="js/admin.js"></script>
 </body>
 </html>
