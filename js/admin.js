@@ -9,6 +9,343 @@ function getAuth() { return (window.joshFirebase || {}).auth; }
 function getStorage() { return (window.joshFirebase || {}).storage; }
 function fbReady() { return !!(window.joshFirebase && window.joshFirebase.firebaseReady); }
 
+// ─── MOCK FIREBASE FALLBACK SYSTEM ───────────────────────
+function convertDatesToTimestamps(data) {
+  if (!data) return data;
+  const copy = { ...data };
+  const timestampFields = ['createdAt', 'updatedAt', 'publishDate', 'sentAt', 'hiddenAt'];
+  for (const field of timestampFields) {
+    if (copy[field]) {
+      const val = copy[field];
+      if (typeof val === 'string' || typeof val === 'number') {
+        const d = new Date(val);
+        copy[field] = {
+          toDate: () => d,
+          seconds: Math.floor(d.getTime() / 1000),
+          nanoseconds: 0,
+          toString: () => d.toString()
+        };
+      } else if (val && typeof val === 'object' && !val.toDate) {
+        const d = val.seconds ? new Date(val.seconds * 1000) : new Date();
+        copy[field] = {
+          toDate: () => d,
+          seconds: val.seconds || Math.floor(d.getTime() / 1000),
+          nanoseconds: val.nanoseconds || 0,
+          toString: () => d.toString()
+        };
+      }
+    }
+  }
+  return copy;
+}
+
+class MockTimestamp {
+  constructor(date = new Date()) {
+    this.date = date;
+  }
+  toDate() {
+    return this.date;
+  }
+  static fromDate(date) {
+    return new MockTimestamp(date);
+  }
+}
+
+class MockFieldValue {
+  static serverTimestamp() {
+    return '__MOCK_SERVER_TIMESTAMP__';
+  }
+}
+
+class MockDocRef {
+  constructor(collectionName, docId, firestore) {
+    this.collectionName = collectionName;
+    this.id = docId;
+    this.firestore = firestore;
+  }
+  async get() {
+    const data = this.firestore._getData(this.collectionName, this.id);
+    return {
+      exists: data !== null,
+      id: this.id,
+      data: () => convertDatesToTimestamps(data)
+    };
+  }
+  async set(payload, options = {}) {
+    this.firestore._setData(this.collectionName, this.id, payload, options.merge);
+    return true;
+  }
+  async update(payload) {
+    this.firestore._setData(this.collectionName, this.id, payload, true);
+    return true;
+  }
+  async delete() {
+    this.firestore._deleteData(this.collectionName, this.id);
+    return true;
+  }
+}
+
+class MockCollection {
+  constructor(collectionName, firestore) {
+    this.collectionName = collectionName;
+    this.firestore = firestore;
+    this._orderByField = null;
+    this._orderByDirection = 'asc';
+    this._limit = null;
+  }
+  orderBy(field, direction = 'asc') {
+    this._orderByField = field;
+    this._orderByDirection = direction;
+    return this;
+  }
+  limit(n) {
+    this._limit = n;
+    return this;
+  }
+  doc(id) {
+    const docId = id || Math.random().toString(36).substring(2, 15);
+    return new MockDocRef(this.collectionName, String(docId), this.firestore);
+  }
+  async add(payload) {
+    const docId = Math.random().toString(36).substring(2, 15);
+    this.firestore._setData(this.collectionName, docId, payload, false);
+    return { id: docId };
+  }
+  async get() {
+    let list = this.firestore._getCollectionList(this.collectionName);
+    if (this._orderByField) {
+      list.sort((a, b) => {
+        let valA = a[this._orderByField];
+        let valB = b[this._orderByField];
+        if (valA && valA.toDate) valA = valA.toDate().getTime();
+        else if (valA && typeof valA === 'string') valA = new Date(valA).getTime();
+        if (valB && valB.toDate) valB = valB.toDate().getTime();
+        else if (valB && typeof valB === 'string') valB = new Date(valB).getTime();
+        if (valA < valB) return this._orderByDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return this._orderByDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    if (this._limit) {
+      list = list.slice(0, this._limit);
+    }
+    const docs = list.map(item => ({
+      id: item.id,
+      data: () => convertDatesToTimestamps(item)
+    }));
+    return {
+      empty: docs.length === 0,
+      docs: docs,
+      forEach: (callback) => docs.forEach(callback)
+    };
+  }
+}
+
+class MockFirestore {
+  collection(name) {
+    return new MockCollection(name, this);
+  }
+  _getCollectionList(name) {
+    if (name === 'settings') return [];
+    if (name === 'hidden_repos') {
+      const arr = JSON.parse(localStorage.getItem('josh_hidden_repos') || '[]');
+      return arr.map(id => ({ id, hiddenAt: new Date().toISOString() }));
+    }
+    if (name === 'github_overrides') {
+      const obj = JSON.parse(localStorage.getItem('josh_github_overrides') || '{}');
+      return Object.entries(obj).map(([id, val]) => ({ id, ...val }));
+    }
+    const key = this._getStorageKey(name);
+    return JSON.parse(localStorage.getItem(key) || '[]');
+  }
+  _getStorageKey(collectionName) {
+    const keys = {
+      projects: 'josh_admin_projects',
+      services: 'josh_services',
+      plans: 'josh_plans',
+      testimonials: 'josh_testimonials',
+      blog: 'josh_blog',
+      messages: 'josh_messages',
+      activity_logs: 'josh_activity_logs'
+    };
+    return keys[collectionName] || `josh_mock_${collectionName}`;
+  }
+  _getData(collectionName, docId) {
+    if (collectionName === 'settings') {
+      const key = docId === 'email' ? 'josh_email_settings' : `josh_${docId}`;
+      const data = localStorage.getItem(key);
+      return data ? JSON.parse(data) : null;
+    }
+    if (collectionName === 'hidden_repos') {
+      const arr = JSON.parse(localStorage.getItem('josh_hidden_repos') || '[]');
+      return arr.includes(String(docId)) ? { hiddenAt: new Date().toISOString() } : null;
+    }
+    if (collectionName === 'github_overrides') {
+      const obj = JSON.parse(localStorage.getItem('josh_github_overrides') || '{}');
+      return obj[String(docId)] || null;
+    }
+    const list = this._getCollectionList(collectionName);
+    return list.find(item => String(item.id) === String(docId)) || null;
+  }
+  _setData(collectionName, docId, payload, merge) {
+    const cleanPayload = {};
+    for (const [k, v] of Object.entries(payload)) {
+      if (v === '__MOCK_SERVER_TIMESTAMP__') {
+        cleanPayload[k] = new Date().toISOString();
+      } else if (v && typeof v === 'object' && v.date) {
+        cleanPayload[k] = v.date.toISOString();
+      } else {
+        cleanPayload[k] = v;
+      }
+    }
+    if (collectionName === 'settings') {
+      const key = docId === 'email' ? 'josh_email_settings' : `josh_${docId}`;
+      let current = {};
+      if (merge) {
+        try { current = JSON.parse(localStorage.getItem(key) || '{}'); } catch(e){}
+      }
+      const updated = { ...current, ...cleanPayload };
+      localStorage.setItem(key, JSON.stringify(updated));
+      return;
+    }
+    if (collectionName === 'hidden_repos') {
+      const arr = JSON.parse(localStorage.getItem('josh_hidden_repos') || '[]');
+      if (!arr.includes(String(docId))) {
+        arr.push(String(docId));
+        localStorage.setItem('josh_hidden_repos', JSON.stringify(arr));
+      }
+      return;
+    }
+    if (collectionName === 'github_overrides') {
+      const obj = JSON.parse(localStorage.getItem('josh_github_overrides') || '{}');
+      let current = obj[String(docId)] || {};
+      if (merge) {
+        current = { ...current, ...cleanPayload };
+      } else {
+        current = cleanPayload;
+      }
+      obj[String(docId)] = current;
+      localStorage.setItem('josh_github_overrides', JSON.stringify(obj));
+      return;
+    }
+    const key = this._getStorageKey(collectionName);
+    const list = JSON.parse(localStorage.getItem(key) || '[]');
+    const index = list.findIndex(item => String(item.id) === String(docId));
+    if (index !== -1) {
+      const current = list[index];
+      const updated = merge ? { ...current, ...cleanPayload } : { id: docId, ...cleanPayload };
+      updated.id = docId;
+      list[index] = updated;
+    } else {
+      list.push({ id: docId, ...cleanPayload });
+    }
+    localStorage.setItem(key, JSON.stringify(list));
+  }
+  _deleteData(collectionName, docId) {
+    if (collectionName === 'settings') {
+      const key = docId === 'email' ? 'josh_email_settings' : `josh_${docId}`;
+      localStorage.removeItem(key);
+      return;
+    }
+    if (collectionName === 'hidden_repos') {
+      let arr = JSON.parse(localStorage.getItem('josh_hidden_repos') || '[]');
+      arr = arr.filter(id => String(id) !== String(docId));
+      localStorage.setItem('josh_hidden_repos', JSON.stringify(arr));
+      return;
+    }
+    if (collectionName === 'github_overrides') {
+      const obj = JSON.parse(localStorage.getItem('josh_github_overrides') || '{}');
+      delete obj[String(docId)];
+      localStorage.setItem('josh_github_overrides', JSON.stringify(obj));
+      return;
+    }
+    const key = this._getStorageKey(collectionName);
+    let list = JSON.parse(localStorage.getItem(key) || '[]');
+    list = list.filter(item => String(item.id) !== String(docId));
+    localStorage.setItem(key, JSON.stringify(list));
+  }
+}
+
+class MockAuth {
+  constructor() {
+    this.callbacks = [];
+    this.user = sessionStorage.getItem('josh_mock_logged_in') === 'true' ? { email: 'admin@joshfolio.com' } : null;
+  }
+  onAuthStateChanged(callback) {
+    this.callbacks.push(callback);
+    setTimeout(() => callback(this.user), 10);
+    return () => {
+      this.callbacks = this.callbacks.filter(c => c !== callback);
+    };
+  }
+  get currentUser() {
+    return this.user;
+  }
+  async signInWithEmailAndPassword(email, password) {
+    if (email === 'admin@joshfolio.com' && password === 'admin123') {
+      this.user = { email };
+      sessionStorage.setItem('josh_mock_logged_in', 'true');
+      this.callbacks.forEach(cb => cb(this.user));
+      return { user: this.user };
+    } else {
+      throw new Error("Invalid mock credentials. Use admin@joshfolio.com and admin123.");
+    }
+  }
+  async signOut() {
+    this.user = null;
+    sessionStorage.removeItem('josh_mock_logged_in');
+    this.callbacks.forEach(cb => cb(null));
+  }
+}
+
+class MockStorageRef {
+  constructor(path, dataUrl = '') {
+    this.path = path;
+    this.dataUrl = dataUrl;
+  }
+  child(subpath) {
+    return new MockStorageRef(`${this.path}/${subpath}`, this.dataUrl);
+  }
+  async put(blob) {
+    const dataUrl = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+    return {
+      ref: new MockStorageRef(this.path, dataUrl)
+    };
+  }
+  async getDownloadURL() {
+    return this.dataUrl || 'https://via.placeholder.com/960x540.png?text=Mock+Image';
+  }
+}
+
+class MockStorage {
+  ref() {
+    return new MockStorageRef('');
+  }
+}
+
+function setupMockFirebase() {
+  const mockDb = new MockFirestore();
+  const mockAuth = new MockAuth();
+  const mockStorage = new MockStorage();
+  
+  window.joshFirebase = {
+    db: mockDb,
+    auth: mockAuth,
+    storage: mockStorage,
+    firebaseReady: true,
+    isMock: true
+  };
+  
+  window.firebase = window.firebase || {};
+  window.firebase.firestore = window.firebase.firestore || {};
+  window.firebase.firestore.FieldValue = window.firebase.firestore.FieldValue || MockFieldValue;
+  window.firebase.firestore.Timestamp = window.firebase.firestore.Timestamp || MockTimestamp;
+}
+
 // Global States
 let activeView = 'overview';
 let cachedProjects = [];
@@ -30,9 +367,8 @@ let ghOverrideBlob = null;
 // Initial Setup Check & Auth Listener
 document.addEventListener('DOMContentLoaded', () => {
   if (!fbReady()) {
-    showToast('⚠ Firebase not connected. Check console.', true);
-    updateFirebaseStatus(false);
-    return;
+    setupMockFirebase();
+    showToast('✓ Loaded local sandbox mode (offline).', false);
   }
   updateFirebaseStatus(true);
   
@@ -54,6 +390,16 @@ document.addEventListener('DOMContentLoaded', () => {
 function updateFirebaseStatus(ready) {
   const dot = document.getElementById('fbDot');
   const label = document.getElementById('fbLabel');
+  if (!dot || !label) return;
+  if (window.joshFirebase && window.joshFirebase.isMock) {
+    dot.className = 'fb-dot connected local-sandbox';
+    label.textContent = 'Local Sandbox ✓';
+    dot.style.backgroundColor = 'var(--gold)';
+    dot.style.boxShadow = '0 0 8px var(--gold)';
+    return;
+  }
+  dot.style.backgroundColor = '';
+  dot.style.boxShadow = '';
   if (ready) {
     dot.className = 'fb-dot connected';
     label.textContent = 'Firestore Connected';
