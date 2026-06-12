@@ -2159,6 +2159,14 @@ initStartupMetrics();
 initInteractiveMockups();
 initSocialSettings();
 
+// Load CMS Dynamic Sections
+loadDynamicAbout();
+loadDynamicServicesAndPlans();
+loadDynamicTestimonials();
+setupTestimonialControls();
+loadDynamicBlogs();
+setupBlogReaderClose();
+
 /* ─── Social Settings Fetcher & Populator ────────────── */
 async function initSocialSettings() {
   const settings = await getSocialSettings();
@@ -2276,4 +2284,415 @@ async function getEmailSettings() {
     }
   }
   return local;
+}
+
+/* ─── Dynamic CMS Fetchers & Renderers ───────────────── */
+
+async function loadDynamicAbout() {
+  const { db, firebaseReady } = window.joshFirebase || {};
+  let data = null;
+  if (firebaseReady && db) {
+    try {
+      const doc = await db.collection('settings').doc('about').get();
+      if (doc.exists) data = doc.data();
+    } catch (err) {
+      console.warn('Failed to load about settings from Firebase:', err);
+    }
+  }
+  if (!data) {
+    try {
+      data = JSON.parse(localStorage.getItem('josh_about'));
+    } catch (e) {}
+  }
+  
+  if (data) {
+    // Update bio paragraphs
+    const aboutTextEl = document.querySelector('.about-text');
+    if (aboutTextEl && data.bio) {
+      // Clear previous paragraphs (excluding the about-ctas block)
+      const paras = aboutTextEl.querySelectorAll('p');
+      paras.forEach(p => p.remove());
+      
+      // Add new paragraphs from bio (split by newlines)
+      const lines = data.bio.split('\n').map(l => l.trim()).filter(Boolean);
+      lines.reverse().forEach(line => {
+        const p = document.createElement('p');
+        p.innerHTML = line;
+        aboutTextEl.insertBefore(p, aboutTextEl.firstChild);
+      });
+    }
+    
+    // Update profile image if set
+    if (data.profileImage) {
+      const profilePhotos = document.querySelectorAll('.hero-photo');
+      profilePhotos.forEach(img => img.src = data.profileImage);
+    }
+    
+    // Update resume download button
+    if (data.resumeUrl) {
+      const resumeBtns = document.querySelectorAll('a[download*="RESUME"]');
+      resumeBtns.forEach(btn => btn.href = data.resumeUrl);
+    }
+  }
+}
+
+async function loadDynamicServicesAndPlans() {
+  const { db, firebaseReady } = window.joshFirebase || {};
+  let services = [];
+  let plans = [];
+  
+  if (firebaseReady && db) {
+    try {
+      const sSnap = await db.collection('services').orderBy('order', 'asc').get();
+      services = sSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      const pSnap = await db.collection('plans').orderBy('order', 'asc').get();
+      plans = pSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (err) {
+      console.warn('Failed to load services/plans from Firebase, checking local:', err);
+    }
+  }
+  
+  if (services.length === 0) {
+    try {
+      services = JSON.parse(localStorage.getItem('josh_services') || '[]');
+    } catch(e) {}
+  }
+  if (plans.length === 0) {
+    try {
+      plans = JSON.parse(localStorage.getItem('josh_plans') || '[]');
+    } catch(e) {}
+  }
+  
+  // Render Services
+  const servicesGrid = document.getElementById('servicesGrid');
+  if (servicesGrid) {
+    servicesGrid.innerHTML = '';
+    if (services.length === 0) {
+      // Default Fallback Services if empty
+      services = [
+        { name: 'Frontend Engineering', icon: '⚙', description: 'Responsive, performant, accessible web apps with modern JavaScript, React, and CSS.', price: '₦150k+', features: ['React/Next.js integration', 'Semantic & responsive HTML', 'Dynamic micro-animations'] },
+        { name: 'Creative Design', icon: '✦', description: 'Brand identities, UI/UX design, print media, and motion graphics with industry tools.', price: '₦100k+', features: ['Figma design source file', 'Harmonious design tokens', 'Logo configurator setups'] },
+        { name: 'Data Science', icon: '◈', description: 'Statistical modelling, predictive analytics, and visualisation using Python, R, and SPSS.', price: '₦200k+', features: ['Statistical tests (ANOVA/Regression)', 'Python notebook reports', 'Data visualization charts'] }
+      ];
+    }
+    
+    // Sanitize legacy emojis/informal fallback icons
+    services.forEach(s => {
+      if (s.icon === '💻') s.icon = '⚙';
+      if (s.icon === '🎨') s.icon = '✦';
+      if (s.icon === '📊') s.icon = '◈';
+      if (s.icon === '💼') s.icon = '⚙';
+    });
+    
+    services.forEach(s => {
+      const card = document.createElement('div');
+      card.className = 'service-card reveal-up';
+      const featuresHtml = (s.features || []).map(f => `<li><span class="feat-bullet">✓</span> ${f}</li>`).join('');
+      card.innerHTML = `
+        <div class="serv-icon">${s.icon || '⚙'}</div>
+        <h3 class="serv-title">${s.name}</h3>
+        <p class="serv-desc">${s.description}</p>
+        <p class="serv-price">${s.price}</p>
+        <ul class="serv-features">${featuresHtml}</ul>
+      `;
+      servicesGrid.appendChild(card);
+    });
+  }
+  
+  // Render Pricing Plans
+  const plansGrid = document.getElementById('plansGrid');
+  if (plansGrid) {
+    plansGrid.innerHTML = '';
+    plans.forEach(p => {
+      const card = document.createElement('div');
+      card.className = `plan-card ${p.popular ? 'popular' : ''} reveal-up`;
+      const featuresHtml = (p.features || []).map(f => `<li><span class="feat-bullet">✓</span> ${f}</li>`).join('');
+      card.innerHTML = `
+        ${p.popular ? '<span class="plan-badge">Most Popular</span>' : ''}
+        <h3 class="plan-title">${p.name}</h3>
+        <p class="plan-price">${p.price}</p>
+        <ul class="plan-features">${featuresHtml}</ul>
+        <a href="#contact" class="${p.popular ? 'btn-primary' : 'btn-ghost'} plan-btn">${p.ctaText || 'Get Started'}</a>
+      `;
+      plansGrid.appendChild(card);
+    });
+  }
+}
+
+let currentTestimonialIndex = 0;
+let testimonialsList = [];
+
+async function seedTestimonialsIfEmpty() {
+  const { db, firebaseReady } = window.joshFirebase || {};
+  const alreadySeeded = localStorage.getItem('josh_testimonials_seeded') === 'true';
+  if (alreadySeeded) return;
+
+  const demoTestimonials = [
+    {
+      clientName: 'Chinedu Okeke',
+      position: 'Director of Product',
+      company: 'Apex Solutions',
+      review: "Joshua's ability to turn complex statistical data models into highly polished, responsive front-end views is absolutely unique. Our client dashboard has never looked better.",
+      rating: 5,
+      profileImage: '',
+      createdAt: new Date().toISOString()
+    },
+    {
+      clientName: 'Amina Yusuf',
+      position: 'Founder',
+      company: 'EduVibe Africa',
+      review: 'An exceptional software developer and creative designer. He redesigned our brand identity and implemented the platform on time. Highly recommended for any serious web project!',
+      rating: 5,
+      profileImage: '',
+      createdAt: new Date().toISOString()
+    },
+    {
+      clientName: 'Sarah Jenkins',
+      position: 'Head of Engineering',
+      company: 'Vanguard Analytics',
+      review: 'The SPSS analytics dashboard Joshua built for us is both robust and visually striking. His clean code, use of design tokens, and automation workflow transformed our operations.',
+      rating: 5,
+      profileImage: '',
+      createdAt: new Date().toISOString()
+    }
+  ];
+
+  if (firebaseReady && db) {
+    try {
+      const snap = await db.collection('testimonials').get();
+      if (snap.empty) {
+        for (const t of demoTestimonials) {
+          await db.collection('testimonials').add(t);
+        }
+        localStorage.setItem('josh_testimonials_seeded', 'true');
+        console.log("[JoshFolio] Testimonials successfully seeded to Firestore.");
+      }
+    } catch (err) {
+      console.warn("Failed to seed testimonials to Firestore:", err);
+    }
+  } else {
+    try {
+      const local = JSON.parse(localStorage.getItem('josh_testimonials') || '[]');
+      if (local.length === 0) {
+        const demoWithIds = demoTestimonials.map(t => ({
+          id: 't-demo-' + Math.random().toString(36).substring(2, 9),
+          ...t
+        }));
+        localStorage.setItem('josh_testimonials', JSON.stringify(demoWithIds));
+        localStorage.setItem('josh_testimonials_seeded', 'true');
+        console.log("[JoshFolio] Testimonials successfully seeded to localStorage.");
+      }
+    } catch (e) {
+      console.warn("Failed to seed testimonials to localStorage:", e);
+    }
+  }
+}
+
+async function loadDynamicTestimonials() {
+  const { db, firebaseReady } = window.joshFirebase || {};
+  
+  await seedTestimonialsIfEmpty();
+
+  let list = [];
+  
+  if (firebaseReady && db) {
+    try {
+      const snap = await db.collection('testimonials').orderBy('createdAt', 'desc').get();
+      list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (err) {
+      console.warn('Failed to load testimonials from Firebase, checking local:', err);
+    }
+  }
+  
+  if (list.length === 0) {
+    try {
+      list = JSON.parse(localStorage.getItem('josh_testimonials') || '[]');
+    } catch(e) {}
+  }
+  
+  testimonialsList = list;
+  if (testimonialsList.length === 0) {
+    testimonialsList = [
+      { clientName: 'Oluwaseun Alabi', position: 'CTO', company: 'Lagos Tech Hub', review: 'Joshua delivered a pixel-perfect, highly automated portfolio workspace that wowed our board members. His statistics edge and AI automation workflow are rare skills in a front-end engineer.', rating: 5, profileImage: '' },
+      { clientName: 'Dr. Kunle Adeleke', position: 'Associate Professor', company: 'OOU Dept. of Statistics', review: 'His expertise with SPSS, ANOVA, and data visualisations is exemplary. He was able to bridge code and statistics to build complex sandbox analytics that look premium.', rating: 5, profileImage: '' }
+    ];
+  }
+  
+  renderTestimonialSlide();
+}
+
+function renderTestimonialSlide() {
+  const slider = document.getElementById('testimonialsSlider');
+  if (!slider || testimonialsList.length === 0) return;
+  
+  const t = testimonialsList[currentTestimonialIndex];
+  const ratingStars = '★'.repeat(t.rating) + '☆'.repeat(5 - t.rating);
+  const avatar = t.profileImage || 'https://via.placeholder.com/150?text=' + encodeURIComponent(t.clientName.substring(0,2));
+  
+  slider.innerHTML = `
+    <div class="testimonial-slide active">
+      <img src="${avatar}" alt="${t.clientName}" class="test-avatar" />
+      <div class="test-rating">${ratingStars}</div>
+      <p class="test-quote">"${t.review}"</p>
+      <h4 class="test-client-name">${t.clientName}</h4>
+      <p class="test-client-meta">${t.position} at ${t.company}</p>
+    </div>
+  `;
+}
+
+function setupTestimonialControls() {
+  const prevBtn = document.getElementById('prevTestimonial');
+  const nextBtn = document.getElementById('nextTestimonial');
+  
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      if (testimonialsList.length === 0) return;
+      currentTestimonialIndex = (currentTestimonialIndex - 1 + testimonialsList.length) % testimonialsList.length;
+      renderTestimonialSlide();
+      playAudioEffect('click');
+    });
+  }
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      if (testimonialsList.length === 0) return;
+      currentTestimonialIndex = (currentTestimonialIndex + 1) % testimonialsList.length;
+      renderTestimonialSlide();
+      playAudioEffect('click');
+    });
+  }
+}
+
+async function loadDynamicBlogs() {
+  const { db, firebaseReady } = window.joshFirebase || {};
+  let list = [];
+  
+  if (firebaseReady && db) {
+    try {
+      const snap = await db.collection('blog').orderBy('publishDate', 'desc').get();
+      list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (err) {
+      console.warn('Failed to load blogs from Firebase, checking local:', err);
+    }
+  }
+  
+  if (list.length === 0) {
+    try {
+      list = JSON.parse(localStorage.getItem('josh_blog') || '[]');
+    } catch(e) {}
+  }
+  
+  const published = list.filter(b => b.status === 'published');
+  
+  const blogGrid = document.getElementById('blogGrid');
+  if (blogGrid) {
+    blogGrid.innerHTML = '';
+    if (published.length === 0) {
+      const fallback = {
+        id: 'default-blog-1',
+        title: 'Bridging Creative Design with Front-End Code',
+        slug: 'bridging-design-with-code',
+        author: 'Idowu Joshua Victor',
+        tags: ['Design', 'Development'],
+        content: 'In modern web design, having a division between design and code slows down product creation. By using design systems directly mapped to CSS custom tokens, creative developers can create live web projects that feel organic, dynamic, and beautiful at first render.\n\n### The Design System Hierarchy\n- Predefined HSL Color Tokens\n- Strict Typography Postures\n- Uniform spacing matrices\n- Fluid micro-animations.',
+        publishDate: new Date(),
+        featuredImage: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80'
+      };
+      published.push(fallback);
+    }
+    
+    published.forEach(b => {
+      const card = document.createElement('div');
+      card.className = 'blog-card reveal-up';
+      const date = b.publishDate && typeof b.publishDate.toDate === 'function' 
+        ? b.publishDate.toDate() 
+        : (b.publishDate ? new Date(b.publishDate) : new Date());
+      const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const tagsHtml = (b.tags || []).map(t => `<span class="blog-card-tag">${t}</span>`).join('');
+      const cover = b.featuredImage || 'https://via.placeholder.com/640x360.png?text=Blog+Article';
+      
+      card.innerHTML = `
+        <div class="blog-card-image-wrap">
+          <img src="${cover}" alt="${b.title}" class="blog-card-image" />
+        </div>
+        <div class="blog-card-body">
+          <div class="blog-card-meta">
+             <span class="blog-card-date">${dateStr}</span>
+             <div class="blog-card-tags">${tagsHtml}</div>
+          </div>
+          <h3 class="blog-card-title">${b.title}</h3>
+          <p class="blog-card-summary">${b.content.substring(0, 120)}...</p>
+          <button class="btn-read-more" data-id="${b.id}">Read Article →</button>
+        </div>
+      `;
+      blogGrid.appendChild(card);
+    });
+    
+    blogGrid.querySelectorAll('.btn-read-more').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const post = published.find(x => x.id === id);
+        if (post) openBlogReaderModal(post);
+      });
+    });
+  }
+}
+
+function openBlogReaderModal(post) {
+  const overlay = document.getElementById('blogReaderOverlay');
+  const hero = document.getElementById('blogReaderHero');
+  const tag = document.getElementById('blogReaderTag');
+  const title = document.getElementById('blogReaderTitle');
+  const author = document.getElementById('blogReaderAuthor');
+  const dateEl = document.getElementById('blogReaderDate');
+  const content = document.getElementById('blogReaderContent');
+  
+  if (!overlay) return;
+  
+  const date = post.publishDate && typeof post.publishDate.toDate === 'function' 
+    ? post.publishDate.toDate() 
+    : (post.publishDate ? new Date(post.publishDate) : new Date());
+  const dateStr = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const cover = post.featuredImage || 'https://via.placeholder.com/960x540.png?text=Blog+Article';
+  
+  hero.style.backgroundImage = `url('${cover}')`;
+  tag.textContent = (post.tags || []).join(', ') || 'Article';
+  title.textContent = post.title;
+  author.textContent = post.author || 'Idowu Joshua Victor';
+  dateEl.textContent = dateStr;
+  
+  content.innerHTML = post.content
+    .split('\n\n')
+    .map(para => {
+      if (para.startsWith('### ')) return `<h3>${para.substring(4)}</h3>`;
+      if (para.startsWith('## ')) return `<h2>${para.substring(3)}</h2>`;
+      if (para.startsWith('- ')) {
+        const items = para.split('\n').map(i => i.substring(2));
+        return `<ul>${items.map(item => `<li>${item}</li>`).join('')}</ul>`;
+      }
+      return `<p>${para.replace(/\n/g, '<br/>')}</p>`;
+    })
+    .join('');
+    
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  playAudioEffect('chord');
+}
+
+function setupBlogReaderClose() {
+  const closeBtn = document.getElementById('closeBlogReader');
+  const overlay = document.getElementById('blogReaderOverlay');
+  
+  const closeModal = () => {
+    if (overlay) overlay.style.display = 'none';
+    document.body.style.overflow = '';
+    playAudioEffect('click');
+  };
+  
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (overlay) {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+  }
 }

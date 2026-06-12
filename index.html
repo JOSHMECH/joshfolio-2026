@@ -53,9 +53,10 @@
       <div class="nav-links" id="navLinks">
         <a href="#about" class="nav-link">About</a>
         <a href="#skills" class="nav-link">Skills</a>
+        <a href="#services" class="nav-link">Services</a>
         <a href="#projects" class="nav-link">Projects</a>
         <a href="#startup" class="nav-link">Startup</a>
-        <a href="#location" class="nav-link">Location</a>
+        <a href="#blog" class="nav-link">Blog</a>
         <a href="#contact" class="nav-link">Contact</a>
       </div>
       <div class="nav-actions">
@@ -404,11 +405,28 @@
     </div>
   </section>
 
+  <!-- ─── Services & Pricing ─────────────────────────── -->
+  <section id="services" class="services section">
+    <div class="container">
+      <div class="section-header centered">
+        <span class="section-tag">03 / Services &amp; Plans</span>
+        <h2 class="section-title">Professional<br /><span class="gold">Services &amp; Plans</span></h2>
+        <p class="section-sub" style="margin: 0 auto; max-width: 520px;">High-quality consulting, bespoke development, and pricing plans structured to scale with your project.</p>
+      </div>
+      <div class="services-grid" id="servicesGrid">
+        <!-- Dynamic services go here -->
+      </div>
+      <div class="plans-grid" id="plansGrid" style="margin-top: 5rem;">
+        <!-- Dynamic pricing plans go here -->
+      </div>
+    </div>
+  </section>
+
   <!-- ─── Projects ────────────────────────────────────── -->
   <section id="projects" class="projects section">
     <div class="container">
       <div class="section-header">
-        <span class="section-tag">03 / Projects</span>
+        <span class="section-tag">04 / Projects</span>
         <h2 class="section-title">Selected<br /><span class="gold">Work</span></h2>
         <p class="section-sub">A curated selection of development, design, and data science projects.</p>
       </div>
@@ -591,8 +609,8 @@
               </div>
             </div>
             <!-- Floating tag elements -->
-            <div class="sh-tag tag-kudi">Kudiflow 💼</div>
-            <div class="sh-tag tag-lens">ScholarLens 📘</div>
+            <div class="sh-tag tag-kudi">Kudiflow ◈</div>
+            <div class="sh-tag tag-lens">ScholarLens ✦</div>
             <div class="sh-tag tag-ai">Gemini AI ✦</div>
           </div>
         </div>
@@ -609,14 +627,14 @@
         </div>
         <!-- Card: Mission -->
         <div class="sbg-card sbg-mission">
-          <div class="sbg-icon">🎯</div>
+          <div class="sbg-icon">✦</div>
           <h4>Our Mission</h4>
           <p>To architect fast, smart, and accessible software assets that solve daily friction in money management,
             academic research, and community building.</p>
         </div>
         <!-- Card: Innovation -->
         <div class="sbg-card sbg-innovation">
-          <div class="sbg-icon">🧠</div>
+          <div class="sbg-icon">◈</div>
           <h4>Youth-Centered Innovation</h4>
           <p>Integrating user-first design, statistics-driven models, and AI pipelines to create tools that youths
             <em>want</em> to use.</p>
@@ -715,7 +733,7 @@
         <!-- Connected Flow Visual -->
         <div class="eco-flow-container">
           <div class="eco-node">
-            <span class="en-icon">💻</span>
+            <span class="en-icon">⚙</span>
             <span class="en-lbl">Client UIs (Next.js / React)</span>
           </div>
           <div class="eco-arrow">──></div>
@@ -725,7 +743,7 @@
           </div>
           <div class="eco-arrow">──></div>
           <div class="eco-node">
-            <span class="en-icon">💾</span>
+            <span class="en-icon">◈</span>
             <span class="en-lbl">Cloud DB (Supabase / Firebase)</span>
           </div>
         </div>
@@ -777,11 +795,30 @@
     </div>
   </section>
 
+  <!-- ─── Testimonials ──────────────────────────────── -->
+  <section id="testimonials" class="testimonials section">
+    <div class="container">
+      <div class="section-header centered">
+        <span class="section-tag">07 / Testimonials</span>
+        <h2 class="section-title">What Clients<br /><span class="gold">Say</span></h2>
+      </div>
+      <div class="testimonials-slider-wrap">
+        <div class="testimonials-slider" id="testimonialsSlider">
+          <!-- Dynamic testimonials go here -->
+        </div>
+        <div class="slider-controls">
+          <button class="slider-btn prev-btn" id="prevTestimonial" aria-label="Previous Testimonial">←</button>
+          <button class="slider-btn next-btn" id="nextTestimonial" aria-label="Next Testimonial">→</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ─── Global Footprint / Location Globe ────────────────── -->
   <section id="location" class="location section">
     <div class="container">
       <div class="section-header centered">
-        <span class="section-tag">06 / Location Telemetry</span>
+        <span class="section-tag">08 / Location Telemetry</span>
         <h2 class="section-title">Global<br /><span class="gold">Telemetry Node</span></h2>
         <p class="section-sub" style="margin: 0 auto; max-width: 520px;">Locate my development node in real time. Spin,
           swipe, or drag the holographic coordinates grid to scan geographic vectors.</p>
@@ -804,12 +841,43 @@
     </div>
   </section>
 
+  <!-- ─── Blog Articles ──────────────────────────────── -->
+  <section id="blog" class="blog section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">09 / Insights</span>
+        <h2 class="section-title">Latest<br /><span class="gold">Articles</span></h2>
+        <p class="section-sub">Thoughts on engineering, statistics, and creative UI/UX design.</p>
+      </div>
+      <div class="blog-grid" id="blogGrid">
+        <!-- Dynamic blog cards go here -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Blog Reader Modal ──────────────────────────── -->
+  <div class="sys-modal-overlay" id="blogReaderOverlay" style="display:none" role="dialog" aria-modal="true" aria-label="Blog Article Reader">
+    <div class="blog-reader-card">
+      <button class="modal-close" id="closeBlogReader" aria-label="Close Reader">✕</button>
+      <div class="blog-reader-hero" id="blogReaderHero" style="background-image: url('https://via.placeholder.com/960x540.png?text=Blog+Image');">
+        <div class="blog-reader-meta">
+          <span class="blog-reader-tag" id="blogReaderTag">Category</span>
+          <h1 class="blog-reader-title" id="blogReaderTitle">Article Title</h1>
+          <p class="blog-reader-info"><span id="blogReaderAuthor">Author</span> · <span id="blogReaderDate">Date</span></p>
+        </div>
+      </div>
+      <div class="blog-reader-content" id="blogReaderContent">
+        <!-- Full markdown/html article content goes here -->
+      </div>
+    </div>
+  </div>
+
   <!-- ─── Contact ─────────────────────────────────────── -->
   <section id="contact" class="contact section">
     <div class="container">
       <div class="contact-inner">
         <div class="contact-left">
-          <span class="section-tag">07 / Contact</span>
+          <span class="section-tag">10 / Contact</span>
           <h2 class="section-title">Let's Build<br /><span class="gold">Something Great</span></h2>
           <p>Whether you need a stunning website, a compelling brand identity,
             data insights, or all three — I'm ready. Let's turn your ideas into reality.</p>
@@ -870,7 +938,8 @@
         </div>
         <nav class="footer-nav" aria-label="Footer navigation">
           <a href="#about">About</a><a href="#skills">Skills</a>
-          <a href="#projects">Projects</a><a href="#contact">Contact</a>
+          <a href="#services">Services</a><a href="#projects">Projects</a>
+          <a href="#blog">Blog</a><a href="#contact">Contact</a>
           <a href="admin.html">Admin</a>
         </nav>
       </div>

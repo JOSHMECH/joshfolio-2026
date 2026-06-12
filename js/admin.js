@@ -837,7 +837,57 @@ function editPlanForm(id) {
 }
 
 // ─── TESTIMONIALS CRUD ─────────────────────────────────
+async function seedTestimonialsIfEmpty() {
+  const db = getDB();
+  if (!db) return;
+  try {
+    const alreadySeeded = localStorage.getItem('josh_testimonials_seeded') === 'true';
+    if (!alreadySeeded) {
+      const snap = await db.collection('testimonials').get();
+      if (snap.empty) {
+        const demoTestimonials = [
+          {
+            clientName: 'Chinedu Okeke',
+            position: 'Director of Product',
+            company: 'Apex Solutions',
+            review: "Joshua's ability to turn complex statistical data models into highly polished, responsive front-end views is absolutely unique. Our client dashboard has never looked better.",
+            rating: 5,
+            profileImage: '',
+            createdAt: new Date().toISOString()
+          },
+          {
+            clientName: 'Amina Yusuf',
+            position: 'Founder',
+            company: 'EduVibe Africa',
+            review: 'An exceptional software developer and creative designer. He redesigned our brand identity and implemented the platform on time. Highly recommended for any serious web project!',
+            rating: 5,
+            profileImage: '',
+            createdAt: new Date().toISOString()
+          },
+          {
+            clientName: 'Sarah Jenkins',
+            position: 'Head of Engineering',
+            company: 'Vanguard Analytics',
+            review: 'The SPSS analytics dashboard Joshua built for us is both robust and visually striking. His clean code, use of design tokens, and automation workflow transformed our operations.',
+            rating: 5,
+            profileImage: '',
+            createdAt: new Date().toISOString()
+          }
+        ];
+        for (const t of demoTestimonials) {
+          await db.collection('testimonials').add(t);
+        }
+        localStorage.setItem('josh_testimonials_seeded', 'true');
+        console.log("[JoshFolio] Testimonials successfully seeded with 3 demo entries.");
+      }
+    }
+  } catch (err) {
+    console.warn("Failed to seed testimonials:", err);
+  }
+}
+
 async function loadTestimonials() {
+  await seedTestimonialsIfEmpty();
   const snap = await getDB().collection('testimonials').orderBy('createdAt', 'desc').get();
   cachedTestimonials = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
