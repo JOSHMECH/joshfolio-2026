@@ -535,9 +535,38 @@ if (logoutBtn) {
 // ─── STORAGE FILE UPLOAD HELPERS ───────────────────────
 async function uploadFileToStorage(blob, folder, filename) {
   if (!blob || !fbReady()) return '';
-  const ref = getStorage().ref().child(`${folder}/${filename}`);
-  const snapshot = await ref.put(blob);
-  return await snapshot.ref.getDownloadURL();
+
+  const fallbackToBase64 = () => new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = () => resolve('');
+    reader.readAsDataURL(blob);
+  });
+
+  const isMock = window.joshFirebase && window.joshFirebase.isMock;
+  if (isMock) {
+    return await fallbackToBase64();
+  }
+
+  try {
+    const storageInstance = getStorage();
+    const ref = storageInstance.ref().child(`${folder}/${filename}`);
+    
+    // Create the upload task
+    const uploadTask = ref.put(blob);
+    
+    // Timeout promise (5 seconds)
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Upload timed out")), 5000)
+    );
+    
+    // Race them
+    const snapshot = await Promise.race([uploadTask, timeoutPromise]);
+    return await snapshot.ref.getDownloadURL();
+  } catch (err) {
+    console.warn("Firebase Storage upload failed or timed out, falling back to base64 Data URL:", err);
+    return await fallbackToBase64();
+  }
 }
 
 function resizeImageFile(file, maxW, maxH, callback) {
@@ -1678,7 +1707,7 @@ async function handleProjectSubmit(e) {
     showToast(`CMS Save failed: ${err.message}`, true);
   } finally {
     saveBtn.disabled = false;
-    saveBtn.textContent = 'Save Case Study';
+    saveBtn.textContent = 'Upload';
   }
 }
 

@@ -67,17 +67,17 @@
         <a href="#" class="snav-link active" data-view="overview"><span class="sn-icon">⬡</span>Overview</a>
         
         <div class="nav-section-title">Website Content</div>
-        <a href="#" class="snav-link" data-view="projects"><span class="sn-icon">💼</span>Projects CRUD</a>
-        <a href="#" class="snav-link" data-view="services"><span class="sn-icon">🛠</span>Services CRUD</a>
-        <a href="#" class="snav-link" data-view="pricing"><span class="sn-icon">💵</span>Pricing Plans</a>
+        <a href="#" class="snav-link" data-view="projects"><span class="sn-icon">◈</span>Projects CRUD</a>
+        <a href="#" class="snav-link" data-view="services"><span class="sn-icon">⚙</span>Services CRUD</a>
+        <a href="#" class="snav-link" data-view="pricing"><span class="sn-icon">✦</span>Pricing Plans</a>
         <a href="#" class="snav-link" data-view="testimonials"><span class="sn-icon">★</span>Testimonials</a>
-        <a href="#" class="snav-link" data-view="about"><span class="sn-icon">👤</span>About Info</a>
-        <a href="#" class="snav-link" data-view="blog"><span class="sn-icon">📝</span>Blog CRUD</a>
+        <a href="#" class="snav-link" data-view="about"><span class="sn-icon">❖</span>About Info</a>
+        <a href="#" class="snav-link" data-view="blog"><span class="sn-icon">⬢</span>Blog CRUD</a>
         
         <div class="nav-section-title">Operations</div>
         <a href="#" class="snav-link" data-view="messages"><span class="sn-icon">✉</span>Inbox Messages</a>
         <a href="#" class="snav-link" data-view="github"><span class="sn-icon">⚙</span>GitHub Sync</a>
-        <a href="#" class="snav-link" data-view="email"><span class="sn-icon">🔔</span>Email Alerts</a>
+        <a href="#" class="snav-link" data-view="email"><span class="sn-icon">✦</span>Email Alerts</a>
       </nav>
       <div class="sidebar-footer">
         <button class="firebase-status" id="fbStatus" title="Click to toggle Database connection mode" style="cursor: pointer; width: 100%; text-align: left; transition: all 0.2s; border: none; font-size: inherit;">
@@ -102,10 +102,10 @@
       <!-- ── Overview View ─────────────────────────────── -->
       <div class="view" id="view-overview">
         <div class="stats-row">
-          <div class="dash-stat"><div class="ds-icon">💼</div><div><div class="ds-num" id="statTotalProjects">0</div><div class="ds-label">Projects</div></div></div>
-          <div class="dash-stat"><div class="ds-icon">🛠</div><div><div class="ds-num" id="statTotalServices">0</div><div class="ds-label">Services</div></div></div>
+          <div class="dash-stat"><div class="ds-icon">◈</div><div><div class="ds-num" id="statTotalProjects">0</div><div class="ds-label">Projects</div></div></div>
+          <div class="dash-stat"><div class="ds-icon">⚙</div><div><div class="ds-num" id="statTotalServices">0</div><div class="ds-label">Services</div></div></div>
           <div class="dash-stat"><div class="ds-icon">★</div><div><div class="ds-num" id="statTotalTestimonials">0</div><div class="ds-label">Reviews</div></div></div>
-          <div class="dash-stat"><div class="ds-icon">📝</div><div><div class="ds-num" id="statTotalBlog">0</div><div class="ds-label">Blog Posts</div></div></div>
+          <div class="dash-stat"><div class="ds-icon">⬢</div><div><div class="ds-num" id="statTotalBlog">0</div><div class="ds-label">Blog Posts</div></div></div>
           <div class="dash-stat"><div class="ds-icon">✉</div><div><div class="ds-num" id="statTotalMessages">0</div><div class="ds-label">Unread Mail</div></div></div>
         </div>
 
@@ -217,7 +217,7 @@
             <div class="pf-group">
               <label>Cover Image (Ideal 16:9 ratio) *</label>
               <div class="img-drop-zone" id="projCoverDropZone">
-                <div class="dz-icon">📁</div>
+                <div class="dz-icon">✦</div>
                 <p>Drag &amp; drop or click to upload cover image</p>
                 <input type="file" id="projCoverFile" accept="image/*" hidden/>
               </div>
@@ -228,7 +228,7 @@
             </div>
             
             <div class="pf-actions">
-              <button type="submit" class="btn-gold" id="saveProjBtn">Save Case Study</button>
+              <button type="submit" class="btn-gold" id="saveProjBtn">Upload</button>
               <button type="button" class="btn-outline" id="cancelProjFormBtn">Cancel</button>
             </div>
           </form>
@@ -414,7 +414,7 @@
             <div class="pf-group" style="margin-bottom:1.5rem;">
               <label>Profile Image File</label>
               <div class="img-drop-zone" id="aboutPhotoDropZone">
-                <div class="dz-icon">📁</div>
+                <div class="dz-icon">✦</div>
                 <p>Drag &amp; drop or click to upload profile image</p>
                 <input type="file" id="aboutPhotoFile" accept="image/*" hidden/>
               </div>
@@ -493,7 +493,7 @@
             <div class="pf-group">
               <label>Featured Image *</label>
               <div class="img-drop-zone" id="blogImgDropZone">
-                <div class="dz-icon">📁</div>
+                <div class="dz-icon">✦</div>
                 <p>Drag &amp; drop or click to upload featured image</p>
                 <input type="file" id="blogImgFile" accept="image/*" hidden/>
               </div>
@@ -614,7 +614,7 @@
         <div class="pf-group" style="margin-bottom:1.2rem; text-align:left;">
           <label>Preview Cover Override</label>
           <div class="img-drop-zone" id="ghDropZone">
-            <div class="dz-icon">📁</div>
+            <div class="dz-icon">✦</div>
             <p>Upload replacement project card image</p>
             <input type="file" id="ghImgFile" accept="image/*" hidden />
           </div>
