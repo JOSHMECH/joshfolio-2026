@@ -400,8 +400,15 @@ if(skillsSec) skillsObs.observe(skillsSec);
 
 /* ─── Project Card Builder ───────────────────────────── */
 function buildCard(project){
+  // Normalize project fields (database vs GitHub API schemas)
+  const title = project.title || '';
+  const image = project.image || project.coverImage || '';
+  const desc = project.desc || project.description || '';
+  const liveUrl = project.liveUrl || project.projectUrl || '';
+  const stack = project.stack || project.technologies || [];
+
   let thumbHtml = '';
-  if (project.isGitHubRepo && !project.image) {
+  if (project.isGitHubRepo && !image) {
     thumbHtml = `
       <div class="github-preview-thumb">
         <div class="gh-preview-grid"></div>
@@ -412,7 +419,7 @@ function buildCard(project){
         </div>
         <div class="gh-preview-code">
           <span class="gh-preview-bracket">[</span>
-          <span class="gh-preview-name">${project.title}</span>
+          <span class="gh-preview-name">${title}</span>
           <span class="gh-preview-bracket">]</span>
         </div>
         <div class="gh-preview-footer">
@@ -420,8 +427,8 @@ function buildCard(project){
         </div>
       </div>`;
   } else {
-    thumbHtml = project.image
-      ? `<img src="${project.image}" alt="${project.title}" loading="lazy"/>`
+    thumbHtml = image
+      ? `<img src="${image}" alt="${title}" loading="lazy"/>`
       : `<div class="curated-preview-thumb">
           <div class="cp-grid"></div>
           <div class="cp-orb"></div>
@@ -431,23 +438,23 @@ function buildCard(project){
           </div>
           <div class="cp-title-block">
             <span class="cp-bracket">❖</span>
-            <span class="cp-name">${project.title}</span>
+            <span class="cp-name">${title}</span>
           </div>
           <div class="cp-footer">
-            <span class="cp-stack">${(project.stack || []).slice(0, 3).join(' · ') || 'Curated Project'}</span>
+            <span class="cp-stack">${stack.slice(0, 3).join(' · ') || 'Curated Project'}</span>
           </div>
         </div>`;
   }
 
   const repoLink = project.isGitHubRepo
-    ? `private.html?repo=${encodeURIComponent(project.title)}&live=${(project.isOverridden && project.liveUrl) ? encodeURIComponent(project.liveUrl) : ''}`
+    ? `private.html?repo=${encodeURIComponent(title)}&live=${(project.isOverridden && liveUrl) ? encodeURIComponent(liveUrl) : ''}`
     : project.repoUrl;
 
   let liveBtnHtml = '';
   if (project.isGitHubRepo && !project.isOverridden) {
     liveBtnHtml = `<span class="overlay-btn disabled-btn">Demo Not Live</span>`;
-  } else if (project.liveUrl) {
-    liveBtnHtml = `<a href="${project.liveUrl}" class="overlay-btn" target="_blank" rel="noopener">Live ↗</a>`;
+  } else if (liveUrl) {
+    liveBtnHtml = `<a href="${liveUrl}" class="overlay-btn" target="_blank" rel="noopener">Live ↗</a>`;
   }
 
   const overlayBtns = [
@@ -455,7 +462,7 @@ function buildCard(project){
     repoLink ? `<a href="${repoLink}" class="overlay-btn ghost" target="_blank" rel="noopener">Repo</a>` : ''
   ].filter(Boolean).join('');
 
-  const stackHtml = (project.stack||[]).map(s=>`<span class="stack-tag">${s}</span>`).join('');
+  const stackHtml = stack.map(s=>`<span class="stack-tag">${s}</span>`).join('');
   const card = document.createElement('div');
   card.className = 'project-card';
   card.dataset.cat = project.category;
@@ -466,8 +473,8 @@ function buildCard(project){
     </div>
     <div class="project-body">
       <p class="project-cat">${project.categoryLabel||project.category}</p>
-      <h3 class="project-title">${project.title}</h3>
-      <p class="project-desc">${project.desc}</p>
+      <h3 class="project-title">${title}</h3>
+      <p class="project-desc">${desc}</p>
       <div class="project-stack">${stackHtml}</div>
     </div>`;
 
@@ -2425,8 +2432,6 @@ let testimonialsList = [];
 
 async function seedTestimonialsIfEmpty() {
   const { db, firebaseReady } = window.joshFirebase || {};
-  const alreadySeeded = localStorage.getItem('josh_testimonials_seeded') === 'true';
-  if (alreadySeeded) return;
 
   const demoTestimonials = [
     {
@@ -2485,6 +2490,53 @@ async function seedTestimonialsIfEmpty() {
       }
     } catch (e) {
       console.warn("Failed to seed testimonials to localStorage:", e);
+    }
+  }
+}
+
+async function seedBlogsIfEmpty() {
+  const { db, firebaseReady } = window.joshFirebase || {};
+
+  const demoBlogs = [
+    {
+      title: 'Bridging Creative Design with Front-End Code',
+      slug: 'bridging-design-with-code',
+      author: 'Idowu Joshua Victor',
+      tags: ['Design', 'Development'],
+      content: 'In modern web design, having a division between design and code slows down product creation. By using design systems directly mapped to CSS custom tokens, creative developers can create live web projects that feel organic, dynamic, and beautiful at first render.\n\n### The Design System Hierarchy\n- Predefined HSL Color Tokens\n- Strict Typography Postures\n- Uniform spacing matrices\n- Fluid micro-animations.',
+      publishDate: new Date().toISOString(),
+      featuredImage: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80',
+      status: 'published'
+    }
+  ];
+
+  if (firebaseReady && db) {
+    try {
+      const snap = await db.collection('blog').get();
+      if (snap.empty) {
+        for (const b of demoBlogs) {
+          await db.collection('blog').add(b);
+        }
+        localStorage.setItem('josh_blogs_seeded', 'true');
+        console.log("[JoshFolio] Blogs successfully seeded to Firestore.");
+      }
+    } catch (err) {
+      console.warn("Failed to seed blogs to Firestore:", err);
+    }
+  } else {
+    try {
+      const local = JSON.parse(localStorage.getItem('josh_blog') || '[]');
+      if (local.length === 0) {
+        const demoWithIds = demoBlogs.map(b => ({
+          id: 'b-demo-' + Math.random().toString(36).substring(2, 9),
+          ...b
+        }));
+        localStorage.setItem('josh_blog', JSON.stringify(demoWithIds));
+        localStorage.setItem('josh_blogs_seeded', 'true');
+        console.log("[JoshFolio] Blogs successfully seeded to localStorage.");
+      }
+    } catch (e) {
+      console.warn("Failed to seed blogs to localStorage:", e);
     }
   }
 }
@@ -2563,6 +2615,9 @@ function setupTestimonialControls() {
 
 async function loadDynamicBlogs() {
   const { db, firebaseReady } = window.joshFirebase || {};
+  
+  await seedBlogsIfEmpty();
+
   let list = [];
   
   if (firebaseReady && db) {
@@ -2585,19 +2640,6 @@ async function loadDynamicBlogs() {
   const blogGrid = document.getElementById('blogGrid');
   if (blogGrid) {
     blogGrid.innerHTML = '';
-    if (published.length === 0) {
-      const fallback = {
-        id: 'default-blog-1',
-        title: 'Bridging Creative Design with Front-End Code',
-        slug: 'bridging-design-with-code',
-        author: 'Idowu Joshua Victor',
-        tags: ['Design', 'Development'],
-        content: 'In modern web design, having a division between design and code slows down product creation. By using design systems directly mapped to CSS custom tokens, creative developers can create live web projects that feel organic, dynamic, and beautiful at first render.\n\n### The Design System Hierarchy\n- Predefined HSL Color Tokens\n- Strict Typography Postures\n- Uniform spacing matrices\n- Fluid micro-animations.',
-        publishDate: new Date(),
-        featuredImage: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80'
-      };
-      published.push(fallback);
-    }
     
     published.forEach(b => {
       const card = document.createElement('div');
