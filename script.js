@@ -731,15 +731,18 @@ async function loadAdminProjects(){
     let firebaseProjects = [];
     if(firebaseReady && db){
       try{
-        const snap = await db.collection('projects')
-          .orderBy('createdAt','desc').get();
-        firebaseProjects = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+        // Use simple .get() without orderBy — avoids Firestore composite index requirement.
+        // We do our own timestamp sort in mergeProjects().
+        const snap = await db.collection('projects').get();
+        firebaseProjects = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(p => !p.status || p.status === 'published'); // only show published
       } catch(err){
-        console.warn('Firestore read failed, using localStorage:', err);
-        firebaseProjects = getLocalProjects();
+        console.warn('[JoshFolio] Firestore project read failed, using localStorage:', err);
+        firebaseProjects = getLocalProjects().filter(p => !p.status || p.status === 'published');
       }
     } else {
-      firebaseProjects = getLocalProjects();
+      firebaseProjects = getLocalProjects().filter(p => !p.status || p.status === 'published');
     }
 
     // Fetch GitHub projects
@@ -779,15 +782,19 @@ async function loadAdminProjects(){
     }
 
     // Merge Firestore projects with local projects overrides/fallbacks
-    const localProjects = getLocalProjects();
+    const localProjects = getLocalProjects()
+      .filter(p => !p.status || p.status === 'published');
     const mergedCurated = mergeProjects(firebaseProjects, localProjects);
 
     // Explicitly mark curated projects so filter logic works reliably
-    const taggedCurated = mergedCurated.map(p => ({
-      ...p,
-      isGitHubRepo: false,
-      isOverridden: false
-    }));
+    // Also filter to only published projects for the public portfolio
+    const taggedCurated = mergedCurated
+      .filter(p => !p.status || p.status === 'published')
+      .map(p => ({
+        ...p,
+        isGitHubRepo: false,
+        isOverridden: false
+      }));
 
     // Merge: Curated projects take precedence.
     const firebaseRepos = new Set(
