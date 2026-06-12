@@ -389,6 +389,11 @@ button {
   border-radius: 6px;
   border: 1px solid var(--border-dim);
 }
+.firebase-status:hover {
+  border-color: var(--gold);
+  color: var(--text);
+  background: var(--surface-3);
+}
 .fb-dot {
   width: 8px;
   height: 8px;

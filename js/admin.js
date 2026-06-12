@@ -266,38 +266,6 @@ class MockFirestore {
   }
 }
 
-class MockAuth {
-  constructor() {
-    this.callbacks = [];
-    this.user = sessionStorage.getItem('josh_mock_logged_in') === 'true' ? { email: 'admin@joshfolio.com' } : null;
-  }
-  onAuthStateChanged(callback) {
-    this.callbacks.push(callback);
-    setTimeout(() => callback(this.user), 10);
-    return () => {
-      this.callbacks = this.callbacks.filter(c => c !== callback);
-    };
-  }
-  get currentUser() {
-    return this.user;
-  }
-  async signInWithEmailAndPassword(email, password) {
-    if (email === 'admin@joshfolio.com' && password === 'admin123') {
-      this.user = { email };
-      sessionStorage.setItem('josh_mock_logged_in', 'true');
-      this.callbacks.forEach(cb => cb(this.user));
-      return { user: this.user };
-    } else {
-      throw new Error("Invalid mock credentials. Use admin@joshfolio.com and admin123.");
-    }
-  }
-  async signOut() {
-    this.user = null;
-    sessionStorage.removeItem('josh_mock_logged_in');
-    this.callbacks.forEach(cb => cb(null));
-  }
-}
-
 class MockStorageRef {
   constructor(path, dataUrl = '') {
     this.path = path;
@@ -329,7 +297,7 @@ class MockStorage {
 
 function setupMockFirebase() {
   const mockDb = new MockFirestore();
-  const mockAuth = new MockAuth();
+  const mockAuth = new HardcodedAuth();
   const mockStorage = new MockStorage();
   
   window.joshFirebase = {
@@ -1226,11 +1194,58 @@ if (delConfirm) {
 // ─── GITHUB SYNC DASHBOARD ─────────────────────────────
 async function loadGitHubReposFromAPI() {
   if (cachedGitHubRepos.length > 0) return cachedGitHubRepos;
-  const res = await fetch('https://api.github.com/users/JOSHMECH/repos?sort=updated&per_page=100');
-  if (!res.ok) throw new Error('GitHub limit exceeded or API error.');
-  const repos = await res.json();
-  cachedGitHubRepos = repos.filter(r => !r.fork);
-  return cachedGitHubRepos;
+  
+  const cacheKey = 'josh_admin_raw_github_repos';
+  try {
+    const res = await fetch('https://api.github.com/users/JOSHMECH/repos?sort=updated&per_page=100');
+    if (!res.ok) throw new Error('GitHub API rate limit exceeded or connection error.');
+    const repos = await res.json();
+    cachedGitHubRepos = repos.filter(r => !r.fork);
+    localStorage.setItem(cacheKey, JSON.stringify(cachedGitHubRepos));
+    return cachedGitHubRepos;
+  } catch (err) {
+    console.warn('[JoshFolio] GitHub fetch failed, attempting cache fallback:', err);
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        cachedGitHubRepos = JSON.parse(cached);
+        return cachedGitHubRepos;
+      } catch (e) {}
+    }
+    
+    // If no cache, return hardcoded mock repositories so the admin page never breaks
+    console.warn('[JoshFolio] No cache found, returning hardcoded mock repositories.');
+    cachedGitHubRepos = [
+      {
+        id: 111111111,
+        name: 'scholarlens',
+        description: 'An AI-powered academic sandbox that accelerates research, organizes notes, compiles citations.',
+        language: 'JavaScript',
+        fork: false,
+        html_url: 'https://github.com/JOSHMECH/scholarlens',
+        homepage: 'https://scholarlens.example.com'
+      },
+      {
+        id: 222222222,
+        name: 'kudiflow',
+        description: 'A smart finance and operations manager that simplifies payments, balances, tracking, and growth.',
+        language: 'Python',
+        fork: false,
+        html_url: 'https://github.com/JOSHMECH/kudiflow',
+        homepage: 'https://kudiflow.example.com'
+      },
+      {
+        id: 333333333,
+        name: 'joshfolio-2026',
+        description: 'My personal creative developer portfolio website built using vanilla CSS and JavaScript.',
+        language: 'HTML',
+        fork: false,
+        html_url: 'https://github.com/JOSHMECH/joshfolio-2026',
+        homepage: null
+      }
+    ];
+    return cachedGitHubRepos;
+  }
 }
 
 async function getHiddenRepos() {
@@ -1257,9 +1272,21 @@ async function renderGitHubList(search = '') {
 
   try {
     const repos = await loadGitHubReposFromAPI();
-    const hiddenList = await getHiddenRepos();
+    
+    let hiddenList = [];
+    try {
+      hiddenList = await getHiddenRepos();
+    } catch (dbErr) {
+      console.warn('[JoshFolio] Failed to load hidden repositories from Firestore:', dbErr);
+    }
     const hiddenSet = new Set(hiddenList.map(String));
-    const overrides = await getGitHubOverrides();
+
+    let overrides = {};
+    try {
+      overrides = await getGitHubOverrides();
+    } catch (dbErr) {
+      console.warn('[JoshFolio] Failed to load GitHub overrides from Firestore:', dbErr);
+    }
 
     loading.style.display = 'none';
     
@@ -1491,6 +1518,19 @@ function initEventTriggers() {
   document.getElementById('blogSearch').addEventListener('input', e => renderBlogsList(e.target.value));
   document.getElementById('messagesSearch').addEventListener('input', e => renderMessagesList(e.target.value));
   document.getElementById('githubSearch').addEventListener('input', e => renderGitHubList(e.target.value));
+
+  // Toggle Database connection mode (Cloud vs Local Sandbox)
+  const fbStatusEl = document.getElementById('fbStatus');
+  if (fbStatusEl) {
+    fbStatusEl.addEventListener('click', () => {
+      const isMock = localStorage.getItem('josh_use_mock_firebase') === 'true';
+      localStorage.setItem('josh_use_mock_firebase', !isMock ? 'true' : 'false');
+      showToast(!isMock ? '✓ Switched to Local Sandbox (reloading...)' : '✓ Switched to Cloud Database (reloading...)');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    });
+  }
 }
 
 function setupImageDropZone(zoneId, fileId, previewId, wrapId, removeId, blobSetter) {
