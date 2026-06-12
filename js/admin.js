@@ -327,7 +327,6 @@ let deleteTarget = { id: null, type: null };
 
 // Temporary upload blobs
 let projectCoverBlob = null;
-let testimonialAvatarBlob = null;
 let aboutPhotoBlob = null;
 let blogImgBlob = null;
 let ghOverrideBlob = null;
@@ -340,11 +339,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   updateFirebaseStatus(true);
   
-  // Auth state monitor
   getAuth().onAuthStateChanged(user => {
     if (user) {
-      document.getElementById('userInitial').textContent = (user.email || 'A').substring(0, 2).toUpperCase();
-      document.getElementById('userInitialSm').textContent = (user.email || 'A').substring(0, 2).toUpperCase();
       showDashboard();
     } else {
       showLogin();
@@ -906,12 +902,8 @@ function renderTestimonialsList() {
   cachedTestimonials.forEach(t => {
     const card = document.createElement('div');
     card.className = 'manage-card';
-    const avatarImg = t.profileImage 
-      ? `<img src="${t.profileImage}" alt="${t.clientName}" />` 
-      : `<div style="font-size:2rem;">★</div>`;
       
     card.innerHTML = `
-      <div class="mc-thumb">${avatarImg}</div>
       <div class="mc-body">
         <p class="mc-cat">${t.position} · ${t.company}</p>
         <h3 class="mc-title">${t.clientName}</h3>
@@ -946,15 +938,6 @@ function editTestimonialForm(id) {
   document.getElementById('testComp').value = t.company;
   document.getElementById('testReview').value = t.review;
 
-  if (t.profileImage) {
-    document.getElementById('testAvatarPreview').src = t.profileImage;
-    document.getElementById('testAvatarPreviewWrap').style.display = 'block';
-    document.getElementById('testAvatarDropZone').style.display = 'none';
-  } else {
-    document.getElementById('testAvatarPreviewWrap').style.display = 'none';
-    document.getElementById('testAvatarDropZone').style.display = 'block';
-  }
-  testimonialAvatarBlob = null;
   document.getElementById('testimonialFormPanel').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -1528,9 +1511,6 @@ function initEventTriggers() {
   setupImageDropZone('projCoverDropZone', 'projCoverFile', 'projCoverPreview', 'projCoverPreviewWrap', 'projCoverRemove', blob => {
     projectCoverBlob = blob;
   });
-  setupImageDropZone('testAvatarDropZone', 'testAvatarFile', 'testAvatarPreview', 'testAvatarPreviewWrap', 'testAvatarRemove', blob => {
-    testimonialAvatarBlob = blob;
-  });
   setupImageDropZone('aboutPhotoDropZone', 'aboutPhotoFile', 'aboutPhotoPreview', 'aboutPhotoPreviewWrap', 'aboutPhotoRemove', blob => {
     aboutPhotoBlob = blob;
   });
@@ -1810,18 +1790,10 @@ async function handleTestimonialSubmit(e) {
   saveBtn.disabled = true;
 
   try {
-    let profileImage = '';
     const docId = id || getDB().collection('testimonials').doc().id;
 
-    if (testimonialAvatarBlob) {
-      profileImage = await uploadFileToStorage(testimonialAvatarBlob, 'testimonials', `avatar_${docId}.jpg`);
-    } else if (id) {
-      const existing = cachedTestimonials.find(x => x.id === id);
-      profileImage = existing ? existing.profileImage : '';
-    }
-
     const payload = {
-      clientName, rating, position, company, review, profileImage,
+      clientName, rating, position, company, review, profileImage: '',
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
@@ -2052,9 +2024,6 @@ function resetTestimonialForm() {
   document.getElementById('testimonialForm').reset();
   document.getElementById('testimonialId').value = '';
   document.getElementById('testimonialFormTitle').textContent = 'Add New Recommendation';
-  document.getElementById('testAvatarPreviewWrap').style.display = 'none';
-  document.getElementById('testAvatarDropZone').style.display = 'block';
-  testimonialAvatarBlob = null;
 }
 
 function resetBlogForm() {

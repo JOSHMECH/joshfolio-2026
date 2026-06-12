@@ -281,6 +281,7 @@ button {
   font-size: .68rem;
   font-weight: 800;
   color: #080808;
+  object-fit: cover;
 }
 
 .sidebar-overlay {
@@ -479,6 +480,7 @@ button {
   font-weight: 800;
   color: #080808;
   flex-shrink: 0;
+  object-fit: cover;
 }
 
 /* ─── Views ───────────────────────────────────────── */

@@ -2528,11 +2528,9 @@ function renderTestimonialSlide() {
   
   const t = testimonialsList[currentTestimonialIndex];
   const ratingStars = '★'.repeat(t.rating) + '☆'.repeat(5 - t.rating);
-  const avatar = t.profileImage || 'https://via.placeholder.com/150?text=' + encodeURIComponent(t.clientName.substring(0,2));
   
   slider.innerHTML = `
     <div class="testimonial-slide active">
-      <img src="${avatar}" alt="${t.clientName}" class="test-avatar" />
       <div class="test-rating">${ratingStars}</div>
       <p class="test-quote">"${t.review}"</p>
       <h4 class="test-client-name">${t.clientName}</h4>
