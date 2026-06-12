@@ -387,7 +387,11 @@ async function showDashboard() {
 }
 
 async function refreshDashboardData() {
-  if (!fbReady()) return;
+  // Works in both real Firebase mode AND local sandbox (mock) mode
+  if (!fbReady()) {
+    console.warn('[JoshFolio CMS] Firebase not ready — skipping data refresh.');
+    return;
+  }
   try {
     await Promise.all([
       loadProjects(),
@@ -399,8 +403,24 @@ async function refreshDashboardData() {
     ]);
     updateDashboardStats();
     loadActivityLogs();
+    // Refresh the currently-visible list view after data loads
+    safeRenderActiveView();
   } catch (err) {
     console.error('Error refreshing data:', err);
+    showToast('⚠ Dashboard data load error. Check console.', true);
+  }
+}
+
+function safeRenderActiveView() {
+  try {
+    if (activeView === 'projects')     renderProjectsList();
+    else if (activeView === 'services')    renderServicesList();
+    else if (activeView === 'pricing')     renderPlansList();
+    else if (activeView === 'testimonials') renderTestimonialsList();
+    else if (activeView === 'blog')        renderBlogsList();
+    else if (activeView === 'messages')    renderMessagesList();
+  } catch (e) {
+    console.warn('[CMS] safeRenderActiveView error:', e);
   }
 }
 
@@ -658,8 +678,15 @@ function updateDashboardStats() {
 
 // ─── PROJECTS CRUD IMPLEMENTATION ──────────────────────
 async function loadProjects() {
-  const snap = await getDB().collection('projects').orderBy('order', 'asc').get();
-  cachedProjects = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  // Try ordering by 'order'; fall back to unordered if field missing
+  try {
+    const snap = await getDB().collection('projects').orderBy('order', 'asc').get();
+    cachedProjects = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (err) {
+    console.warn('[CMS] orderBy(order) failed, loading without sort:', err);
+    const snap = await getDB().collection('projects').get();
+    cachedProjects = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
 }
 
 function renderProjectsList(search = '') {
@@ -668,10 +695,11 @@ function renderProjectsList(search = '') {
   const sub = document.getElementById('projectsCountSub');
   
   grid.innerHTML = '';
-  const filtered = cachedProjects.filter(p => 
-    !search || p.title.toLowerCase().includes(search.toLowerCase()) || 
-    p.categoryLabel.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = cachedProjects.filter(p => {
+    const label = (p.categoryLabel || p.category || '').toLowerCase();
+    const title = (p.title || '').toLowerCase();
+    return !search || title.includes(search.toLowerCase()) || label.includes(search.toLowerCase());
+  });
 
   sub.textContent = `${filtered.length} project${filtered.length !== 1 ? 's' : ''} configured.`;
 
@@ -747,8 +775,14 @@ function editProjectForm(id) {
 
 // ─── SERVICES CRUD IMPLEMENTATION ──────────────────────
 async function loadServices() {
-  const snap = await getDB().collection('services').orderBy('order', 'asc').get();
-  cachedServices = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  try {
+    const snap = await getDB().collection('services').orderBy('order', 'asc').get();
+    cachedServices = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (err) {
+    console.warn('[CMS] loadServices orderBy failed, loading without sort:', err);
+    const snap = await getDB().collection('services').get();
+    cachedServices = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
 }
 
 function renderServicesList() {
@@ -805,8 +839,14 @@ function editServiceForm(id) {
 
 // ─── PRICING PLANS CRUD ────────────────────────────────
 async function loadPlans() {
-  const snap = await getDB().collection('plans').orderBy('order', 'asc').get();
-  cachedPlans = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  try {
+    const snap = await getDB().collection('plans').orderBy('order', 'asc').get();
+    cachedPlans = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (err) {
+    console.warn('[CMS] loadPlans orderBy failed, loading without sort:', err);
+    const snap = await getDB().collection('plans').get();
+    cachedPlans = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
 }
 
 function renderPlansList() {
@@ -1080,7 +1120,12 @@ function renderBlogsList(search = '') {
       ? `<img src="${b.featuredImage}" alt="${b.title}" />` 
       : `<div style="font-size:2.5rem;">📝</div>`;
       
-    const dateStr = b.publishDate ? b.publishDate.toDate().toLocaleDateString() : '';
+    const dateStr = b.publishDate
+      ? (typeof b.publishDate.toDate === 'function'
+          ? b.publishDate.toDate()
+          : new Date(b.publishDate)
+        ).toLocaleDateString()
+      : '';
     
     card.innerHTML = `
       <div class="mc-thumb">${thumb}</div>
@@ -1141,8 +1186,14 @@ function editBlogForm(id) {
 
 // ─── INBOX MESSAGES ────────────────────────────────────
 async function loadMessages() {
-  const snap = await getDB().collection('messages').orderBy('createdAt', 'desc').get();
-  cachedMessages = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  try {
+    const snap = await getDB().collection('messages').orderBy('createdAt', 'desc').get();
+    cachedMessages = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (err) {
+    console.warn('[CMS] loadMessages orderBy failed, loading without sort:', err);
+    const snap = await getDB().collection('messages').get();
+    cachedMessages = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
 }
 
 function renderMessagesList(search = '') {
@@ -1151,11 +1202,14 @@ function renderMessagesList(search = '') {
   const sub = document.getElementById('messagesSub');
   
   grid.innerHTML = '';
-  const filtered = cachedMessages.filter(m =>
-    !search || m.name.toLowerCase().includes(search.toLowerCase()) ||
-    m.email.toLowerCase().includes(search.toLowerCase()) ||
-    m.message.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = cachedMessages.filter(m => {
+    if (!search) return true;
+    const name    = (m.name    || '').toLowerCase();
+    const email   = (m.email   || '').toLowerCase();
+    const message = (m.message || '').toLowerCase();
+    const s = search.toLowerCase();
+    return name.includes(s) || email.includes(s) || message.includes(s);
+  });
 
   sub.textContent = `${filtered.length} message${filtered.length !== 1 ? 's' : ''} found.`;
 
@@ -1168,7 +1222,12 @@ function renderMessagesList(search = '') {
   filtered.forEach(m => {
     const card = document.createElement('div');
     card.className = `message-card ${m.read ? '' : 'unread'}`;
-    const dateStr = m.createdAt ? m.createdAt.toDate().toLocaleString() : '';
+    const dateStr = m.createdAt
+      ? (typeof m.createdAt.toDate === 'function'
+          ? m.createdAt.toDate()
+          : new Date(m.createdAt)
+        ).toLocaleString()
+      : '';
     
     card.innerHTML = `
       <div class="msg-header">

@@ -725,79 +725,92 @@ function mergeProjects(fbList, localList) {
 /* ─── Load Projects from Firebase or localStorage ────── */
 async function loadAdminProjects(){
   const loading = document.getElementById('projectsLoading');
-  const { db, firebaseReady } = window.joshFirebase || {};
+  try {
+    const { db, firebaseReady } = window.joshFirebase || {};
 
-  let firebaseProjects = [];
-  if(firebaseReady && db){
-    try{
-      const snap = await db.collection('projects')
-        .orderBy('createdAt','desc').get();
-      firebaseProjects = snap.docs.map(d=>({ id:d.id, ...d.data() }));
-    } catch(err){
-      console.warn('Firestore read failed, using localStorage:', err);
+    let firebaseProjects = [];
+    if(firebaseReady && db){
+      try{
+        const snap = await db.collection('projects')
+          .orderBy('createdAt','desc').get();
+        firebaseProjects = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+      } catch(err){
+        console.warn('Firestore read failed, using localStorage:', err);
+        firebaseProjects = getLocalProjects();
+      }
+    } else {
       firebaseProjects = getLocalProjects();
     }
-  } else {
-    firebaseProjects = getLocalProjects();
-  }
 
-  // Fetch GitHub projects
-  let githubProjects = await fetchGitHubRepos();
+    // Fetch GitHub projects
+    let githubProjects = await fetchGitHubRepos();
 
-  // Fetch Hidden Repo IDs
-  const hiddenRepoIds = await getHiddenRepoIds();
+    // Fetch Hidden Repo IDs
+    const hiddenRepoIds = await getHiddenRepoIds();
 
-  // Filter out any hidden repos
-  githubProjects = githubProjects.filter(gh => {
-    const rawId = gh.id.replace('gh-', '');
-    return !hiddenRepoIds.has(String(rawId));
-  });
-
-  // Apply overrides (Live URL and Preview image overrides)
-  try {
-    const overrides = await getGitHubOverrides();
-    githubProjects = githubProjects.map(gh => {
+    // Filter out any hidden repos
+    githubProjects = githubProjects.filter(gh => {
       const rawId = gh.id.replace('gh-', '');
-      const o = overrides[rawId];
-      if (o) {
+      return !hiddenRepoIds.has(String(rawId));
+    });
+
+    // Apply overrides (Live URL and Preview image overrides)
+    try {
+      const overrides = await getGitHubOverrides();
+      githubProjects = githubProjects.map(gh => {
+        const rawId = gh.id.replace('gh-', '');
+        const o = overrides[rawId];
+        if (o) {
+          return {
+            ...gh,
+            liveUrl: o.liveUrl || gh.liveUrl,
+            image: o.previewUrl || gh.image || '',
+            isOverridden: true
+          };
+        }
         return {
           ...gh,
-          liveUrl: o.liveUrl || gh.liveUrl,
-          image: o.previewUrl || gh.image || '',
-          isOverridden: true
+          isOverridden: false
         };
-      }
-      return {
-        ...gh,
-        isOverridden: false
-      };
+      });
+    } catch (err) {
+      console.warn('Failed to apply GitHub overrides:', err);
+      githubProjects = githubProjects.map(gh => ({ ...gh, isOverridden: false }));
+    }
+
+    // Merge Firestore projects with local projects overrides/fallbacks
+    const localProjects = getLocalProjects();
+    const mergedCurated = mergeProjects(firebaseProjects, localProjects);
+
+    // Explicitly mark curated projects so filter logic works reliably
+    const taggedCurated = mergedCurated.map(p => ({
+      ...p,
+      isGitHubRepo: false,
+      isOverridden: false
+    }));
+
+    // Merge: Curated projects take precedence.
+    const firebaseRepos = new Set(
+      taggedCurated
+        .map(p => normalizeRepoUrl(p.repoUrl))
+        .filter(Boolean)
+    );
+
+    const filteredGitHub = githubProjects.filter(gh => {
+      const url = normalizeRepoUrl(gh.repoUrl);
+      return !firebaseRepos.has(url);
     });
+
+    // Combine lists: curated projects first, then github repositories
+    allAdminProjects = [...taggedCurated, ...filteredGitHub];
   } catch (err) {
-    console.warn('Failed to apply GitHub overrides:', err);
-    githubProjects = githubProjects.map(gh => ({ ...gh, isOverridden: false }));
+    console.error('[JoshFolio] loadAdminProjects error:', err);
+    // Still try to render whatever we have
+    allAdminProjects = allAdminProjects.length ? allAdminProjects : getLocalProjects().map(p => ({ ...p, isGitHubRepo: false }));
+  } finally {
+    if(loading) loading.style.display='none';
+    renderProjects('all');
   }
-
-  // Merge Firestore projects with local projects overrides/fallbacks
-  const localProjects = getLocalProjects();
-  const mergedCurated = mergeProjects(firebaseProjects, localProjects);
-
-  // Merge: Curated projects take precedence.
-  const firebaseRepos = new Set(
-    mergedCurated
-      .map(p => normalizeRepoUrl(p.repoUrl))
-      .filter(Boolean)
-  );
-
-  const filteredGitHub = githubProjects.filter(gh => {
-    const url = normalizeRepoUrl(gh.repoUrl);
-    return !firebaseRepos.has(url);
-  });
-
-  // Combine lists: curated projects first, then github repositories
-  allAdminProjects = [...mergedCurated, ...filteredGitHub];
-
-  if(loading) loading.style.display='none';
-  renderProjects('all');
 }
 
 function getLocalProjects(){
@@ -2637,11 +2650,14 @@ async function loadDynamicBlogs() {
   
   const published = list.filter(b => b.status === 'published');
   
+  // Limit to 3 most recent on the homepage; full list available on blog.html
+  const preview = published.slice(0, 3);
+  
   const blogGrid = document.getElementById('blogGrid');
   if (blogGrid) {
     blogGrid.innerHTML = '';
     
-    published.forEach(b => {
+    preview.forEach(b => {
       const card = document.createElement('div');
       card.className = 'blog-card reveal-up';
       const date = b.publishDate && typeof b.publishDate.toDate === 'function' 
@@ -2675,6 +2691,12 @@ async function loadDynamicBlogs() {
         if (post) openBlogReaderModal(post);
       });
     });
+
+    // Add "See All Articles" CTA after the grid if there are more posts
+    const ctaWrap = document.getElementById('blogSeeCta');
+    if (ctaWrap) {
+      ctaWrap.style.display = published.length > 0 ? 'flex' : 'none';
+    }
   }
 }
 

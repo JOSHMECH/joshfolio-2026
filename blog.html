@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="All articles by Idowu Joshua Victor — thoughts on software engineering, creative design, statistics, and building digital products." />
+  <meta name="theme-color" content="#080808" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Josh_d_Guru — Blog & Insights" />
+  <meta property="og:description" content="All articles by Idowu Joshua Victor on engineering, design, and data." />
+  <meta property="og:image" content="/social-preview.png" />
+
+  <title>Blog & Insights — Josh_d_Guru</title>
+  <link rel="apple-touch-icon" href="josh.png">
+  <link rel="icon" type="image/png" href="josh.png">
+  <link rel="shortcut icon" href="josh.png">
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter+Tight:ital,wght@0,300..900;1,300..900&family=Inter:ital,opsz,wght@0,14..32,300..900;1,14..32,300..900&family=JetBrains+Mono:ital,wght@0,300..800;1,300..800&display=swap"
+    rel="stylesheet" />
+
+  <style>
+    /* ── Blog Page Specific Styles ── */
+    .blog-page-hero {
+      background: var(--bg);
+      padding: 8rem 0 4rem;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border-dim);
+    }
+    .blog-page-hero::before {
+      content: '';
+      position: absolute;
+      top: -30%;
+      right: -15%;
+      width: 480px;
+      height: 480px;
+      background: radial-gradient(ellipse at center, rgba(200, 169, 110, 0.07) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .blog-page-hero .container {
+      position: relative;
+      z-index: 1;
+    }
+    .blog-page-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .blog-page-eyebrow::before {
+      content: '';
+      display: block;
+      width: 24px;
+      height: 1px;
+      background: var(--gold);
+    }
+    .blog-page-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.6rem, 6vw, 5rem);
+      font-weight: 800;
+      line-height: 1.05;
+      margin-bottom: 1.2rem;
+      color: var(--text);
+    }
+    .blog-page-title .gold { color: var(--gold); }
+    .blog-page-sub {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      line-height: 1.65;
+      max-width: 560px;
+    }
+
+    /* Filter bar */
+    .blog-filter-bar {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-top: 2.5rem;
+      align-items: center;
+    }
+    .blog-filter-label {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-right: 0.4rem;
+    }
+    .filter-tag-btn {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 30px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-tag-btn:hover,
+    .filter-tag-btn.active {
+      background: var(--gold);
+      color: #080808;
+      border-color: var(--gold);
+      font-weight: 700;
+    }
+
+    /* Main blog content area */
+    .blog-page-content {
+      background: var(--bg-alt);
+      padding: 5rem 0 8rem;
+    }
+
+    /* Empty / Loading states */
+    .blog-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      padding: 5rem 0;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+    .blog-loading-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: blink 1.2s infinite;
+    }
+    .blog-loading-dot:nth-child(2) { animation-delay: 0.2s; }
+    .blog-loading-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink {
+      0%, 80%, 100% { opacity: 0.2; transform: scale(0.9); }
+      40% { opacity: 1; transform: scale(1.1); }
+    }
+
+    .blog-empty-state {
+      text-align: center;
+      padding: 5rem 0;
+      color: var(--text-muted);
+      display: none;
+    }
+    .blog-empty-state .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    .blog-empty-state p { font-size: 1rem; }
+
+    /* Article count badge */
+    .blog-count-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .blog-count-label {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .blog-count-label strong {
+      color: var(--gold);
+    }
+
+    /* Back nav */
+    .back-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+      margin-bottom: 2rem;
+    }
+    .back-nav:hover { color: var(--gold); }
+    .back-nav .arrow { transition: transform 0.2s; }
+    .back-nav:hover .arrow { transform: translateX(-4px); }
+
+    /* Footer */
+    .blog-page-footer {
+      background: var(--bg);
+      border-top: 1px solid var(--border-dim);
+      padding: 2.5rem 0;
+      text-align: center;
+    }
+    .blog-page-footer p {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .blog-page-footer a {
+      color: var(--gold);
+      text-decoration: none;
+    }
+    .blog-page-footer a:hover { text-decoration: underline; }
+
+    /* Larger card grid on dedicated page */
+    .blog-page-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 2.2rem;
+    }
+    @media (max-width: 480px) {
+      .blog-page-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="noise-overlay"></div>
+
+  <!-- ─── Navigation ──────────────────────────────────── -->
+  <nav id="navbar">
+    <div class="nav-inner">
+      <a href="index.html#hero" class="nav-logo">
+        <span class="logo-bracket">[</span>Josh_d_Guru<span class="logo-bracket">]</span>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="index.html#about" class="nav-link">About</a>
+        <a href="index.html#skills" class="nav-link">Skills</a>
+        <a href="index.html#services" class="nav-link">Services</a>
+        <a href="index.html#projects" class="nav-link">Projects</a>
+        <a href="index.html#startup" class="nav-link">Startup</a>
+        <a href="blog.html" class="nav-link" style="color:var(--gold)">Blog</a>
+        <a href="index.html#contact" class="nav-link">Contact</a>
+      </div>
+      <div class="nav-actions">
+        <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+  <div class="mobile-menu-overlay" id="menuOverlay"></div>
+
+  <!-- ─── Blog Hero ──────────────────────────────────── -->
+  <section class="blog-page-hero">
+    <div class="container">
+      <a href="index.html#blog" class="back-nav">
+        <span class="arrow">←</span> Back to Portfolio
+      </a>
+      <p class="blog-page-eyebrow">Insights & Editorial</p>
+      <h1 class="blog-page-title">
+        All <span class="gold">Articles</span>
+      </h1>
+      <p class="blog-page-sub">
+        Thoughts on software engineering, creative UI/UX design, statistical modeling, and the art of building premium digital products.
+      </p>
+
+      <!-- Dynamic tag filter buttons -->
+      <div class="blog-filter-bar" id="blogFilterBar">
+        <span class="blog-filter-label">Filter:</span>
+        <button class="filter-tag-btn active" data-filter="all" id="filterAll">All</button>
+        <!-- More tags injected dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Blog Grid ──────────────────────────────────── -->
+  <section class="blog-page-content">
+    <div class="container">
+      <div class="blog-count-row">
+        <span class="blog-count-label" id="blogPageCount">Loading articles…</span>
+      </div>
+
+      <!-- Loading spinner -->
+      <div class="blog-loading" id="blogPageLoading">
+        <div class="blog-loading-dot"></div>
+        <div class="blog-loading-dot"></div>
+        <div class="blog-loading-dot"></div>
+        <span>Loading articles…</span>
+      </div>
+
+      <!-- Empty state -->
+      <div class="blog-empty-state" id="blogPageEmpty">
+        <div class="empty-icon">📝</div>
+        <p>No published articles yet. Check back soon.</p>
+      </div>
+
+      <!-- Blog cards -->
+      <div class="blog-page-grid" id="blogPageGrid"></div>
+    </div>
+  </section>
+
+  <!-- ─── Blog Reader Modal ──────────────────────────── -->
+  <div class="sys-modal-overlay" id="blogReaderOverlay" style="display:none" role="dialog" aria-modal="true" aria-label="Blog Article Reader">
+    <div class="blog-reader-card">
+      <button class="modal-close" id="closeBlogReader" aria-label="Close Reader">✕</button>
+      <div class="blog-reader-hero" id="blogReaderHero" style="background-image: url('https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=960&q=80');">
+        <div class="blog-reader-meta">
+          <span class="blog-reader-tag" id="blogReaderTag">Category</span>
+          <h1 class="blog-reader-title" id="blogReaderTitle">Article Title</h1>
+          <p class="blog-reader-info"><span id="blogReaderAuthor">Author</span> · <span id="blogReaderDate">Date</span></p>
+        </div>
+      </div>
+      <div class="blog-reader-content" id="blogReaderContent">
+        <!-- Full article content -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Footer ────────────────────────────────────── -->
+  <footer class="blog-page-footer">
+    <div class="container">
+      <p>© 2026 <a href="index.html">Josh_d_Guru</a> · All rights reserved · <a href="index.html#contact">Get in touch</a></p>
+    </div>
+  </footer>
+
+  <!-- Firebase / Config -->
+  <script src="firebase-config.js"></script>
+
+  <script>
+  /* ══════════════════════════════════════════════════════
+     Blog Page — blog.html
+     Loads all published blog articles, renders grid + modal reader
+  ══════════════════════════════════════════════════════ */
+
+  let allBlogPosts = [];
+  let activeFilterTag = 'all';
+
+  // ─── Minimal local storage fallback ─────────────────
+  function getLocalBlogs() {
+    try {
+      return JSON.parse(localStorage.getItem('josh_blog') || '[]');
+    } catch (e) { return []; }
+  }
+
+  // ─── Safe date helper ────────────────────────────────
+  function parseDate(val) {
+    if (!val) return new Date();
+    if (typeof val.toDate === 'function') return val.toDate();
+    return new Date(val);
+  }
+
+  // ─── Render content helper (markdown-lite) ───────────
+  function renderMarkdownLite(content) {
+    return (content || '').split('\n\n').map(para => {
+      if (para.startsWith('### ')) return `<h3>${para.substring(4)}</h3>`;
+      if (para.startsWith('## '))  return `<h2>${para.substring(3)}</h2>`;
+      if (para.startsWith('# '))   return `<h2>${para.substring(2)}</h2>`;
+      if (para.startsWith('- ')) {
+        const items = para.split('\n').filter(i => i.startsWith('- ')).map(i => i.substring(2));
+        return `<ul>${items.map(item => `<li>${item}</li>`).join('')}</ul>`;
+      }
+      return `<p>${para.replace(/\n/g, '<br/>')}</p>`;
+    }).join('');
+  }
+
+  // ─── Open blog reader modal ──────────────────────────
+  function openBlogReader(post) {
+    const overlay = document.getElementById('blogReaderOverlay');
+    const hero    = document.getElementById('blogReaderHero');
+    const tag     = document.getElementById('blogReaderTag');
+    const title   = document.getElementById('blogReaderTitle');
+    const author  = document.getElementById('blogReaderAuthor');
+    const dateEl  = document.getElementById('blogReaderDate');
+    const content = document.getElementById('blogReaderContent');
+
+    if (!overlay) return;
+
+    const date    = parseDate(post.publishDate);
+    const dateStr = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    const cover   = post.featuredImage || 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?auto=format&fit=crop&w=960&q=80';
+
+    hero.style.backgroundImage = `url('${cover}')`;
+    tag.textContent    = (post.tags || []).join(', ') || 'Article';
+    title.textContent  = post.title;
+    author.textContent = post.author || 'Idowu Joshua Victor';
+    dateEl.textContent = dateStr;
+    content.innerHTML  = renderMarkdownLite(post.content);
+
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  // ─── Close modal ─────────────────────────────────────
+  function setupBlogReaderClose() {
+    const closeBtn = document.getElementById('closeBlogReader');
+    const overlay  = document.getElementById('blogReaderOverlay');
+
+    const closeModal = () => {
+      if (overlay) overlay.style.display = 'none';
+      document.body.style.overflow = '';
+    };
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (overlay)  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  }
+
+  // ─── Build tag filter bar ─────────────────────────────
+  function buildTagFilters(posts) {
+    const bar = document.getElementById('blogFilterBar');
+    if (!bar) return;
+
+    const tagSet = new Set();
+    posts.forEach(p => (p.tags || []).forEach(t => tagSet.add(t)));
+
+    tagSet.forEach(tag => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-tag-btn';
+      btn.dataset.filter = tag;
+      btn.textContent = tag;
+      btn.addEventListener('click', () => applyFilter(tag));
+      bar.appendChild(btn);
+    });
+  }
+
+  // ─── Apply tag filter ─────────────────────────────────
+  function applyFilter(tag) {
+    activeFilterTag = tag;
+    document.querySelectorAll('.filter-tag-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.filter === tag);
+    });
+    const filtered = tag === 'all'
+      ? allBlogPosts
+      : allBlogPosts.filter(p => (p.tags || []).includes(tag));
+    renderGrid(filtered);
+  }
+
+  // ─── Render the blog grid ─────────────────────────────
+  function renderGrid(posts) {
+    const grid  = document.getElementById('blogPageGrid');
+    const empty = document.getElementById('blogPageEmpty');
+    const count = document.getElementById('blogPageCount');
+
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const label = activeFilterTag === 'all' ? 'all articles' : `"${activeFilterTag}" articles`;
+    count.innerHTML = `Showing <strong>${posts.length}</strong> ${label}`;
+
+    if (posts.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    posts.forEach((b, idx) => {
+      const card = document.createElement('div');
+      card.className = 'blog-card reveal-up';
+      card.style.setProperty('--d', `${idx * 0.08}s`);
+
+      const date    = parseDate(b.publishDate);
+      const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const tags    = (b.tags || []).map(t => `<span class="blog-card-tag">${t}</span>`).join('');
+      const cover   = b.featuredImage || 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?auto=format&fit=crop&w=640&q=80';
+      const excerpt = (b.content || '').replace(/[#\-*]/g, '').substring(0, 130) + '…';
+
+      card.innerHTML = `
+        <div class="blog-card-image-wrap">
+          <img src="${cover}" alt="${b.title}" class="blog-card-image" loading="lazy" />
+        </div>
+        <div class="blog-card-body">
+          <div class="blog-card-meta">
+            <span class="blog-card-date">${dateStr}</span>
+            <div class="blog-card-tags">${tags}</div>
+          </div>
+          <h2 class="blog-card-title" style="font-size:1.15rem;">${b.title}</h2>
+          <p class="blog-card-summary">${excerpt}</p>
+          <button class="btn-read-more" data-id="${b.id}" aria-label="Read full article: ${b.title}">
+            Read Full Article →
+          </button>
+        </div>
+      `;
+
+      card.querySelector('.btn-read-more').addEventListener('click', () => openBlogReader(b));
+      grid.appendChild(card);
+    });
+  }
+
+  // ─── Load all blogs ───────────────────────────────────
+  async function loadAllBlogs() {
+    const loading = document.getElementById('blogPageLoading');
+    const empty   = document.getElementById('blogPageEmpty');
+
+    // Wait for firebase-config.js to initialize
+    await new Promise(resolve => {
+      if (window.joshFirebase) { resolve(); return; }
+      const maxWait = 4000;
+      const start   = Date.now();
+      const check   = setInterval(() => {
+        if (window.joshFirebase || Date.now() - start > maxWait) {
+          clearInterval(check);
+          resolve();
+        }
+      }, 80);
+    });
+
+    const { db, firebaseReady } = window.joshFirebase || {};
+    let list = [];
+
+    if (firebaseReady && db) {
+      try {
+        const snap = await db.collection('blog').orderBy('publishDate', 'desc').get();
+        list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } catch (err) {
+        console.warn('[Blog Page] Firebase read failed, falling back to local:', err);
+      }
+    }
+
+    // Fallback to local storage
+    if (list.length === 0) {
+      list = getLocalBlogs();
+    }
+
+    // Only show published posts
+    allBlogPosts = list.filter(b => b.status === 'published');
+
+    if (loading) loading.style.display = 'none';
+
+    if (allBlogPosts.length === 0) {
+      empty.style.display = 'block';
+      const count = document.getElementById('blogPageCount');
+      if (count) count.textContent = '0 articles found.';
+      return;
+    }
+
+    buildTagFilters(allBlogPosts);
+    renderGrid(allBlogPosts);
+  }
+
+  // ─── Nav hamburger ────────────────────────────────────
+  function setupNav() {
+    const hamburger    = document.getElementById('hamburger');
+    const menuOverlay  = document.getElementById('menuOverlay');
+    const navbar       = document.getElementById('navbar');
+    const navLinks     = document.querySelectorAll('.nav-link');
+
+    if (hamburger && menuOverlay) {
+      hamburger.addEventListener('click', () => {
+        const open = hamburger.classList.toggle('open');
+        menuOverlay.classList.toggle('open', open);
+        hamburger.setAttribute('aria-expanded', open);
+        document.body.style.overflow = open ? 'hidden' : '';
+      });
+      menuOverlay.addEventListener('click', () => {
+        hamburger.classList.remove('open');
+        menuOverlay.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', false);
+        document.body.style.overflow = '';
+      });
+    }
+
+    // Navbar scroll shadow
+    window.addEventListener('scroll', () => {
+      if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 40);
+    }, { passive: true });
+
+    // Close mobile nav on link click
+    navLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        if (hamburger) hamburger.classList.remove('open');
+        if (menuOverlay) menuOverlay.classList.remove('open');
+        document.body.style.overflow = '';
+      });
+    });
+  }
+
+  // ─── Reveal animations ───────────────────────────────
+  function setupRevealObserver() {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.reveal-up').forEach(el => observer.observe(el));
+
+    // Re-observe when new cards are added
+    const gridEl = document.getElementById('blogPageGrid');
+    if (gridEl) {
+      new MutationObserver(() => {
+        gridEl.querySelectorAll('.reveal-up:not(.visible)').forEach(el => observer.observe(el));
+      }).observe(gridEl, { childList: true });
+    }
+  }
+
+  // ─── Init ─────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    setupNav();
+    setupBlogReaderClose();
+    setupRevealObserver();
+    loadAllBlogs();
+
+    // Check for deep-link hash like blog.html#article-slug
+    if (location.hash && location.hash.length > 1) {
+      const slug = location.hash.substring(1);
+      // Wait briefly for data to load, then open matching post
+      setTimeout(() => {
+        const post = allBlogPosts.find(p => p.slug === slug || p.id === slug);
+        if (post) openBlogReader(post);
+      }, 1500);
+    }
+  });
+  </script>
+
+</body>
+</html>
