@@ -1437,7 +1437,7 @@ function initTerminalCLI() {
       "  - Active Beta Users: 2,400+",
       "  - Ecosystem Nodes: 3 Built",
       "  - Community Members: 15,000+",
-      "INTEGRATIONS: Gemini AI, Supabase, Cloud Firestore"
+      "INTEGRATIONS: Gemini AI, Firebase, Cloud Firestore"
     ],
     globe: () => [
       "LOCATION TELEMETRY SYSTEM:",

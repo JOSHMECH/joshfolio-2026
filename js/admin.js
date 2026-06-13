@@ -366,7 +366,7 @@ function updateFirebaseStatus(ready) {
   dot.style.boxShadow = '';
   if (ready) {
     dot.className = 'fb-dot connected';
-    label.textContent = 'Firestore Connected';
+    label.textContent = 'Firebase Connected';
   } else {
     dot.className = 'fb-dot error';
     label.textContent = 'Connection Offline';
@@ -1665,16 +1665,11 @@ function initEventTriggers() {
   document.getElementById('messagesSearch').addEventListener('input', e => renderMessagesList(e.target.value));
   document.getElementById('githubSearch').addEventListener('input', e => renderGitHubList(e.target.value));
 
-  // Toggle Database connection mode (Cloud vs Local Sandbox)
+  // Database connection status confirmation (Read-Only)
   const fbStatusEl = document.getElementById('fbStatus');
   if (fbStatusEl) {
     fbStatusEl.addEventListener('click', () => {
-      const isMock = localStorage.getItem('josh_use_mock_firebase') === 'true';
-      localStorage.setItem('josh_use_mock_firebase', !isMock ? 'true' : 'false');
-      showToast(!isMock ? '✓ Switched to Local Sandbox (reloading...)' : '✓ Switched to Cloud Database (reloading...)');
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      showToast('✓ Cloud Database (Firebase) is connected and active.');
     });
   }
 }
