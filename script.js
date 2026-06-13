@@ -1444,9 +1444,9 @@ function initTerminalCLI() {
       "------------------------------------",
       "HEADQUARTERS: Lagos, Nigeria",
       "COORDINATES: 6.5244° N, 3.3792° E",
-      "RADAR SCAN: 3D Holographic Canvas Active",
-      "DOTTED GRID NODES: 852 landmass coordinates projected",
-      "SPIN STATE: Drag interaction enabled"
+      "RADAR SCAN: MapLibre GL 3D Globe Active",
+      "BASEMAP: Carto Dark Matter Vector Style",
+      "SPIN STATE: Slow auto-rotation, drag interaction enabled"
     ],
     contact: () => {
       const s = window.joshSocials || { email: "joshmech851@gmail.com", phone: "+234 816 1523 407", github: "https://github.com/JOSHMECH" };
@@ -1618,253 +1618,109 @@ function initMagneticAndParallax() {
   }, { passive: true });
 }
 
-/* ─── 3D Dotted Location Globe ───────────────────────── */
+/* ─── 3D MapLibre GL Location Globe ───────────────────────── */
+let locationMap = null;
 function initLocationGlobe() {
-  const canvas = document.getElementById('locationGlobe');
-  const tooltip = document.getElementById('globeTooltip');
-  if (!canvas) return;
-  
-  const ctx = canvas.getContext('2d');
-  const radius = 110;
-  const cameraDistance = 330;
-  
-  const dpr = window.devicePixelRatio || 1;
-  const width = 360;
-  const height = 360;
-  canvas.width = width * dpr;
-  canvas.height = height * dpr;
-  ctx.scale(dpr, dpr);
-  
-  const cx = width / 2;
-  const cy = height / 2;
-  
-  function isLand(lat, lon) {
-    if (lat >= -35 && lat <= 35 && lon >= -17 && lon <= 51) {
-      if (lat < 5 && lon < 8) return false;
-      if (lat > 18 && lon > 33 && lat < 30 && lon < 45) return false;
-      return true;
-    }
-    if (lat >= 36 && lat <= 70 && lon >= -10 && lon <= 45) {
-      if (lat > 60 && lon < 5) return false;
-      if (lat < 42 && lon > 25 && lon < 35) return false;
-      return true;
-    }
-    if (lat >= 5 && lat <= 75 && lon >= 45 && lon <= 180) {
-      if (lat < 30 && lon < 60 && lat > 12) return true;
-      if (lat < 8 && lon < 95) return false;
-      return true;
-    }
-    if (lat >= -10 && lat <= 8 && lon >= 95 && lon <= 150) {
-      return true;
-    }
-    if (lat >= -44 && lat <= -10 && lon >= 113 && lon <= 154) {
-      return true;
-    }
-    if (lat >= 15 && lat <= 75 && lon >= -168 && lon <= -52) {
-      if (lat < 25 && lon > -85) return false;
-      return true;
-    }
-    if (lat >= 60 && lat <= 83 && lon >= -75 && lon <= -15) {
-      return true;
-    }
-    if (lat >= -56 && lat <= 12 && lon >= -92 && lon <= -34) {
-      if (lat > 5 && lon < -75) return false;
-      if (lat < -20 && lon > -40) return false;
-      return true;
-    }
-    if (lat <= -60) {
-      return true;
-    }
-    return false;
-  }
-  
-  const points = [];
-  for (let lat = -80; lat <= 80; lat += 4.5) {
-    const radLat = lat * Math.PI / 180;
-    const cosLat = Math.cos(radLat);
-    const lonStep = cosLat > 0.1 ? 4.5 / cosLat : 90;
-    for (let lon = -180; lon < 180; lon += lonStep) {
-      if (isLand(lat, lon)) {
-        points.push({
-          x: radius * Math.cos(radLat) * Math.sin(lon * Math.PI / 180),
-          y: -radius * Math.sin(radLat),
-          z: radius * Math.cos(radLat) * Math.cos(lon * Math.PI / 180)
-        });
+  const container = document.getElementById('locationGlobe');
+  if (!container || typeof maplibregl === 'undefined') return;
+
+  // Initialize MapLibre GL
+  locationMap = new maplibregl.Map({
+    container: 'locationGlobe',
+    style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+    center: [3.3792, 6.5244], // Lagos longitude/latitude
+    zoom: 1.8,
+    projection: { type: 'globe' }, // Enable 3D Globe view
+    attributionControl: false,
+    dragPan: true,
+    dragRotate: true,
+    scrollZoom: false, // Prevent page scrolling issues
+    doubleClickZoom: false,
+    boxZoom: false,
+    keyboard: false
+  });
+
+  locationMap.on('load', () => {
+    // Add custom gold pulse marker
+    const el = document.createElement('div');
+    el.className = 'maplibre-custom-marker';
+    
+    const pulse = document.createElement('div');
+    pulse.className = 'maplibre-pulse-ring';
+    el.appendChild(pulse);
+
+    const core = document.createElement('div');
+    core.className = 'maplibre-core-dot';
+    el.appendChild(core);
+
+    // Create and add the marker to the map
+    const marker = new maplibregl.Marker({ element: el })
+      .setLngLat([3.3792, 6.5244])
+      .addTo(locationMap);
+
+    // Custom Popup styled in dark gold
+    const popup = new maplibregl.Popup({
+      offset: 15,
+      closeButton: false,
+      closeOnClick: false,
+      className: 'maplibre-custom-popup'
+    })
+      .setHTML(`
+        <div class="map-popup-header">
+          <span class="mph-dot"></span>
+          <span class="mph-title">LAGOS NODE</span>
+        </div>
+        <div class="map-popup-body">
+          <p class="mp-loc">Lagos, Nigeria</p>
+          <p class="mp-status">✦ STATUS: ACTIVE DEV NODE</p>
+          <p class="mp-coords">[6.5244° N, 3.3792° E]</p>
+        </div>
+      `);
+
+    marker.setPopup(popup);
+    popup.addTo(locationMap);
+
+    // Slow Auto-Rotation Loop
+    let userInteracted = false;
+    let idleTimeout = null;
+
+    function rotateGlobe() {
+      if (!userInteracted && locationMap) {
+        const center = locationMap.getCenter();
+        center.lng = (center.lng + 0.15) % 360;
+        locationMap.setCenter(center);
+        requestAnimationFrame(rotateGlobe);
       }
     }
-  }
-  
-  const lagosLat = 6.5244;
-  const lagosLon = 3.3792;
-  const lagosRadLat = lagosLat * Math.PI / 180;
-  const lagosRadLon = lagosLon * Math.PI / 180;
-  const lagosPt = {
-    x: radius * Math.cos(lagosRadLat) * Math.sin(lagosRadLon),
-    y: -radius * Math.sin(lagosRadLat),
-    z: radius * Math.cos(lagosRadLat) * Math.cos(lagosRadLon)
-  };
-  
-  let angleY = 1.6;
-  let angleX = 0.25;
-  
-  let isDragging = false;
-  let lastX = 0;
-  let lastY = 0;
-  let velY = 0;
-  let velX = 0;
-  
-  function getEventPos(e) {
-    if (e.touches && e.touches.length > 0) {
-      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    }
-    return { x: e.clientX, y: e.clientY };
-  }
-  
-  function handleStart(e) {
-    isDragging = true;
-    const pos = getEventPos(e);
-    lastX = pos.x;
-    lastY = pos.y;
-    velX = 0;
-    velY = 0;
-    canvas.style.cursor = 'grabbing';
-  }
-  
-  function handleMove(e) {
-    if (!isDragging) return;
-    if (e.cancelable) e.preventDefault();
-    const pos = getEventPos(e);
-    const dx = pos.x - lastX;
-    const dy = pos.y - lastY;
-    
-    velY = dx * 0.004;
-    velX = dy * 0.004;
-    
-    angleY += velY;
-    angleX += velX;
-    angleX = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, angleX));
-    
-    lastX = pos.x;
-    lastY = pos.y;
-  }
-  
-  function handleEnd() {
-    isDragging = false;
-    canvas.style.cursor = 'grab';
-  }
-  
-  canvas.addEventListener('mousedown', handleStart);
-  canvas.addEventListener('mousemove', handleMove);
-  window.addEventListener('mouseup', handleEnd);
-  
-  canvas.addEventListener('touchstart', handleStart, { passive: false });
-  canvas.addEventListener('touchmove', handleMove, { passive: false });
-  window.addEventListener('touchend', handleEnd);
-  
-  function render() {
-    ctx.clearRect(0, 0, width, height);
-    
-    const glow = ctx.createRadialGradient(cx, cy, radius * 0.6, cx, cy, radius * 1.3);
-    glow.addColorStop(0, 'rgba(200, 169, 110, 0.03)');
-    glow.addColorStop(0.8, 'rgba(200, 169, 110, 0.005)');
-    glow.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, width, height);
-    
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(200, 169, 110, 0.06)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    
-    if (!isDragging) {
-      velY *= 0.95;
-      velX *= 0.95;
-      angleY += 0.0018 + velY;
-      angleX += velX;
-      angleX = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, angleX));
-    }
-    
-    const projected = [];
-    const cosY = Math.cos(angleY);
-    const sinY = Math.sin(angleY);
-    const cosX = Math.cos(angleX);
-    const sinX = Math.sin(angleX);
-    
-    points.forEach(p => {
-      const x1 = p.x * cosY - p.z * sinY;
-      const z1 = p.x * sinY + p.z * cosY;
-      const y2 = p.y * cosX - z1 * sinX;
-      const z2 = p.y * sinX + z1 * cosX;
-      
-      const scale = cameraDistance / (cameraDistance - z2);
-      projected.push({
-        x: cx + x1 * scale,
-        y: cy + y2 * scale,
-        z: z2,
-        scale: scale
-      });
-    });
-    
-    projected.sort((a, b) => a.z - b.z);
-    
-    projected.forEach(p => {
-      ctx.beginPath();
-      const isFront = p.z > 0;
-      const r = (isFront ? 1.1 : 0.75) * p.scale;
-      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-      
-      if (isFront) {
-        const opacity = 0.15 + (p.z / radius) * 0.45;
-        ctx.fillStyle = `rgba(200, 169, 110, ${opacity})`;
-      } else {
-        ctx.fillStyle = 'rgba(200, 169, 110, 0.05)';
-      }
-      ctx.fill();
-    });
-    
-    const lx1 = lagosPt.x * cosY - lagosPt.z * sinY;
-    const lz1 = lagosPt.x * sinY + lagosPt.z * cosY;
-    const ly2 = lagosPt.y * cosX - lz1 * sinX;
-    const lz2 = lagosPt.y * sinX + lz1 * cosX;
-    
-    const isLagosFront = lz2 > 0;
-    if (isLagosFront) {
-      const lScale = cameraDistance / (cameraDistance - lz2);
-      const lpx = cx + lx1 * lScale;
-      const lpy = cy + ly2 * lScale;
-      
-      const pulse = 1 + Math.sin(Date.now() * 0.005) * 0.3;
-      
-      ctx.beginPath();
-      ctx.arc(lpx, lpy, 8 * pulse * lScale, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(200, 169, 110, 0.8)';
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-      
-      ctx.beginPath();
-      ctx.arc(lpx, lpy, 3.5 * lScale, 0, Math.PI * 2);
-      ctx.fillStyle = '#FAF6EE';
-      ctx.shadowColor = '#C8A96E';
-      ctx.shadowBlur = 8;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      
-      if (tooltip) {
-        tooltip.innerHTML = `Lagos, Nigeria <span style="color:var(--gold); opacity:0.65; margin-left:6px;">[6.5° N, 3.4° E]</span>`;
-        tooltip.style.opacity = '1';
-      }
-    } else {
-      if (tooltip) {
-        tooltip.innerHTML = `Lagos, Nigeria <span style="color:var(--text-muted); opacity:0.4; margin-left:6px;">(rotated behind)</span>`;
-        tooltip.style.opacity = '0.5';
-      }
-    }
-    
-    requestAnimationFrame(render);
-  }
-  
-  render();
+
+    const stopRotation = () => {
+      userInteracted = true;
+      if (idleTimeout) clearTimeout(idleTimeout);
+    };
+
+    const startRotation = () => {
+      userInteracted = false;
+      rotateGlobe();
+    };
+
+    // Listen to user map interactions to stop rotation
+    locationMap.on('dragstart', stopRotation);
+    locationMap.on('zoomstart', stopRotation);
+    locationMap.on('rotatestart', stopRotation);
+
+    // Setup idle timer to resume rotation after 5 seconds
+    const resetIdleTimer = () => {
+      if (idleTimeout) clearTimeout(idleTimeout);
+      idleTimeout = setTimeout(startRotation, 5000);
+    };
+
+    locationMap.on('dragend', resetIdleTimer);
+    locationMap.on('zoomend', resetIdleTimer);
+    locationMap.on('rotateend', resetIdleTimer);
+
+    // Start auto-rotation
+    rotateGlobe();
+  });
 }
 
 /* ─── GuruLabs Waitlist ──────────────────────────────── */
@@ -2184,6 +2040,7 @@ initLocationGlobe();
 initStartupWaitlist();
 initStartupMetrics();
 initInteractiveMockups();
+initDottedSurface();
 initSocialSettings();
 
 // Load CMS Dynamic Sections
@@ -2591,46 +2448,65 @@ async function loadDynamicTestimonials() {
     ];
   }
   
-  renderTestimonialSlide();
+  renderTestimonials3d();
 }
 
-function renderTestimonialSlide() {
-  const slider = document.getElementById('testimonialsSlider');
-  if (!slider || testimonialsList.length === 0) return;
+function renderTestimonials3d() {
+  const wall = document.getElementById('testimonials3dWall');
+  if (!wall || testimonialsList.length === 0) return;
   
-  const t = testimonialsList[currentTestimonialIndex];
-  const ratingStars = '★'.repeat(t.rating) + '☆'.repeat(5 - t.rating);
+  wall.innerHTML = '';
   
-  slider.innerHTML = `
-    <div class="testimonial-slide active">
-      <div class="test-rating">${ratingStars}</div>
-      <p class="test-quote">"${t.review}"</p>
-      <h4 class="test-client-name">${t.clientName}</h4>
-      <p class="test-client-meta">${t.position} at ${t.company}</p>
-    </div>
-  `;
+  const columnsCount = 4;
+  for (let c = 0; c < columnsCount; c++) {
+    const colEl = document.createElement('div');
+    colEl.className = 'marquee-column' + (c % 2 === 1 ? ' reverse' : '');
+    colEl.style.setProperty('--duration', `${25 + c * 5}s`);
+    
+    const innerEl = document.createElement('div');
+    innerEl.className = 'marquee-inner';
+    
+    // Mix up testimonials per column to create variance
+    const items = [...testimonialsList];
+    if (c === 1) items.reverse();
+    if (c === 2) items.sort(() => 0.5 - Math.random());
+    if (c === 3) items.sort(() => 0.5 - Math.random()).reverse();
+    
+    // Duplicate list to make a seamless vertical marquee loop
+    const loopedItems = [...items, ...items, ...items, ...items];
+    
+    loopedItems.forEach(t => {
+      const card = document.createElement('div');
+      card.className = 'testimonial-card-3d';
+      
+      const initials = t.clientName ? t.clientName.charAt(0) : 'C';
+      const ratingStars = '★'.repeat(t.rating || 5);
+      
+      const avatarHtml = t.profileImage 
+        ? `<img src="${t.profileImage}" alt="${t.clientName}" />`
+        : initials;
+        
+      card.innerHTML = `
+        <div class="t-card-header">
+          <div class="t-card-avatar">${avatarHtml}</div>
+          <div class="t-card-meta">
+            <span class="t-card-name">${t.clientName}</span>
+            <span class="t-card-company">${t.position || 'Client'} · ${t.company || 'Company'}</span>
+            <span class="t-card-rating">${ratingStars}</span>
+          </div>
+        </div>
+        <blockquote class="t-card-quote">"${t.review}"</blockquote>
+      `;
+      innerEl.appendChild(card);
+    });
+    
+    colEl.appendChild(innerEl);
+    wall.appendChild(colEl);
+  }
 }
 
 function setupTestimonialControls() {
-  const prevBtn = document.getElementById('prevTestimonial');
-  const nextBtn = document.getElementById('nextTestimonial');
-  
-  if (prevBtn) {
-    prevBtn.addEventListener('click', () => {
-      if (testimonialsList.length === 0) return;
-      currentTestimonialIndex = (currentTestimonialIndex - 1 + testimonialsList.length) % testimonialsList.length;
-      renderTestimonialSlide();
-      playAudioEffect('click');
-    });
-  }
-  if (nextBtn) {
-    nextBtn.addEventListener('click', () => {
-      if (testimonialsList.length === 0) return;
-      currentTestimonialIndex = (currentTestimonialIndex + 1) % testimonialsList.length;
-      renderTestimonialSlide();
-      playAudioEffect('click');
-    });
-  }
+  // Read-only state for 3D Wall (controls not needed)
 }
 
 async function loadDynamicBlogs() {
@@ -2764,4 +2640,102 @@ function setupBlogReaderClose() {
       if (e.target === overlay) closeModal();
     });
   }
+}
+
+/* ─── WebGL Waving Dotted Particle Surface Background ─── */
+function initDottedSurface() {
+  const container = document.getElementById('dottedSurfaceContainer');
+  if (!container || typeof THREE === 'undefined') return;
+
+  const SEPARATION = 150;
+  const AMOUNTX = 40;
+  const AMOUNTY = 60;
+
+  // Setup Scene & Camera
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x080808, 2000, 10000);
+
+  const camera = new THREE.PerspectiveCamera(
+    60,
+    container.clientWidth / container.clientHeight,
+    1,
+    10000
+  );
+  camera.position.set(0, 355, 1220);
+
+  const renderer = new THREE.WebGLRenderer({
+    alpha: true,
+    antialias: true
+  });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setClearColor(scene.fog.color, 0);
+
+  container.appendChild(renderer.domElement);
+
+  // Particles positioning
+  const positions = [];
+  const colors = [];
+
+  for (let ix = 0; ix < AMOUNTX; ix++) {
+    for (let iy = 0; iy < AMOUNTY; iy++) {
+      const x = ix * SEPARATION - (AMOUNTX * SEPARATION) / 2;
+      const y = 0;
+      const z = iy * SEPARATION - (AMOUNTY * SEPARATION) / 2;
+
+      positions.push(x, y, z);
+      // Gold colors to match theme (var(--gold) is roughly rgb(200, 169, 110))
+      colors.push(200 / 255, 169 / 255, 110 / 255);
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+  const material = new THREE.PointsMaterial({
+    size: 5.5,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.4,
+    sizeAttenuation: true
+  });
+
+  const points = new THREE.Points(geometry, material);
+  scene.add(points);
+
+  let count = 0;
+  let animationId;
+
+  function animate() {
+    animationId = requestAnimationFrame(animate);
+
+    const positionAttribute = geometry.attributes.position;
+    const posArr = positionAttribute.array;
+
+    let i = 0;
+    for (let ix = 0; ix < AMOUNTX; ix++) {
+      for (let iy = 0; iy < AMOUNTY; iy++) {
+        const index = i * 3;
+        posArr[index + 1] =
+          Math.sin((ix + count) * 0.35) * 45 +
+          Math.sin((iy + count) * 0.5) * 45;
+        i++;
+      }
+    }
+
+    positionAttribute.needsUpdate = true;
+    renderer.render(scene, camera);
+    count += 0.045; // Smooth slow waving animation
+  }
+
+  function handleResize() {
+    if (!container.clientWidth || !container.clientHeight) return;
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+  }
+  window.addEventListener('resize', handleResize);
+
+  animate();
 }

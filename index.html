@@ -27,6 +27,7 @@
   <link rel="icon" type="image/png" href="josh.png">
   <link rel="shortcut icon" href="josh.png">
   <link rel="stylesheet" href="styles.css" />
+  <link href="https://unpkg.com/maplibre-gl@4.3.2/dist/maplibre-gl.css" rel="stylesheet" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -76,6 +77,9 @@
 
   <!-- ─── Hero ────────────────────────────────────────── -->
   <section id="hero" class="hero">
+    <!-- Waving Dotted Particle Surface Background -->
+    <div id="dottedSurfaceContainer" class="hero-dotted-surface"></div>
+
     <div class="hero-orb hero-orb-1"></div>
     <div class="hero-orb hero-orb-2"></div>
 
@@ -802,13 +806,13 @@
         <span class="section-tag">07 / Testimonials</span>
         <h2 class="section-title">What Clients<br /><span class="gold">Say</span></h2>
       </div>
-      <div class="testimonials-slider-wrap">
-        <div class="testimonials-slider" id="testimonialsSlider">
-          <!-- Dynamic testimonials go here -->
-        </div>
-        <div class="slider-controls">
-          <button class="slider-btn prev-btn" id="prevTestimonial" aria-label="Previous Testimonial">←</button>
-          <button class="slider-btn next-btn" id="nextTestimonial" aria-label="Next Testimonial">→</button>
+      <div class="testimonials-3d-perspective-container">
+        <div class="grad-top"></div>
+        <div class="grad-bottom"></div>
+        <div class="grad-left"></div>
+        <div class="grad-right"></div>
+        <div class="testimonials-3d-wall-wrapper" id="testimonials3dWall">
+          <!-- Dynamic 3D Marquee Columns go here -->
         </div>
       </div>
     </div>
@@ -832,8 +836,7 @@
             <span class="gch-badge">LIVE</span>
           </div>
           <div class="globe-canvas-wrap">
-            <canvas id="locationGlobe" width="360" height="360"
-              style="max-width: 100%; height: auto; cursor: grab;"></canvas>
+            <div id="locationGlobe"></div>
           </div>
           <div id="globeTooltip" class="globe-tooltip">Lagos, Nigeria</div>
         </div>
@@ -1033,12 +1036,16 @@
     </div>
   </div>
 
+  <!-- 🌐 Three.js WebGL Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
   <!-- 🔥 Firebase SDK (compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
   <script src="firebase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="https://unpkg.com/maplibre-gl@4.3.2/dist/maplibre-gl.js"></script>
   <script src="script.js"></script>
 </body>
 
