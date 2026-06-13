@@ -47,14 +47,23 @@
       font-family: var(--font-body);
       font-size: 16px;
       line-height: 1.6;
-      overflow: hidden;
+      overflow-y: auto;
+      overflow-x: hidden;
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       position: relative;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+    }
+    .scroll-wrapper {
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 1.5rem;
+      z-index: 10;
+      position: relative;
     }
     a {
       text-decoration: none;
@@ -325,6 +334,302 @@
         font-size: 0.78rem;
       }
     }
+      }
+    }
+
+    /* ─── Recommended Section ───────────────────────────── */
+    .recommended-section {
+      margin-top: 4rem;
+      width: 100%;
+      max-width: 900px;
+      text-align: center;
+      z-index: 10;
+    }
+    .rec-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 2rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    /* Blog Grid & Cards */
+    .blog-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+      width: 100%;
+      margin-top: 1rem;
+    }
+    @media (max-width: 768px) {
+      .blog-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .blog-card {
+      background: rgba(20, 20, 20, 0.55);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-dim);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      transition: all 0.3s ease;
+      box-shadow: var(--shadow);
+    }
+    
+    .blog-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--gold);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(200, 169, 110, 0.05);
+    }
+    
+    .blog-card-image-wrap {
+      width: 100%;
+      height: 180px;
+      overflow: hidden;
+      position: relative;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    
+    .blog-card-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    
+    .blog-card:hover .blog-card-image {
+      transform: scale(1.05);
+    }
+    
+    .blog-card-body {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+    }
+    
+    .blog-card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    
+    .blog-card-date {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    
+    .blog-card-tags {
+      display: flex;
+      gap: 0.4rem;
+    }
+    
+    .blog-card-tag {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--gold);
+      background: rgba(200, 169, 110, 0.08);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      border: 1px solid rgba(200, 169, 110, 0.15);
+    }
+    
+    .blog-card-title {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.4;
+      margin-bottom: 0.5rem;
+    }
+    
+    .blog-card-summary {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+      margin-bottom: 1.25rem;
+      flex-grow: 1;
+    }
+    
+    .btn-read-more {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--gold);
+      background: transparent;
+      border: none;
+      text-align: left;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: gap 0.2s;
+    }
+    
+    .btn-read-more:hover {
+      gap: 0.6rem;
+    }
+
+    /* ─── Blog Reader Modal ──────────────────────────────── */
+    .sys-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 8, 8, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+      z-index: 10000;
+      animation: fadeIn 0.25s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .blog-reader-card {
+      background: rgba(18, 18, 18, 0.95);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 800px;
+      max-height: 85vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    @keyframes scaleUp {
+      from { transform: scale(0.96); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    
+    .modal-close {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    
+    .modal-close:hover {
+      background: var(--gold);
+      color: #080808;
+      border-color: var(--gold);
+      transform: scale(1.05);
+    }
+    
+    .blog-reader-hero {
+      width: 100%;
+      height: 280px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+    }
+    
+    .blog-reader-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(18, 18, 18, 1) 0%, rgba(18, 18, 18, 0.4) 60%, rgba(0, 0, 0, 0.1) 100%);
+    }
+    
+    .blog-reader-meta {
+      position: relative;
+      z-index: 2;
+      padding: 2rem;
+      width: 100%;
+    }
+    
+    .blog-reader-tag {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 0.6rem;
+      display: block;
+    }
+    
+    .blog-reader-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 800;
+      color: #FAF6EE;
+      line-height: 1.25;
+      margin-bottom: 0.8rem;
+    }
+    
+    .blog-reader-info {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    
+    .blog-reader-content {
+      padding: 2rem;
+      color: #FAF6EE;
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+    
+    .blog-reader-content p {
+      margin-bottom: 1.5rem;
+      color: rgba(250, 246, 238, 0.85);
+    }
+    
+    .blog-reader-content h2, 
+    .blog-reader-content h3 {
+      font-family: var(--font-display);
+      color: var(--gold);
+      margin: 2rem 0 1rem;
+      font-weight: 700;
+    }
+    
+    .blog-reader-content h2 { font-size: 1.35rem; }
+    .blog-reader-content h3 { font-size: 1.15rem; }
+    
+    .blog-reader-content ul {
+      margin: 1rem 0 1.5rem 1.5rem;
+      list-style-type: square;
+    }
+    
+    .blog-reader-content li {
+      margin-bottom: 0.5rem;
+      color: rgba(250, 246, 238, 0.85);
+    }
   </style>
 </head>
 <body>
@@ -336,41 +641,68 @@
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
 
-  <div class="error-container">
-    <span class="error-tag">⚡ System Alert: Error 404</span>
-    <h1 class="error-title">404</h1>
-    <h2 class="error-subtitle">Route Lost in Space</h2>
-    <p class="error-desc">
-      It seems you've wandered off the grid. The index you are looking for has either been relocated, purged, or is temporarily out of service.
-    </p>
+  <div class="scroll-wrapper">
+    <div class="error-container">
+      <span class="error-tag">⚡ System Alert: Error 404</span>
+      <h1 class="error-title">404</h1>
+      <h2 class="error-subtitle">Route Lost in Space</h2>
+      <p class="error-desc">
+        It seems you've wandered off the grid. The index you are looking for has either been relocated, purged, or is temporarily out of service.
+      </p>
 
-    <div class="terminal-card">
-      <div class="terminal-header">
-        <span class="terminal-dot"></span>
-        <span class="terminal-dot"></span>
-        <span class="terminal-dot"></span>
+      <div class="terminal-card">
+        <div class="terminal-header">
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+        </div>
+        <div class="terminal-body">
+          <div class="terminal-line">
+            <span class="terminal-prompt">$</span>
+            <span class="terminal-output">locate --target="<span id="route-path">unknown</span>"</span>
+          </div>
+          <div class="terminal-line">
+            <span class="terminal-error-text">status: RESOLVE_FAILED (404)</span>
+          </div>
+          <div class="terminal-line">
+            <span>reason: Host path does not match any registered endpoints.</span>
+          </div>
+          <div class="terminal-line">
+            <span class="terminal-prompt">$</span>
+            <span class="terminal-output">ping --reconnect=home</span>
+          </div>
+        </div>
       </div>
-      <div class="terminal-body">
-        <div class="terminal-line">
-          <span class="terminal-prompt">$</span>
-          <span class="terminal-output">locate --target="<span id="route-path">unknown</span>"</span>
-        </div>
-        <div class="terminal-line">
-          <span class="terminal-error-text">status: RESOLVE_FAILED (404)</span>
-        </div>
-        <div class="terminal-line">
-          <span>reason: Host path does not match any registered endpoints.</span>
-        </div>
-        <div class="terminal-line">
-          <span class="terminal-prompt">$</span>
-          <span class="terminal-output">ping --reconnect=home</span>
-        </div>
+
+      <div class="actions-row">
+        <a href="/" class="btn-primary">Return Home →</a>
+        <a href="/admin" class="btn-ghost">Go to Dashboard</a>
       </div>
     </div>
 
-    <div class="actions-row">
-      <a href="/" class="btn-primary">Return Home →</a>
-      <a href="/admin" class="btn-ghost">Go to Dashboard</a>
+    <!-- Recommended articles -->
+    <div class="recommended-section">
+      <h3 class="rec-title">⚡ Suggested Reading</h3>
+      <div class="blog-grid" id="blogGrid">
+        <!-- Dynamic recommended articles loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Blog Reader Modal Overlay ─── -->
+  <div class="sys-modal-overlay" id="blogReaderOverlay" style="display:none" role="dialog" aria-modal="true" aria-label="Blog Article Reader">
+    <div class="blog-reader-card">
+      <button class="modal-close" id="closeBlogReader" aria-label="Close Reader">✕</button>
+      <div class="blog-reader-hero" id="blogReaderHero">
+        <div class="blog-reader-meta">
+          <span class="blog-reader-tag" id="blogReaderTag">Category</span>
+          <h1 class="blog-reader-title" id="blogReaderTitle">Article Title</h1>
+          <p class="blog-reader-info"><span id="blogReaderAuthor">Author</span> · <span id="blogReaderDate">Date</span></p>
+        </div>
+      </div>
+      <div class="blog-reader-content" id="blogReaderContent">
+        <!-- Content will be injected dynamically -->
+      </div>
     </div>
   </div>
 
@@ -406,28 +738,204 @@
     })();
 
     // Make elements responsive to custom cursor hover
-    document.querySelectorAll('a, button').forEach(el => {
-      el.addEventListener('mouseenter', () => {
-        if (cursor) {
-          cursor.style.width = '14px';
-          cursor.style.height = '14px';
-        }
-        if (cursorTrail) {
-          cursorTrail.style.width = '46px';
-          cursorTrail.style.height = '46px';
-        }
+    function updateCursorHovers() {
+      document.querySelectorAll('a, button').forEach(el => {
+        el.removeEventListener('mouseenter', el._enterHandler);
+        el.removeEventListener('mouseleave', el._leaveHandler);
+        
+        el._enterHandler = () => {
+          if (cursor) { cursor.style.width = '14px'; cursor.style.height = '14px'; }
+          if (cursorTrail) { cursorTrail.style.width = '46px'; cursorTrail.style.height = '46px'; }
+        };
+        el._leaveHandler = () => {
+          if (cursor) { cursor.style.width = '8px'; cursor.style.height = '8px'; }
+          if (cursorTrail) { cursorTrail.style.width = '32px'; cursorTrail.style.height = '32px'; }
+        };
+        
+        el.addEventListener('mouseenter', el._enterHandler);
+        el.addEventListener('mouseleave', el._leaveHandler);
       });
-      el.addEventListener('mouseleave', () => {
-        if (cursor) {
-          cursor.style.width = '8px';
-          cursor.style.height = '8px';
+    }
+
+    /* ─── Recommended Blogs Loader & Reader ──────────────── */
+    let allBlogPosts = [];
+
+    function getLocalBlogs() {
+      try {
+        return JSON.parse(localStorage.getItem('josh_blog') || '[]');
+      } catch (e) { return []; }
+    }
+
+    function parseDate(val) {
+      if (!val) return new Date();
+      if (typeof val.toDate === 'function') return val.toDate();
+      return new Date(val);
+    }
+
+    function renderMarkdownLite(content) {
+      return (content || '').split('\n\n').map(para => {
+        if (para.startsWith('### ')) return `<h3>${para.substring(4)}</h3>`;
+        if (para.startsWith('## '))  return `<h2>${para.substring(3)}</h2>`;
+        if (para.startsWith('# '))   return `<h2>${para.substring(2)}</h2>`;
+        if (para.startsWith('- ')) {
+          const items = para.split('\n').filter(i => i.startsWith('- ')).map(i => i.substring(2));
+          return `<ul>${items.map(item => `<li>${item}</li>`).join('')}</ul>`;
         }
-        if (cursorTrail) {
-          cursorTrail.style.width = '32px';
-          cursorTrail.style.height = '32px';
-        }
+        return `<p>${para.replace(/\n/g, '<br/>')}</p>`;
+      }).join('');
+    }
+
+    function openBlogReader(post) {
+      const overlay = document.getElementById('blogReaderOverlay');
+      const hero    = document.getElementById('blogReaderHero');
+      const tag     = document.getElementById('blogReaderTag');
+      const title   = document.getElementById('blogReaderTitle');
+      const author  = document.getElementById('blogReaderAuthor');
+      const dateEl  = document.getElementById('blogReaderDate');
+      const content = document.getElementById('blogReaderContent');
+
+      if (!overlay) return;
+
+      const date    = parseDate(post.publishDate);
+      const dateStr = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      const cover   = post.featuredImage || 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?auto=format&fit=crop&w=960&q=80';
+
+      hero.style.backgroundImage = `url('${cover}')`;
+      tag.textContent    = (post.tags || []).join(', ') || 'Article';
+      title.textContent  = post.title;
+      author.textContent = post.author || 'Idowu Joshua Victor';
+      dateEl.textContent = dateStr;
+      content.innerHTML  = renderMarkdownLite(post.content);
+
+      overlay.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      
+      updateCursorHovers();
+    }
+
+    function setupBlogReaderClose() {
+      const closeBtn = document.getElementById('closeBlogReader');
+      const overlay  = document.getElementById('blogReaderOverlay');
+
+      const closeModal = () => {
+        if (overlay) overlay.style.display = 'none';
+        document.body.style.overflow = '';
+      };
+
+      if (closeBtn) closeBtn.addEventListener('click', closeModal);
+      if (overlay)  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    }
+
+    async function loadDynamicBlogs() {
+      await new Promise(resolve => {
+        if (window.joshFirebase) { resolve(); return; }
+        const maxWait = 4000;
+        const start   = Date.now();
+        const check   = setInterval(() => {
+          if (window.joshFirebase || Date.now() - start > maxWait) {
+            clearInterval(check);
+            resolve();
+          }
+        }, 80);
       });
-    });
+
+      const { db, firebaseReady } = window.joshFirebase || {};
+      let list = [];
+
+      if (firebaseReady && db) {
+        try {
+          const snap = await db.collection('blog').orderBy('publishDate', 'desc').get();
+          list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (err) {
+          console.warn('[404 Blog] Firebase load failed:', err);
+        }
+      }
+
+      if (list.length === 0) {
+        list = getLocalBlogs();
+      }
+
+      if (list.length === 0) {
+        list = [
+          {
+            id: "kudiflow-fintech",
+            title: "Building Kudiflow: Solving African Cross-Border Payments",
+            summary: "An inside look at the technical architecture of Kudiflow, bridging the gap between local wallets and international trade APIs.",
+            content: "### The Core Friction\nCross-border payments in Africa remain highly fragmented. Kudiflow leverages mobile money gateways and local bank integrations to process liquidity in under 60 seconds...\n\n### Architectural Blueprint\nWe built KudiFlow using a microservices pattern. Firebase Auth handles customer profiles, while Cloud Firestore syncs transaction states in real time. For security, we implemented multi-sig approvals for high-value node transfers.",
+            tags: ["Fintech", "Case Study"],
+            featuredImage: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=640&q=80",
+            author: "Idowu Joshua Victor",
+            publishDate: new Date("2026-02-15").toISOString(),
+            status: "published"
+          },
+          {
+            id: "scholarlens-ai",
+            title: "ScholarLens: Training OCR Models for Academic Sandboxing",
+            summary: "How we optimized Tesseract OCR and integrated Gemini 1.5 Pro to digitize handwritten mathematical expressions with 98% accuracy.",
+            content: "### The Extraction Problem\nMost academic sandboxing applications struggle with rendering mathematical syntax. For ScholarLens, our goal was converting printed and handwritten formulas into clean LaTeX formats.\n\n### Optimization Strategy\nBy pre-processing document captures via OpenCV grayscale thresholds and passing targeted crops to LLM multimodal APIs, we bypassed custom tensor model training constraints, saving thousands in infrastructure resources.",
+            tags: ["AI & Analytics", "E-Learning"],
+            featuredImage: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=640&q=80",
+            author: "Idowu Joshua Victor",
+            publishDate: new Date("2026-03-01").toISOString(),
+            status: "published"
+          }
+        ];
+      }
+
+      allBlogPosts = list.filter(b => b.status === 'published');
+      const preview = allBlogPosts.slice(0, 2);
+
+      const grid = document.getElementById('blogGrid');
+      if (grid && preview.length > 0) {
+        grid.innerHTML = '';
+        preview.forEach(b => {
+          const card = document.createElement('div');
+          card.className = 'blog-card';
+          
+          const date = parseDate(b.publishDate);
+          const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          const tags = (b.tags || []).map(t => `<span class="blog-card-tag">${t}</span>`).join('');
+          const cover = b.featuredImage || 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?auto=format&fit=crop&w=640&q=80';
+          const excerpt = (b.summary || b.content || '').substring(0, 100) + '…';
+
+          card.innerHTML = `
+            <div class="blog-card-image-wrap">
+              <img src="${cover}" alt="${b.title}" class="blog-card-image" />
+            </div>
+            <div class="blog-card-body">
+              <div class="blog-card-meta">
+                <span class="blog-card-date">${dateStr}</span>
+                <div class="blog-card-tags">${tags}</div>
+              </div>
+              <h3 class="blog-card-title">${b.title}</h3>
+              <p class="blog-card-summary">${excerpt}</p>
+              <button class="btn-read-more" data-id="${b.id || b.title}">Read Article →</button>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+
+        grid.querySelectorAll('.btn-read-more').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.dataset.id;
+            const post = allBlogPosts.find(x => x.id === id || x.title === id);
+            if (post) openBlogReader(post);
+          });
+        });
+      }
+    }
+
+    // Init recommended section
+    setupBlogReaderClose();
+    loadDynamicBlogs();
+    updateCursorHovers();
   </script>
+
+  <!-- 🔥 Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js"></script>
 </body>
 </html>
