@@ -488,7 +488,9 @@
         </div>
       `;
 
-      card.querySelector('.btn-read-more').addEventListener('click', () => openBlogReader(b));
+      card.querySelector('.btn-read-more').addEventListener('click', () => {
+        window.location.href = '404.html';
+      });
       grid.appendChild(card);
     });
   }

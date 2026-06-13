@@ -2569,9 +2569,7 @@ async function loadDynamicBlogs() {
     
     blogGrid.querySelectorAll('.btn-read-more').forEach(btn => {
       btn.addEventListener('click', () => {
-        const id = btn.dataset.id;
-        const post = published.find(x => x.id === id);
-        if (post) openBlogReaderModal(post);
+        window.location.href = '404.html';
       });
     });
 
