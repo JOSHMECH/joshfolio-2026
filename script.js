@@ -2384,37 +2384,64 @@ async function seedBlogsIfEmpty() {
       publishDate: new Date().toISOString(),
       featuredImage: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80',
       status: 'published'
+    },
+    {
+      title: 'Introducing Kudiflow: Smart Finance for Creators',
+      slug: 'introducing-kudiflow-smart-finance',
+      author: 'Idowu Joshua Victor',
+      tags: ['Fintech', 'Productivity'],
+      content: 'Managing operations and transaction tracking as a student builder or digital creator shouldn\'t feel like a chore. Kudiflow was engineered under the GuruLabs parent ecosystem to automate bookkeeping, expense logging, and cash flow visualizations.\n\n### Streamlined Financial Operations\nBy integrating intelligent ledger controls and predictive analytics, Kudiflow helps you:\n- Maintain real-time balance sheets\n- Set automated savings targets\n- Generate interactive expense reports instantly.',
+      publishDate: new Date(Date.now() - 3600000).toISOString(),
+      featuredImage: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=800&q=80',
+      status: 'published'
+    },
+    {
+      title: 'ScholarLens: Elevating Student Research with AI',
+      slug: 'scholarlens-ai-research-sandbox',
+      author: 'Idowu Joshua Victor',
+      tags: ['Edtech', 'AI'],
+      content: 'Academic research is often hindered by fragmented tools. ScholarLens bridges the gap by offering a unified sandbox where students can extract key text insights, compile citations, and analyze grade predictions.\n\n### The Academic Sandbox Model\nDesigned to empower youth innovation, ScholarLens provides:\n- Automated AI summaries for PDFs\n- Citations mapping\n- Linear regression models for GPA predictions.',
+      publishDate: new Date(Date.now() - 7200000).toISOString(),
+      featuredImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
+      status: 'published'
     }
   ];
 
   if (firebaseReady && db) {
     try {
-      const snap = await db.collection('blog').get();
-      if (snap.empty) {
-        for (const b of demoBlogs) {
+      for (const b of demoBlogs) {
+        const snap = await db.collection('blog').where('slug', '==', b.slug).get();
+        if (snap.empty) {
           await db.collection('blog').add(b);
+          console.log(`[JoshFolio] Seeded Firestore blog: ${b.title}`);
         }
-        localStorage.setItem('josh_blogs_seeded', 'true');
-        console.log("[JoshFolio] Blogs successfully seeded to Firestore.");
       }
+      localStorage.setItem('josh_blogs_seeded', 'true');
     } catch (err) {
       console.warn("Failed to seed blogs to Firestore:", err);
     }
-  } else {
-    try {
-      const local = JSON.parse(localStorage.getItem('josh_blog') || '[]');
-      if (local.length === 0) {
-        const demoWithIds = demoBlogs.map(b => ({
+  }
+
+  // Always sync local storage for redundancy/offline mode
+  try {
+    const local = JSON.parse(localStorage.getItem('josh_blog') || '[]');
+    let updated = false;
+    for (const b of demoBlogs) {
+      if (!local.some(x => x.slug === b.slug)) {
+        local.push({
           id: 'b-demo-' + Math.random().toString(36).substring(2, 9),
           ...b
-        }));
-        localStorage.setItem('josh_blog', JSON.stringify(demoWithIds));
-        localStorage.setItem('josh_blogs_seeded', 'true');
-        console.log("[JoshFolio] Blogs successfully seeded to localStorage.");
+        });
+        updated = true;
+        console.log(`[JoshFolio] Seeded localStorage blog: ${b.title}`);
       }
-    } catch (e) {
-      console.warn("Failed to seed blogs to localStorage:", e);
     }
+    if (updated) {
+      localStorage.setItem('josh_blog', JSON.stringify(local));
+    }
+    localStorage.setItem('josh_blogs_seeded', 'true');
+  } catch (e) {
+    console.warn("Failed to seed blogs to localStorage:", e);
   }
 }
 
@@ -2531,6 +2558,44 @@ async function loadDynamicBlogs() {
     } catch(e) {}
   }
   
+  if (list.length === 0) {
+    list = [
+      {
+        id: "bridging-design-with-code",
+        title: "Bridging Creative Design with Front-End Code",
+        summary: "In modern web design, having a division between design and code slows down product creation. By using design systems directly mapped to CSS custom tokens, creative developers can create live web projects that feel organic, dynamic, and beautiful at first render.",
+        content: "### The Design System Hierarchy\n- Predefined HSL Color Tokens\n- Strict Typography Postures\n- Uniform spacing matrices\n- Fluid micro-animations.",
+        tags: ["Design", "Development"],
+        featuredImage: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80",
+        author: "Idowu Joshua Victor",
+        publishDate: new Date().toISOString(),
+        status: "published"
+      },
+      {
+        id: "introducing-kudiflow-smart-finance",
+        title: "Introducing Kudiflow: Smart Finance for Creators",
+        summary: "Managing operations and transaction tracking as a student builder or digital creator shouldn't feel like a chore. Kudiflow was engineered under the GuruLabs parent ecosystem to automate bookkeeping, expense logging, and cash flow visualizations.",
+        content: "### Streamlined Financial Operations\nBy integrating intelligent ledger controls and predictive analytics, Kudiflow helps you:\n- Maintain real-time balance sheets\n- Set automated savings targets\n- Generate interactive expense reports instantly.",
+        tags: ["Fintech", "Productivity"],
+        featuredImage: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=800&q=80",
+        author: "Idowu Joshua Victor",
+        publishDate: new Date(Date.now() - 3600000).toISOString(),
+        status: "published"
+      },
+      {
+        id: "scholarlens-ai-research-sandbox",
+        title: "ScholarLens: Elevating Student Research with AI",
+        summary: "Academic research is often hindered by fragmented tools. ScholarLens bridges the gap by offering a unified sandbox where students can extract key text insights, compile citations, and analyze grade predictions.",
+        content: "### The Academic Sandbox Model\nDesigned to empower youth innovation, ScholarLens provides:\n- Automated AI summaries for PDFs\n- Citations mapping\n- Linear regression models for GPA predictions.",
+        tags: ["Edtech", "AI"],
+        featuredImage: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80",
+        author: "Idowu Joshua Victor",
+        publishDate: new Date(Date.now() - 7200000).toISOString(),
+        status: "published"
+      }
+    ];
+  }
+  
   const published = list.filter(b => b.status === 'published');
   
   // Limit to 3 most recent on the homepage; full list available on blog.html
@@ -2569,7 +2634,9 @@ async function loadDynamicBlogs() {
     
     blogGrid.querySelectorAll('.btn-read-more').forEach(btn => {
       btn.addEventListener('click', () => {
-        window.location.href = '404.html';
+        const id = btn.dataset.id;
+        const post = list.find(p => p.id === id);
+        if (post) openBlogReaderModal(post);
       });
     });
 
@@ -2579,6 +2646,19 @@ async function loadDynamicBlogs() {
       ctaWrap.style.display = published.length > 0 ? 'flex' : 'none';
     }
   }
+}
+
+function renderMarkdownLite(content) {
+  return (content || '').split('\n\n').map(para => {
+    if (para.startsWith('### ')) return `<h3>${para.substring(4)}</h3>`;
+    if (para.startsWith('## '))  return `<h2>${para.substring(3)}</h2>`;
+    if (para.startsWith('# '))   return `<h2>${para.substring(2)}</h2>`;
+    if (para.startsWith('- ')) {
+      const items = para.split('\n').filter(i => i.startsWith('- ')).map(i => i.substring(2));
+      return `<ul>${items.map(item => `<li>${item}</li>`).join('')}</ul>`;
+    }
+    return `<p>${para.replace(/\n/g, '<br/>')}</p>`;
+  }).join('');
 }
 
 function openBlogReaderModal(post) {
@@ -2604,40 +2684,50 @@ function openBlogReaderModal(post) {
   author.textContent = post.author || 'Idowu Joshua Victor';
   dateEl.textContent = dateStr;
   
-  content.innerHTML = post.content
-    .split('\n\n')
-    .map(para => {
-      if (para.startsWith('### ')) return `<h3>${para.substring(4)}</h3>`;
-      if (para.startsWith('## ')) return `<h2>${para.substring(3)}</h2>`;
-      if (para.startsWith('- ')) {
-        const items = para.split('\n').map(i => i.substring(2));
-        return `<ul>${items.map(item => `<li>${item}</li>`).join('')}</ul>`;
-      }
-      return `<p>${para.replace(/\n/g, '<br/>')}</p>`;
-    })
-    .join('');
+  content.innerHTML = renderMarkdownLite(post.content) + `
+    <div class="blog-reader-footer" style="margin-top: 3rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 2rem; display: flex; justify-content: flex-start;">
+      <button class="btn-ghost" id="bottomBackBlogReader" style="display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 0.8rem; cursor: pointer; padding: 0.6rem 1.2rem; border: 1px solid var(--border); border-radius: 20px; color: var(--text);">
+        ← Back to Articles
+      </button>
+    </div>
+  `;
     
   overlay.style.display = 'flex';
+  setTimeout(() => { overlay.classList.add('open'); }, 10);
   document.body.style.overflow = 'hidden';
   playAudioEffect('chord');
 }
 
 function setupBlogReaderClose() {
   const closeBtn = document.getElementById('closeBlogReader');
+  const backBtn = document.getElementById('backBlogReader');
   const overlay = document.getElementById('blogReaderOverlay');
+  const content = document.getElementById('blogReaderContent');
   
   const closeModal = () => {
-    if (overlay) overlay.style.display = 'none';
+    if (overlay) {
+      overlay.classList.remove('open');
+      setTimeout(() => { overlay.style.display = 'none'; }, 300);
+    }
     document.body.style.overflow = '';
     playAudioEffect('click');
   };
   
   if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (backBtn) backBtn.addEventListener('click', closeModal);
+  if (content) {
+    content.addEventListener('click', e => {
+      if (e.target && e.target.closest('#bottomBackBlogReader')) {
+        closeModal();
+      }
+    });
+  }
   if (overlay) {
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) closeModal();
     });
   }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 }
 
 /* ─── WebGL Waving Dotted Particle Surface Background ─── */

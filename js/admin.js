@@ -1063,28 +1063,49 @@ async function seedBlogsIfEmpty() {
   const db = getDB();
   if (!db) return;
   try {
-    const snap = await db.collection('blog').get();
-    if (snap.empty) {
-      const demoBlogs = [
-        {
-          title: 'Bridging Creative Design with Front-End Code',
-          slug: 'bridging-design-with-code',
-          author: 'Idowu Joshua Victor',
-          tags: ['Design', 'Development'],
-          content: 'In modern web design, having a division between design and code slows down product creation. By using design systems directly mapped to CSS custom tokens, creative developers can create live web projects that feel organic, dynamic, and beautiful at first render.\n\n### The Design System Hierarchy\n- Predefined HSL Color Tokens\n- Strict Typography Postures\n- Uniform spacing matrices\n- Fluid micro-animations.',
-          publishDate: new Date().toISOString(),
-          featuredImage: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80',
-          status: 'published'
-        }
-      ];
-      for (const b of demoBlogs) {
-        await db.collection('blog').add(b);
+    const demoBlogs = [
+      {
+        title: 'Bridging Creative Design with Front-End Code',
+        slug: 'bridging-design-with-code',
+        author: 'Idowu Joshua Victor',
+        tags: ['Design', 'Development'],
+        content: 'In modern web design, having a division between design and code slows down product creation. By using design systems directly mapped to CSS custom tokens, creative developers can create live web projects that feel organic, dynamic, and beautiful at first render.\n\n### The Design System Hierarchy\n- Predefined HSL Color Tokens\n- Strict Typography Postures\n- Uniform spacing matrices\n- Fluid micro-animations.',
+        publishDate: new Date().toISOString(),
+        featuredImage: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80',
+        status: 'published'
+      },
+      {
+        title: 'Introducing Kudiflow: Smart Finance for Creators',
+        slug: 'introducing-kudiflow-smart-finance',
+        author: 'Idowu Joshua Victor',
+        tags: ['Fintech', 'Productivity'],
+        content: 'Managing operations and transaction tracking as a student builder or digital creator shouldn\'t feel like a chore. Kudiflow was engineered under the GuruLabs parent ecosystem to automate bookkeeping, expense logging, and cash flow visualizations.\n\n### Streamlined Financial Operations\nBy integrating intelligent ledger controls and predictive analytics, Kudiflow helps you:\n- Maintain real-time balance sheets\n- Set automated savings targets\n- Generate interactive expense reports instantly.',
+        publishDate: new Date(Date.now() - 3600000).toISOString(),
+        featuredImage: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=800&q=80',
+        status: 'published'
+      },
+      {
+        title: 'ScholarLens: Elevating Student Research with AI',
+        slug: 'scholarlens-ai-research-sandbox',
+        author: 'Idowu Joshua Victor',
+        tags: ['Edtech', 'AI'],
+        content: 'Academic research is often hindered by fragmented tools. ScholarLens bridges the gap by offering a unified sandbox where students can extract key text insights, compile citations, and analyze grade predictions.\n\n### The Academic Sandbox Model\nDesigned to empower youth innovation, ScholarLens provides:\n- Automated AI summaries for PDFs\n- Citations mapping\n- Linear regression models for GPA predictions.',
+        publishDate: new Date(Date.now() - 7200000).toISOString(),
+        featuredImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
+        status: 'published'
       }
-      localStorage.setItem('josh_blogs_seeded', 'true');
-      console.log("[JoshFolio] Blogs successfully seeded with demo entry.");
+    ];
+
+    for (const b of demoBlogs) {
+      const existSnap = await db.collection('blog').where('slug', '==', b.slug).get();
+      if (existSnap.empty) {
+        await db.collection('blog').add(b);
+        console.log(`[JoshFolio CMS] Seeded Firestore blog: ${b.title}`);
+      }
     }
+    localStorage.setItem('josh_blogs_seeded', 'true');
   } catch (err) {
-    console.warn("Failed to seed blogs:", err);
+    console.warn("Failed to seed blogs in CMS:", err);
   }
 }
 

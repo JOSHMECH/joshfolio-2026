@@ -306,6 +306,7 @@
   <!-- ─── Blog Reader Modal ──────────────────────────── -->
   <div class="sys-modal-overlay" id="blogReaderOverlay" style="display:none" role="dialog" aria-modal="true" aria-label="Blog Article Reader">
     <div class="blog-reader-card">
+      <button class="modal-back" id="backBlogReader" aria-label="Back to Articles">← Back</button>
       <button class="modal-close" id="closeBlogReader" aria-label="Close Reader">✕</button>
       <div class="blog-reader-hero" id="blogReaderHero" style="background-image: url('https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=960&q=80');">
         <div class="blog-reader-meta">
@@ -391,23 +392,43 @@
     title.textContent  = post.title;
     author.textContent = post.author || 'Idowu Joshua Victor';
     dateEl.textContent = dateStr;
-    content.innerHTML  = renderMarkdownLite(post.content);
+    content.innerHTML  = renderMarkdownLite(post.content) + `
+      <div class="blog-reader-footer" style="margin-top: 3rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 2rem; display: flex; justify-content: flex-start;">
+        <button class="btn-ghost" id="bottomBackBlogReader" style="display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 0.8rem; cursor: pointer; padding: 0.6rem 1.2rem; border: 1px solid var(--border); border-radius: 20px; color: var(--text);">
+          ← Back to Articles
+        </button>
+      </div>
+    `;
 
     overlay.style.display = 'flex';
+    setTimeout(() => { overlay.classList.add('open'); }, 10);
     document.body.style.overflow = 'hidden';
   }
 
   // ─── Close modal ─────────────────────────────────────
   function setupBlogReaderClose() {
     const closeBtn = document.getElementById('closeBlogReader');
+    const backBtn = document.getElementById('backBlogReader');
     const overlay  = document.getElementById('blogReaderOverlay');
+    const content = document.getElementById('blogReaderContent');
 
     const closeModal = () => {
-      if (overlay) overlay.style.display = 'none';
+      if (overlay) {
+        overlay.classList.remove('open');
+        setTimeout(() => { overlay.style.display = 'none'; }, 300);
+      }
       document.body.style.overflow = '';
     };
 
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (backBtn) backBtn.addEventListener('click', closeModal);
+    if (content) {
+      content.addEventListener('click', e => {
+        if (e.target && e.target.closest('#bottomBackBlogReader')) {
+          closeModal();
+        }
+      });
+    }
     if (overlay)  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
   }
@@ -489,7 +510,7 @@
       `;
 
       card.querySelector('.btn-read-more').addEventListener('click', () => {
-        window.location.href = '404.html';
+        openBlogReader(b);
       });
       grid.appendChild(card);
     });
@@ -528,6 +549,44 @@
     // Fallback to local storage
     if (list.length === 0) {
       list = getLocalBlogs();
+    }
+
+    if (list.length === 0) {
+      list = [
+        {
+          id: "bridging-design-with-code",
+          title: "Bridging Creative Design with Front-End Code",
+          summary: "In modern web design, having a division between design and code slows down product creation. By using design systems directly mapped to CSS custom tokens, creative developers can create live web projects that feel organic, dynamic, and beautiful at first render.",
+          content: "### The Design System Hierarchy\n- Predefined HSL Color Tokens\n- Strict Typography Postures\n- Uniform spacing matrices\n- Fluid micro-animations.",
+          tags: ["Design", "Development"],
+          featuredImage: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80",
+          author: "Idowu Joshua Victor",
+          publishDate: new Date().toISOString(),
+          status: "published"
+        },
+        {
+          id: "introducing-kudiflow-smart-finance",
+          title: "Introducing Kudiflow: Smart Finance for Creators",
+          summary: "Managing operations and transaction tracking as a student builder or digital creator shouldn't feel like a chore. Kudiflow was engineered under the GuruLabs parent ecosystem to automate bookkeeping, expense logging, and cash flow visualizations.",
+          content: "### Streamlined Financial Operations\nBy integrating intelligent ledger controls and predictive analytics, Kudiflow helps you:\n- Maintain real-time balance sheets\n- Set automated savings targets\n- Generate interactive expense reports instantly.",
+          tags: ["Fintech", "Productivity"],
+          featuredImage: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=800&q=80",
+          author: "Idowu Joshua Victor",
+          publishDate: new Date(Date.now() - 3600000).toISOString(),
+          status: "published"
+        },
+        {
+          id: "scholarlens-ai-research-sandbox",
+          title: "ScholarLens: Elevating Student Research with AI",
+          summary: "Academic research is often hindered by fragmented tools. ScholarLens bridges the gap by offering a unified sandbox where students can extract key text insights, compile citations, and analyze grade predictions.",
+          content: "### The Academic Sandbox Model\nDesigned to empower youth innovation, ScholarLens provides:\n- Automated AI summaries for PDFs\n- Citations mapping\n- Linear regression models for GPA predictions.",
+          tags: ["Edtech", "AI"],
+          featuredImage: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80",
+          author: "Idowu Joshua Victor",
+          publishDate: new Date(Date.now() - 7200000).toISOString(),
+          status: "published"
+        }
+      ];
     }
 
     // Only show published posts

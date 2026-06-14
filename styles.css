@@ -3113,7 +3113,8 @@ em{font-family:var(--font-serif);font-style:italic;}
 }
 .blog-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  justify-content: center;
   gap: 2.2rem;
   margin-top: 3rem;
 }
@@ -3237,6 +3238,31 @@ em{font-family:var(--font-serif);font-style:italic;}
   transition: all 0.2s;
 }
 .blog-reader-card .modal-close:hover {
+  background: var(--gold);
+  color: #080808;
+  border-color: var(--gold);
+}
+.blog-reader-card .modal-back {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  height: 38px;
+  padding: 0 1.2rem;
+  border-radius: 20px;
+  background: rgba(8,8,8,0.7);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s;
+}
+.blog-reader-card .modal-back:hover {
   background: var(--gold);
   color: #080808;
   border-color: var(--gold);
