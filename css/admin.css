@@ -1066,6 +1066,39 @@ button {
   transform: translateY(0); opacity: 1;
 }
 
+/* ─── DEMO DATA TABS ─────────────────────────────────── */
+.demo-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border-dim);
+  padding-bottom: 1rem;
+}
+.demo-tab-btn {
+  background: var(--surface);
+  border: 1px solid var(--border-dim);
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.demo-tab-btn:hover {
+  border-color: var(--border);
+  color: var(--text);
+  background: var(--surface-2);
+}
+.demo-tab-btn.active {
+  background: var(--gold-dim);
+  border-color: var(--gold);
+  color: var(--gold);
+  box-shadow: 0 0 12px var(--gold-glow);
+}
+
 /* ─── RESPONSIVE OVERRIDES ───────────────────────────── */
 @media(min-width: 2560px) {
   :root { --sidebar-w: 280px; }
@@ -1099,6 +1132,8 @@ button {
   .pf-actions { flex-direction: column; align-items: stretch; }
   .btn-gold, .btn-outline, .btn-danger { width: 100%; justify-content: center; text-align: center; }
   .btn-sm.btn-gold, .btn-sm.btn-outline, .btn-sm.btn-danger { width: auto; }
+  .demo-tabs { gap: 0.4rem; }
+  .demo-tab-btn { padding: 0.5rem 0.8rem; font-size: 0.75rem; }
 }
 @media(max-width: 480px) {
   .stats-row { grid-template-columns: 1fr; }

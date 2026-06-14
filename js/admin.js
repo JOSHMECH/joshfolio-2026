@@ -324,6 +324,400 @@ let cachedBlogs = [];
 let cachedMessages = [];
 let cachedGitHubRepos = [];
 let deleteTarget = { id: null, type: null };
+let currentDemoTab = 'blogs';
+
+const DEMO_DATASETS = {
+  blogs: [
+    {
+      title: 'Bridging Creative Design with Front-End Code',
+      slug: 'bridging-design-with-code',
+      author: 'Idowu Joshua Victor',
+      tags: ['Design', 'Development'],
+      content: 'In modern web design, having a division between design and code slows down product creation. By using design systems directly mapped to CSS custom tokens, creative developers can create live web projects that feel organic, dynamic, and beautiful at first render.\n\n### The Design System Hierarchy\n- Predefined HSL Color Tokens\n- Strict Typography Postures\n- Uniform spacing matrices\n- Fluid micro-animations.',
+      publishDate: new Date().toISOString(),
+      featuredImage: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80',
+      status: 'published'
+    },
+    {
+      title: 'Introducing Kudiflow: Smart Finance for Creators',
+      slug: 'introducing-kudiflow-smart-finance',
+      author: 'Idowu Joshua Victor',
+      tags: ['Fintech', 'Productivity'],
+      content: 'Managing operations and transaction tracking as a student builder or digital creator shouldn\'t feel like a chore. Kudiflow was engineered under the GuruLabs parent ecosystem to automate bookkeeping, expense logging, and cash flow visualizations.\n\n### Streamlined Financial Operations\nBy integrating intelligent ledger controls and predictive analytics, Kudiflow helps you:\n- Maintain real-time balance sheets\n- Set automated savings targets\n- Generate interactive expense reports instantly.',
+      publishDate: new Date(Date.now() - 3600000).toISOString(),
+      featuredImage: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=800&q=80',
+      status: 'published'
+    },
+    {
+      title: 'ScholarLens: Elevating Student Research with AI',
+      slug: 'scholarlens-ai-research-sandbox',
+      author: 'Idowu Joshua Victor',
+      tags: ['Edtech', 'AI'],
+      content: 'Academic research is often hindered by fragmented tools. ScholarLens bridges the gap by offering a unified sandbox where students can extract key text insights, compile citations, and analyze grade predictions.\n\n### The Academic Sandbox Model\nDesigned to empower youth innovation, ScholarLens provides:\n- Automated AI summaries for PDFs\n- Citations mapping\n- Linear regression models for GPA predictions.',
+      publishDate: new Date(Date.now() - 7200000).toISOString(),
+      featuredImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
+      status: 'published'
+    }
+  ],
+  testimonials: [
+    {
+      clientName: 'Chinedu Okeke',
+      position: 'Director of Product',
+      company: 'Apex Solutions',
+      review: "Joshua's ability to turn complex statistical data models into highly polished, responsive front-end views is absolutely unique. Our client dashboard has never looked better.",
+      rating: 5,
+      profileImage: '',
+      createdAt: new Date().toISOString()
+    },
+    {
+      clientName: 'Amina Yusuf',
+      position: 'Founder',
+      company: 'EduVibe Africa',
+      review: 'An exceptional software developer and creative designer. He redesigned our brand identity and implemented the platform on time. Highly recommended for any serious web project!',
+      rating: 5,
+      profileImage: '',
+      createdAt: new Date().toISOString()
+    },
+    {
+      clientName: 'Sarah Jenkins',
+      position: 'Head of Engineering',
+      company: 'Vanguard Analytics',
+      review: 'The SPSS analytics dashboard Joshua built for us is both robust and visually striking. His clean code, use of design tokens, and automation workflow transformed our operations.',
+      rating: 5,
+      profileImage: '',
+      createdAt: new Date().toISOString()
+    }
+  ],
+  projects: [
+    {
+      title: "Kudiflow",
+      slug: "kudiflow",
+      category: "dev",
+      categoryLabel: "Software Development",
+      description: "A smart finance and operations manager simplifying wallet tracking, balance alerts, and transaction records for creative builders.",
+      longDescription: "Kudiflow is a comprehensive fintech and productivity tool designed for builders, creators, and student entrepreneurs in Africa. It bridges ledger tracking with clean, beautiful UI components and automated analytics tools.",
+      projectUrl: "https://kudiflow.com",
+      repoUrl: "https://github.com/JOSHMECH/kudiflow",
+      technologies: ["React", "Next.js", "Tailwind CSS", "Firebase"],
+      coverImage: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=800&q=80",
+      featured: true,
+      status: "published",
+      order: 0,
+      createdAt: new Date().toISOString(),
+      emoji: "💰"
+    },
+    {
+      title: "ScholarLens AI",
+      slug: "scholarlens",
+      category: "dev",
+      categoryLabel: "Software Development",
+      description: "An AI-powered academic sandbox accelerating research extraction, automated citations compiling, and grade predictions.",
+      longDescription: "ScholarLens integrates advanced AI models (like Gemini API) with robust client interfaces to assist students and researchers in compiling research papers, analyzing analytical data, and visualizing study paths.",
+      projectUrl: "https://scholarlens.com",
+      repoUrl: "https://github.com/JOSHMECH/scholarlens",
+      technologies: ["React", "TypeScript", "Node.js", "Gemini API"],
+      coverImage: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=800&q=80",
+      featured: true,
+      status: "published",
+      order: 1,
+      createdAt: new Date().toISOString(),
+      emoji: "📚"
+    },
+    {
+      title: "SPSS Analytics Suite",
+      slug: "spss-analytics",
+      category: "data",
+      categoryLabel: "Data Science",
+      description: "A web-based analytical visualization dashboard mapping complex statistical linear regression and ANOVA models.",
+      longDescription: "Developed for academic research at Olabisi Onabanjo University, this interactive statistics sandbox helps visualize data distributions, run Pearson correlation tests, and execute KNN classification streams.",
+      projectUrl: "#stats-lab",
+      repoUrl: "https://github.com/JOSHMECH/stats-sandbox",
+      technologies: ["Python", "SPSS", "HTML5 Canvas", "R Programming"],
+      coverImage: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80",
+      featured: true,
+      status: "published",
+      order: 2,
+      createdAt: new Date().toISOString(),
+      emoji: "📊"
+    },
+    {
+      title: "GuruLabs Brand Identity",
+      slug: "gurulabs-branding",
+      category: "design",
+      categoryLabel: "Creative Design",
+      description: "Complete brand guidelines, design tokens, logos, typography postures, and digital assets designed for GuruLabs.",
+      longDescription: "A comprehensive design system comprising dark-mode glassmorphic styling, custom HSL color systems, vector logo variations, and premium UI kit elements used across Kudiflow and ScholarLens.",
+      projectUrl: "#startup",
+      repoUrl: "",
+      technologies: ["CorelDraw", "Figma", "Illustrator", "Adobe XD"],
+      coverImage: "https://images.unsplash.com/photo-1561070791-26c113006238?auto=format&fit=crop&w=800&q=80",
+      featured: true,
+      status: "published",
+      order: 3,
+      createdAt: new Date().toISOString(),
+      emoji: "✦"
+    }
+  ],
+  services: [
+    { name: 'Frontend Engineering', icon: '⚙', description: 'Responsive, performant, accessible web apps with modern JavaScript, React, and CSS.', price: '₦150k+', features: ['React/Next.js integration', 'Semantic & responsive HTML', 'Dynamic micro-animations'], order: 1 },
+    { name: 'Creative Design', icon: '✦', description: 'Brand identities, UI/UX design, print media, and motion graphics with industry tools.', price: '₦100k+', features: ['Figma design source file', 'Harmonious design tokens', 'Logo configurator setups'], order: 2 },
+    { name: 'Data Science', icon: '◈', description: 'Statistical modelling, predictive analytics, and visualisation using Python, R, and SPSS.', price: '₦200k+', features: ['Statistical tests (ANOVA/Regression)', 'Python notebook reports', 'Data visualization charts'], order: 3 }
+  ],
+  plans: [
+    { name: 'Basic Curated Page', price: '₦50k', ctaText: 'Get Started', features: ['Single landing page', 'Responsive clean layout', 'Contact form setup', 'Self-hosting options'], popular: false, order: 1 },
+    { name: 'Standard Portfolio CMS', price: '₦150k', ctaText: 'Recommended', features: ['Full CMS portfolio panel', 'Cloud database integration', 'Security audit protections', 'Custom glassmorphic overlays'], popular: true, order: 2 },
+    { name: 'Advanced AI Suite', price: '₦300k', ctaText: 'Partner With Us', features: ['Next.js/React infrastructure', 'Gemini AI API tools', 'Interactive data models', 'Live telemetry configurations'], popular: false, order: 3 }
+  ]
+};
+
+async function seedDemoBlogs() {
+  const isOnline = fbReady();
+  let count = 0;
+  if (isOnline) {
+    const db = getDB();
+    for (const b of DEMO_DATASETS.blogs) {
+      const snap = await db.collection('blog').where('slug', '==', b.slug).get();
+      if (snap.empty) {
+        await db.collection('blog').add(b);
+        count++;
+      }
+    }
+  } else {
+    const local = JSON.parse(localStorage.getItem('josh_blog') || '[]');
+    for (const b of DEMO_DATASETS.blogs) {
+      if (!local.some(x => x.slug === b.slug)) {
+        local.push({
+          id: 'b-demo-' + Math.random().toString(36).substring(2, 9),
+          ...b
+        });
+        count++;
+      }
+    }
+    localStorage.setItem('josh_blog', JSON.stringify(local));
+  }
+  return count;
+}
+
+async function clearDemoBlogs() {
+  const isOnline = fbReady();
+  if (isOnline) {
+    const db = getDB();
+    const snap = await db.collection('blog').get();
+    for (const doc of snap.docs) {
+      await db.collection('blog').doc(doc.id).delete();
+    }
+  } else {
+    localStorage.setItem('josh_blog', '[]');
+  }
+}
+
+async function seedDemoTestimonials() {
+  const isOnline = fbReady();
+  let count = 0;
+  if (isOnline) {
+    const db = getDB();
+    for (const t of DEMO_DATASETS.testimonials) {
+      const snap = await db.collection('testimonials').where('clientName', '==', t.clientName).get();
+      if (snap.empty) {
+        await db.collection('testimonials').add(t);
+        count++;
+      }
+    }
+  } else {
+    const local = JSON.parse(localStorage.getItem('josh_testimonials') || '[]');
+    for (const t of DEMO_DATASETS.testimonials) {
+      if (!local.some(x => x.clientName === t.clientName)) {
+        local.push({
+          id: 't-demo-' + Math.random().toString(36).substring(2, 9),
+          ...t
+        });
+        count++;
+      }
+    }
+    localStorage.setItem('josh_testimonials', JSON.stringify(local));
+  }
+  return count;
+}
+
+async function clearDemoTestimonials() {
+  const isOnline = fbReady();
+  if (isOnline) {
+    const db = getDB();
+    const snap = await db.collection('testimonials').get();
+    for (const doc of snap.docs) {
+      await db.collection('testimonials').doc(doc.id).delete();
+    }
+  } else {
+    localStorage.setItem('josh_testimonials', '[]');
+  }
+}
+
+async function seedDemoProjects() {
+  const isOnline = fbReady();
+  let count = 0;
+  if (isOnline) {
+    const db = getDB();
+    for (const p of DEMO_DATASETS.projects) {
+      const snap = await db.collection('projects').where('slug', '==', p.slug).get();
+      if (snap.empty) {
+        await db.collection('projects').add(p);
+        count++;
+      }
+    }
+  } else {
+    const local = JSON.parse(localStorage.getItem('josh_admin_projects') || '[]');
+    for (const p of DEMO_DATASETS.projects) {
+      if (!local.some(x => x.slug === p.slug)) {
+        local.push({
+          id: 'p-demo-' + Math.random().toString(36).substring(2, 9),
+          ...p
+        });
+        count++;
+      }
+    }
+    localStorage.setItem('josh_admin_projects', JSON.stringify(local));
+  }
+  return count;
+}
+
+async function clearDemoProjects() {
+  const isOnline = fbReady();
+  if (isOnline) {
+    const db = getDB();
+    const snap = await db.collection('projects').get();
+    for (const doc of snap.docs) {
+      await db.collection('projects').doc(doc.id).delete();
+    }
+  } else {
+    localStorage.setItem('josh_admin_projects', '[]');
+  }
+}
+
+async function resetAllDemoData() {
+  const isOnline = fbReady();
+  if (isOnline) {
+    const db = getDB();
+    const collections = ['blog', 'testimonials', 'projects', 'services', 'plans'];
+    for (const coll of collections) {
+      const snap = await db.collection(coll).get();
+      for (const doc of snap.docs) {
+        await db.collection(coll).doc(doc.id).delete();
+      }
+    }
+    for (const b of DEMO_DATASETS.blogs) await db.collection('blog').add(b);
+    for (const t of DEMO_DATASETS.testimonials) await db.collection('testimonials').add(t);
+    for (const p of DEMO_DATASETS.projects) await db.collection('projects').add(p);
+    for (const s of DEMO_DATASETS.services) await db.collection('services').add(s);
+    for (const pl of DEMO_DATASETS.plans) await db.collection('plans').add(pl);
+  } else {
+    localStorage.setItem('josh_blog', JSON.stringify(DEMO_DATASETS.blogs.map(b => ({ id: 'b-' + Math.random().toString(36).substring(2, 9), ...b }))));
+    localStorage.setItem('josh_testimonials', JSON.stringify(DEMO_DATASETS.testimonials.map(t => ({ id: 't-' + Math.random().toString(36).substring(2, 9), ...t }))));
+    localStorage.setItem('josh_admin_projects', JSON.stringify(DEMO_DATASETS.projects.map(p => ({ id: 'p-' + Math.random().toString(36).substring(2, 9), ...p }))));
+    localStorage.setItem('josh_services', JSON.stringify(DEMO_DATASETS.services.map(s => ({ id: 's-' + Math.random().toString(36).substring(2, 9), ...s }))));
+    localStorage.setItem('josh_plans', JSON.stringify(DEMO_DATASETS.plans.map(p => ({ id: 'pl-' + Math.random().toString(36).substring(2, 9), ...p }))));
+  }
+}
+
+async function updateDemoCounts() {
+  const isOnline = fbReady();
+  let blogCount = 0;
+  let testimonialCount = 0;
+  let projectCount = 0;
+  
+  if (isOnline) {
+    try {
+      const db = getDB();
+      const blogSnap = await db.collection('blog').get();
+      const testSnap = await db.collection('testimonials').get();
+      const projSnap = await db.collection('projects').get();
+      
+      blogCount = blogSnap.size;
+      testimonialCount = testSnap.size;
+      projectCount = projSnap.size;
+    } catch (err) {
+      console.warn('Failed to load demo counts from Firestore:', err);
+    }
+  } else {
+    try {
+      blogCount = JSON.parse(localStorage.getItem('josh_blog') || '[]').length;
+      testimonialCount = JSON.parse(localStorage.getItem('josh_testimonials') || '[]').length;
+      projectCount = JSON.parse(localStorage.getItem('josh_admin_projects') || '[]').length;
+    } catch (e) {}
+  }
+  
+  const bEl = document.getElementById('lblBlogCount');
+  const tEl = document.getElementById('lblTestimonialCount');
+  const pEl = document.getElementById('lblProjectCount');
+  
+  if (bEl) bEl.textContent = `${blogCount} article${blogCount !== 1 ? 's' : ''} in database.`;
+  if (tEl) tEl.textContent = `${testimonialCount} review${testimonialCount !== 1 ? 's' : ''} in database.`;
+  if (pEl) pEl.textContent = `${projectCount} project${projectCount !== 1 ? 's' : ''} in database.`;
+}
+
+// ─── DEMO DATA LIVE EDITOR ─────────────────────────────
+function renderDemoEditorList() {
+  const grid = document.getElementById('demoEditorGrid');
+  const empty = document.getElementById('demoEditorEmptyMsg');
+  if (!grid || !empty) return;
+
+  grid.innerHTML = '';
+
+  // Map tab name to cached data and metadata
+  const tabConfig = {
+    blogs:        { cache: cachedBlogs,        viewId: 'blog',         type: 'blog',        editFn: editBlogForm,        labelFn: b => b.title,        subFn: b => `${(b.tags||[]).join(', ')} · ${b.status || 'draft'}`,      thumbFn: b => b.featuredImage ? `<img src="${b.featuredImage}" alt="${b.title}" />` : '<div style="font-size:2.5rem">📝</div>' },
+    testimonials: { cache: cachedTestimonials,  viewId: 'testimonials', type: 'testimonial', editFn: editTestimonialForm, labelFn: t => t.clientName,    subFn: t => `${t.position} · ${t.company} · ${'★'.repeat(t.rating)}`, thumbFn: () => '<div style="font-size:2.5rem">★</div>' },
+    projects:     { cache: cachedProjects,      viewId: 'projects',     type: 'project',     editFn: editProjectForm,     labelFn: p => p.title,        subFn: p => `${p.categoryLabel || p.category || ''} · ${p.status || ''}`, thumbFn: p => p.coverImage ? `<img src="${p.coverImage}" alt="${p.title}" />` : `<div style="font-size:2.5rem">${p.emoji || '📁'}</div>` },
+    services:     { cache: cachedServices,      viewId: 'services',     type: 'service',     editFn: editServiceForm,     labelFn: s => s.name,         subFn: s => `${s.price || ''} · ${(s.features||[]).slice(0,2).join(', ')}`, thumbFn: s => `<div style="font-size:2.5rem">${s.icon || '⚙'}</div>` },
+    plans:        { cache: cachedPlans,         viewId: 'pricing',      type: 'plan',        editFn: editPlanForm,        labelFn: p => p.name,         subFn: p => `${p.price} · ${p.popular ? 'Popular' : 'Standard'}`,          thumbFn: () => '<div style="font-size:2.5rem">💵</div>' }
+  };
+
+  const cfg = tabConfig[currentDemoTab];
+  if (!cfg) return;
+
+  const items = cfg.cache || [];
+  if (items.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  items.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'manage-card';
+    card.innerHTML = `
+      <div class="mc-thumb">${cfg.thumbFn(item)}</div>
+      <div class="mc-body">
+        <p class="mc-cat">${cfg.subFn(item)}</p>
+        <h3 class="mc-title">${cfg.labelFn(item)}</h3>
+        <div class="mc-actions">
+          <button class="btn-outline btn-sm demo-edit-btn" data-id="${item.id}" data-view="${cfg.viewId}" data-type="${cfg.type}">Edit</button>
+          <button class="btn-danger btn-sm demo-del-btn" data-id="${item.id}" data-type="${cfg.type}">Delete</button>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+
+  // Bind edit buttons — switch to the proper CRUD view and open the form
+  grid.querySelectorAll('.demo-edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const targetView = btn.dataset.view;
+      switchView(targetView);
+      // Small delay to let the view render before opening the edit form
+      setTimeout(() => {
+        const editFn = tabConfig[currentDemoTab] && tabConfig[currentDemoTab].editFn;
+        if (editFn) editFn(id);
+      }, 100);
+    });
+  });
+
+  // Bind delete buttons
+  grid.querySelectorAll('.demo-del-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      triggerDelete(btn.dataset.id, btn.dataset.type);
+    });
+  });
+}
 
 // Temporary upload blobs
 let projectCoverBlob = null;
@@ -419,6 +813,7 @@ function safeRenderActiveView() {
     else if (activeView === 'testimonials') renderTestimonialsList();
     else if (activeView === 'blog')        renderBlogsList();
     else if (activeView === 'messages')    renderMessagesList();
+    else if (activeView === 'demodata')    renderDemoEditorList();
   } catch (e) {
     console.warn('[CMS] safeRenderActiveView error:', e);
   }
@@ -449,7 +844,8 @@ function switchView(viewId) {
     blog: 'Blog Manager',
     messages: 'Inbox Messages',
     github: 'GitHub Repository Sync',
-    email: 'Email Alert Settings'
+    email: 'Email Alert Settings',
+    demodata: 'Demo Data Manager'
   };
 
   const subtitles = {
@@ -462,7 +858,8 @@ function switchView(viewId) {
     blog: 'Write and publish editorial insights with formatting.',
     messages: 'Review user contact queries in your email/inbox.',
     github: 'Sync public repositories and overlay customization links.',
-    email: 'Enable dynamic EmailJS notifications for contact submissions.'
+    email: 'Enable dynamic EmailJS notifications for contact submissions.',
+    demodata: 'Initialize, restore, or clear default demo datasets.'
   };
 
   if (pageTitle) pageTitle.textContent = titles[viewId] || 'Dashboard';
@@ -478,6 +875,7 @@ function switchView(viewId) {
   if (viewId === 'messages') renderMessagesList();
   if (viewId === 'github') renderGitHubList();
   if (viewId === 'email') loadEmailSettingsForm();
+  if (viewId === 'demodata') { updateDemoCounts(); renderDemoEditorList(); }
 
   closeSidebar();
 }
@@ -1349,6 +1747,11 @@ if (delConfirm) {
         showToast('Message deleted.');
       }
       updateDashboardStats();
+      // Keep Demo Data editor in sync if an item was deleted from there
+      if (activeView === 'demodata') {
+        updateDemoCounts();
+        renderDemoEditorList();
+      }
     } catch (err) {
       console.error(err);
       showToast(`Delete failed: ${err.message}`, true);
@@ -1693,6 +2096,142 @@ function initEventTriggers() {
       showToast('✓ Cloud Database (Firebase) is connected and active.');
     });
   }
+
+  // Demo Data Manager Event Listeners
+  document.getElementById('btnSeedBlogs').addEventListener('click', async () => {
+    const btn = document.getElementById('btnSeedBlogs');
+    btn.disabled = true;
+    try {
+      const count = await seedDemoBlogs();
+      showToast(`✓ Seeded ${count} missing demo blogs.`);
+      logActivity('Seed Demo Blogs', `Added ${count} items`);
+      await refreshDashboardData();
+      updateDemoCounts();
+      renderDemoEditorList();
+    } catch (err) {
+      showToast('Seeding blogs failed: ' + err.message, true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('btnClearBlogs').addEventListener('click', async () => {
+    if (!confirm('Are you sure you want to delete ALL blog posts?')) return;
+    const btn = document.getElementById('btnClearBlogs');
+    btn.disabled = true;
+    try {
+      await clearDemoBlogs();
+      showToast('✓ All blog posts cleared.');
+      logActivity('Clear Blogs', 'Deleted all posts');
+      await refreshDashboardData();
+      updateDemoCounts();
+      renderDemoEditorList();
+    } catch (err) {
+      showToast('Clearing blogs failed: ' + err.message, true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('btnSeedTestimonials').addEventListener('click', async () => {
+    const btn = document.getElementById('btnSeedTestimonials');
+    btn.disabled = true;
+    try {
+      const count = await seedDemoTestimonials();
+      showToast(`✓ Seeded ${count} missing testimonials.`);
+      logActivity('Seed Demo Testimonials', `Added ${count} items`);
+      await refreshDashboardData();
+      updateDemoCounts();
+      renderDemoEditorList();
+    } catch (err) {
+      showToast('Seeding testimonials failed: ' + err.message, true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('btnClearTestimonials').addEventListener('click', async () => {
+    if (!confirm('Are you sure you want to delete ALL testimonials?')) return;
+    const btn = document.getElementById('btnClearTestimonials');
+    btn.disabled = true;
+    try {
+      await clearDemoTestimonials();
+      showToast('✓ All testimonials cleared.');
+      logActivity('Clear Testimonials', 'Deleted all reviews');
+      await refreshDashboardData();
+      updateDemoCounts();
+      renderDemoEditorList();
+    } catch (err) {
+      showToast('Clearing testimonials failed: ' + err.message, true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('btnSeedProjects').addEventListener('click', async () => {
+    const btn = document.getElementById('btnSeedProjects');
+    btn.disabled = true;
+    try {
+      const count = await seedDemoProjects();
+      showToast(`✓ Seeded ${count} missing projects.`);
+      logActivity('Seed Demo Projects', `Added ${count} items`);
+      await refreshDashboardData();
+      updateDemoCounts();
+      renderDemoEditorList();
+    } catch (err) {
+      showToast('Seeding projects failed: ' + err.message, true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('btnClearProjects').addEventListener('click', async () => {
+    if (!confirm('Are you sure you want to delete ALL projects?')) return;
+    const btn = document.getElementById('btnClearProjects');
+    btn.disabled = true;
+    try {
+      await clearDemoProjects();
+      showToast('✓ All projects cleared.');
+      logActivity('Clear Projects', 'Deleted all projects');
+      await refreshDashboardData();
+      updateDemoCounts();
+      renderDemoEditorList();
+    } catch (err) {
+      showToast('Clearing projects failed: ' + err.message, true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('btnResetAllData').addEventListener('click', async () => {
+    if (!confirm('WARNING: This will delete ALL existing projects, services, plans, testimonials, and blog posts and restore them to factory defaults. Proceed?')) return;
+    const btn = document.getElementById('btnResetAllData');
+    btn.disabled = true;
+    btn.textContent = 'Resetting Database...';
+    try {
+      await resetAllDemoData();
+      showToast('✓ System reset completed successfully!');
+      logActivity('Reset Database', 'Restored all collections to factory defaults');
+      await refreshDashboardData();
+      updateDemoCounts();
+      renderDemoEditorList();
+    } catch (err) {
+      showToast('System reset failed: ' + err.message, true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Reset Entire Database to Demo';
+    }
+  });
+
+  // Demo Data Editor tab switching
+  document.querySelectorAll('.demo-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentDemoTab = btn.dataset.tab;
+      document.querySelectorAll('.demo-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderDemoEditorList();
+    });
+  });
 }
 
 function setupImageDropZone(zoneId, fileId, previewId, wrapId, removeId, blobSetter) {
