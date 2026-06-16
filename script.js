@@ -1388,6 +1388,16 @@ function initTerminalCLI() {
       termOverlay.classList.remove('open');
     }
   });
+
+  const termContainer = termOverlay.querySelector('.terminal-container');
+  if (termContainer) {
+    termContainer.addEventListener('click', e => {
+      // Focus the input if they click anywhere inside the container, unless they clicked the close button
+      if (e.target !== closeBtn && !e.target.closest('#terminalCloseBtn')) {
+        termInput.focus();
+      }
+    });
+  }
   
   const commands = {
     help: () => [

@@ -89,76 +89,7 @@ async function seedAllCollectionsIfEmpty(db) {
   };
 
   // 1. Projects
-  const demoProjects = [
-    {
-      title: "Kudiflow",
-      slug: "kudiflow",
-      category: "dev",
-      categoryLabel: "Software Development",
-      description: "A smart finance and operations manager simplifying wallet tracking, balance alerts, and transaction records for creative builders.",
-      longDescription: "Kudiflow is a comprehensive fintech and productivity tool designed for builders, creators, and student entrepreneurs in Africa. It bridges ledger tracking with clean, beautiful UI components and automated analytics tools.",
-      projectUrl: "https://kudiflow.com",
-      repoUrl: "https://github.com/JOSHMECH/kudiflow",
-      technologies: ["React", "Next.js", "Tailwind CSS", "Firebase"],
-      coverImage: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=800&q=80",
-      featured: true,
-      status: "published",
-      order: 0,
-      createdAt: new Date().toISOString(),
-      emoji: "💰"
-    },
-    {
-      title: "ScholarLens AI",
-      slug: "scholarlens",
-      category: "dev",
-      categoryLabel: "Software Development",
-      description: "An AI-powered academic sandbox accelerating research extraction, automated citations compiling, and grade predictions.",
-      longDescription: "ScholarLens integrates advanced AI models (like Gemini API) with robust client interfaces to assist students and researchers in compiling research papers, analyzing analytical data, and visualizing study paths.",
-      projectUrl: "https://scholarlens.com",
-      repoUrl: "https://github.com/JOSHMECH/scholarlens",
-      technologies: ["React", "TypeScript", "Node.js", "Gemini API"],
-      coverImage: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=800&q=80",
-      featured: true,
-      status: "published",
-      order: 1,
-      createdAt: new Date().toISOString(),
-      emoji: "📚"
-    },
-    {
-      title: "SPSS Analytics Suite",
-      slug: "spss-analytics",
-      category: "data",
-      categoryLabel: "Data Science",
-      description: "A web-based analytical visualization dashboard mapping complex statistical linear regression and ANOVA models.",
-      longDescription: "Developed for academic research at Olabisi Onabanjo University, this interactive statistics sandbox helps visualize data distributions, run Pearson correlation tests, and execute KNN classification streams.",
-      projectUrl: "#stats-lab",
-      repoUrl: "https://github.com/JOSHMECH/stats-sandbox",
-      technologies: ["Python", "SPSS", "HTML5 Canvas", "R Programming"],
-      coverImage: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80",
-      featured: true,
-      status: "published",
-      order: 2,
-      createdAt: new Date().toISOString(),
-      emoji: "📊"
-    },
-    {
-      title: "GuruLabs Brand Identity",
-      slug: "gurulabs-branding",
-      category: "design",
-      categoryLabel: "Creative Design",
-      description: "Complete brand guidelines, design tokens, logos, typography postures, and digital assets designed for GuruLabs.",
-      longDescription: "A comprehensive design system comprising dark-mode glassmorphic styling, custom HSL color systems, vector logo variations, and premium UI kit elements used across Kudiflow and ScholarLens.",
-      projectUrl: "#startup",
-      repoUrl: "",
-      technologies: ["CorelDraw", "Figma", "Illustrator", "Adobe XD"],
-      coverImage: "https://images.unsplash.com/photo-1561070791-26c113006238?auto=format&fit=crop&w=800&q=80",
-      featured: true,
-      status: "published",
-      order: 3,
-      createdAt: new Date().toISOString(),
-      emoji: "✦"
-    }
-  ];
+  const demoProjects = [];
   await seedIfEmpty('projects', demoProjects);
 
   // 2. Services
