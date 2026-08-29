@@ -388,7 +388,62 @@ const DEMO_DATASETS = {
       createdAt: new Date().toISOString()
     }
   ],
-  projects: [],
+  projects: [
+    {
+      title: 'ScholarLens AI Sandbox',
+      slug: 'scholarlens-ai-sandbox',
+      category: 'dev',
+      categoryLabel: 'Edtech · Machine Learning',
+      description: 'An AI-powered academic sandbox that accelerates student research, notes compilation, and citation generation.',
+      longDescription: '<p>ScholarLens is an intelligent academic research sandbox designed to empower student builders and researchers. It features automated AI summaries for research papers, dynamic citation mapping, and GPA prediction modelling.</p>',
+      client: 'GuruLabs / EdTech Case',
+      completionDate: 'May 2026',
+      projectUrl: 'https://scholarlens.example.com',
+      repoUrl: 'https://github.com/JOSHMECH/scholarlens',
+      coverImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
+      technologies: ['React', 'Next.js', 'Python', 'FastAPI', 'Gemini AI'],
+      featured: true,
+      status: 'published',
+      emoji: '🚀',
+      order: 1
+    },
+    {
+      title: 'Kudiflow Smart Ledger',
+      slug: 'kudiflow-smart-finance',
+      category: 'data',
+      categoryLabel: 'Fintech · Predictive Analytics',
+      description: 'A smart operations & automated ledger manager simplifying creator transactions, cash flows, and predictive budgets.',
+      longDescription: '<p>Kudiflow delivers intelligent ledger controls, predictive cash flow forecasting, and automated expense categorisation under the GuruLabs parent ecosystem.</p>',
+      client: 'GuruLabs Ecosystem',
+      completionDate: 'April 2026',
+      projectUrl: 'https://kudiflow.example.com',
+      repoUrl: 'https://github.com/JOSHMECH/kudiflow',
+      coverImage: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=800&q=80',
+      technologies: ['Python', 'SPSS', 'TypeScript', 'TailwindCSS', 'Chart.js'],
+      featured: true,
+      status: 'published',
+      emoji: '📊',
+      order: 2
+    },
+    {
+      title: 'Apex Brand Identity System',
+      slug: 'apex-brand-identity-system',
+      category: 'design',
+      categoryLabel: 'Brand Identity · UI/UX',
+      description: 'A full vector design system, custom typography tokens, and marketing collateral for an engineering firm.',
+      longDescription: '<p>A complete brand identity and design guidelines suite encompassing color harmony matrices, vector logomarks, typography postures, and print assets.</p>',
+      client: 'Apex Solutions',
+      completionDate: 'March 2026',
+      projectUrl: 'https://behance.net',
+      repoUrl: 'https://github.com/JOSHMECH',
+      coverImage: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80',
+      technologies: ['Figma', 'CorelDraw', 'Adobe Illustrator', 'CSS Design Tokens'],
+      featured: true,
+      status: 'published',
+      emoji: '🎨',
+      order: 3
+    }
+  ],
   services: [
     { name: 'Frontend Engineering', icon: '⚙', description: 'Responsive, performant, accessible web apps with modern JavaScript, React, and CSS.', price: '₦150k+', features: ['React/Next.js integration', 'Semantic & responsive HTML', 'Dynamic micro-animations'], order: 1 },
     { name: 'Creative Design', icon: '✦', description: 'Brand identities, UI/UX design, print media, and motion graphics with industry tools.', price: '₦100k+', features: ['Figma design source file', 'Harmonious design tokens', 'Logo configurator setups'], order: 2 },
@@ -1087,14 +1142,16 @@ function editProjectForm(id) {
   
   document.getElementById('projectFormPanel').style.display = 'block';
   document.getElementById('projectFormTitle').textContent = 'Edit Project Case Study';
+  const saveBtn = document.getElementById('saveProjBtn');
+  if (saveBtn) saveBtn.textContent = 'Update Project';
   
   document.getElementById('projectId').value = p.id;
-  document.getElementById('projTitle').value = p.title;
-  document.getElementById('projSlug').value = p.slug;
-  document.getElementById('projCategory').value = p.category;
+  document.getElementById('projTitle').value = p.title || '';
+  document.getElementById('projSlug').value = p.slug || '';
+  document.getElementById('projCategory').value = p.category || '';
   document.getElementById('projCatLabel').value = p.categoryLabel || '';
-  document.getElementById('projDesc').value = p.description;
-  document.getElementById('projLongDesc').value = p.longDescription;
+  document.getElementById('projDesc').value = p.description || '';
+  document.getElementById('projLongDesc').value = p.longDescription || '';
   document.getElementById('projClient').value = p.client || '';
   document.getElementById('projDate').value = p.completionDate || '';
   document.getElementById('projUrl').value = p.projectUrl || '';
@@ -1109,6 +1166,7 @@ function editProjectForm(id) {
     document.getElementById('projCoverPreviewWrap').style.display = 'block';
     document.getElementById('projCoverDropZone').style.display = 'none';
   } else {
+    document.getElementById('projCoverPreview').src = '';
     document.getElementById('projCoverPreviewWrap').style.display = 'none';
     document.getElementById('projCoverDropZone').style.display = 'block';
   }
@@ -2046,6 +2104,37 @@ function initEventTriggers() {
   document.getElementById('messagesSearch').addEventListener('input', e => renderMessagesList(e.target.value));
   document.getElementById('githubSearch').addEventListener('input', e => renderGitHubList(e.target.value));
 
+  // Auto-slug generator for projects & blogs (on new item creation)
+  const projTitleInput = document.getElementById('projTitle');
+  const projSlugInput = document.getElementById('projSlug');
+  if (projTitleInput && projSlugInput) {
+    projTitleInput.addEventListener('input', () => {
+      if (!document.getElementById('projectId').value) {
+        projSlugInput.value = projTitleInput.value
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-');
+      }
+    });
+  }
+
+  const blogTitleInput = document.getElementById('blogTitle');
+  const blogSlugInput = document.getElementById('blogSlug');
+  if (blogTitleInput && blogSlugInput) {
+    blogTitleInput.addEventListener('input', () => {
+      if (!document.getElementById('blogId').value) {
+        blogSlugInput.value = blogTitleInput.value
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-');
+      }
+    });
+  }
+
   // Database connection status confirmation (Read-Only)
   const fbStatusEl = document.getElementById('fbStatus');
   if (fbStatusEl) {
@@ -2261,12 +2350,13 @@ async function handleProjectSubmit(e) {
   try {
     let coverUrl = '';
     const docId = id || getDB().collection('projects').doc().id;
+    const previewWrapVisible = document.getElementById('projCoverPreviewWrap').style.display !== 'none';
 
     if (projectCoverBlob) {
       coverUrl = await uploadFileToStorage(projectCoverBlob, 'projects', `cover_${docId}.jpg`);
-    } else if (id) {
+    } else if (id && previewWrapVisible) {
       const existing = cachedProjects.find(x => x.id === id);
-      coverUrl = existing ? existing.coverImage : '';
+      coverUrl = existing ? (existing.coverImage || '') : '';
     }
 
     const payload = {
@@ -2528,12 +2618,13 @@ async function handleBlogSubmit(e) {
   try {
     let featuredImage = '';
     const docId = id || getDB().collection('blog').doc().id;
+    const previewWrapVisible = document.getElementById('blogImgPreviewWrap').style.display !== 'none';
 
     if (blogImgBlob) {
       featuredImage = await uploadFileToStorage(blogImgBlob, 'blog', `cover_${docId}.jpg`);
-    } else if (id) {
+    } else if (id && previewWrapVisible) {
       const existing = cachedBlogs.find(x => x.id === id);
-      featuredImage = existing ? existing.featuredImage : '';
+      featuredImage = existing ? (existing.featuredImage || '') : '';
     }
 
     const payload = {
@@ -2631,6 +2722,9 @@ function resetProjectForm() {
   document.getElementById('projectForm').reset();
   document.getElementById('projectId').value = '';
   document.getElementById('projectFormTitle').textContent = 'Add New Project';
+  const saveBtn = document.getElementById('saveProjBtn');
+  if (saveBtn) saveBtn.textContent = 'Upload Project';
+  document.getElementById('projCoverPreview').src = '';
   document.getElementById('projCoverPreviewWrap').style.display = 'none';
   document.getElementById('projCoverDropZone').style.display = 'block';
   projectCoverBlob = null;

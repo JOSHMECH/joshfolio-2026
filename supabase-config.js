@@ -87,11 +87,19 @@ function normaliseRow(row) {
   return copy;
 }
 
+function generateSbId(prefix = 'sb') {
+  return prefix + '-' + Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+}
+
 /** Convert a Firestore-style doc snapshot to Supabase-friendly payload */
 function cleanPayload(data) {
   const out = {};
   for (const [k, v] of Object.entries(data)) {
-    if (v === null || v === undefined) continue;
+    if (v === undefined) continue;
+    if (v === null) {
+      out[k] = null;
+      continue;
+    }
     // FieldValue.serverTimestamp() produces an ISO string already
     if (typeof v === 'string' && v === '__MOCK_SERVER_TIMESTAMP__') {
       out[k] = new Date().toISOString();
@@ -111,9 +119,12 @@ function cleanPayload(data) {
 class SupabaseDocRef {
   constructor(tableName, docId, supabase) {
     this.tableName = tableName;
-    this.docId = docId;
+    const finalId = (docId !== undefined && docId !== null && docId !== '' && String(docId) !== 'undefined')
+      ? String(docId)
+      : generateSbId(tableName ? tableName.substring(0, 4) : 'sb');
+    this.docId = finalId;
     this._sb = supabase;
-    this.id = docId;
+    this.id = finalId;
   }
 
   async get() {
@@ -133,27 +144,29 @@ class SupabaseDocRef {
   async set(payload, options = {}) {
     const clean = cleanPayload(payload);
     const row = { ...clean, id: this.docId };
-    if (options.merge) {
-      const { error } = await this._sb
-        .from(this.tableName)
-        .upsert(row, { onConflict: 'id' });
-      if (error) throw error;
-    } else {
-      // Full replace: delete then insert
-      await this._sb.from(this.tableName).delete().eq('id', this.docId);
-      const { error } = await this._sb.from(this.tableName).insert(row);
-      if (error) throw error;
-    }
+    const { error } = await this._sb
+      .from(this.tableName)
+      .upsert(row, { onConflict: 'id' });
+    if (error) throw error;
     return true;
   }
 
   async update(payload) {
     const clean = cleanPayload(payload);
-    const { error } = await this._sb
+    const { data, error } = await this._sb
       .from(this.tableName)
       .update(clean)
-      .eq('id', this.docId);
+      .eq('id', this.docId)
+      .select('id');
     if (error) throw error;
+    if (!data || data.length === 0) {
+      // Row didn't exist in Supabase yet; upsert to prevent data loss
+      const row = { ...clean, id: this.docId };
+      const { error: upsertErr } = await this._sb
+        .from(this.tableName)
+        .upsert(row, { onConflict: 'id' });
+      if (upsertErr) throw upsertErr;
+    }
     return true;
   }
 
@@ -194,13 +207,16 @@ class SupabaseQuery {
   }
 
   doc(id) {
-    return new SupabaseDocRef(this.tableName, String(id), this._sb);
+    const finalId = (id !== undefined && id !== null && id !== '' && String(id) !== 'undefined')
+      ? String(id)
+      : generateSbId(this.tableName ? this.tableName.substring(0, 4) : 'sb');
+    return new SupabaseDocRef(this.tableName, finalId, this._sb);
   }
 
   async add(payload) {
     const clean = cleanPayload(payload);
     if (!clean.id) {
-      clean.id = 'sb-' + Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+      clean.id = generateSbId(this.tableName ? this.tableName.substring(0, 4) : 'sb');
     }
     const { data, error } = await this._sb
       .from(this.tableName)
@@ -359,9 +375,10 @@ class SupabaseStorageShim {
 
   async put(blob) {
     const path = this._path;
+    const contentType = (blob && blob.type) ? blob.type : 'image/jpeg';
     const { error } = await this._sb.storage
       .from(this._bucket)
-      .upload(path, blob, { upsert: true });
+      .upload(path, blob, { contentType, upsert: true });
     if (error) throw error;
     const ref = new SupabaseStorageShim(this._sb);
     ref._bucket = this._bucket;
