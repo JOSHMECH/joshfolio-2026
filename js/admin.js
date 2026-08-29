@@ -701,7 +701,7 @@ function updateFirebaseStatus(ready) {
   dot.style.boxShadow = '';
   if (ready) {
     dot.className = 'fb-dot connected';
-    label.textContent = 'Firebase Connected';
+    label.textContent = 'Supabase Connected';
   } else {
     dot.className = 'fb-dot error';
     label.textContent = 'Connection Offline';
@@ -890,47 +890,47 @@ if (logoutBtn) {
 // ─── STORAGE FILE UPLOAD HELPERS ───────────────────────
 async function uploadFileToStorage(blob, folder, filename) {
   if (!blob) return '';
-  if (!fbReady()) {
-    console.warn('[JoshFolio CMS] Firebase not ready — falling back to base64 for image storage.');
-    return await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = () => resolve('');
-      reader.readAsDataURL(blob);
-    });
-  }
+
   const fallbackToBase64 = () => new Promise((resolve) => {
     const reader = new FileReader();
     reader.onloadend = () => resolve(reader.result);
-    reader.onerror = () => resolve('');
+    reader.onerror  = () => resolve('');
     reader.readAsDataURL(blob);
   });
 
-  const isMock = window.joshFirebase && window.joshFirebase.isMock;
-  if (isMock) {
+  if (!fbReady()) {
+    console.warn('[JoshFolio CMS] DB not ready — saving image as base64.');
     return await fallbackToBase64();
   }
 
+  const isMock = window.joshFirebase && window.joshFirebase.isMock;
+  if (isMock) return await fallbackToBase64();
+
   try {
     const storageInstance = getStorage();
-    const ref = storageInstance.ref().child(`${folder}/${filename}`);
-    
-    // Create the upload task
-    const uploadTask = ref.put(blob);
-    
+    if (!storageInstance) {
+      console.warn('[JoshFolio CMS] Storage not configured — saving image as base64.');
+      return await fallbackToBase64();
+    }
+
+    // storage.ref('folder/filename') works for both Firebase and Supabase shim
+    const ref = storageInstance.ref(`${folder}/${filename}`);
+
     // Timeout promise (30 seconds)
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Upload timed out")), 30000)
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Upload timed out after 30s')), 30000)
     );
-    
-    // Race them
-    const snapshot = await Promise.race([uploadTask, timeoutPromise]);
+
+    // Race upload against timeout
+    const snapshot = await Promise.race([ref.put(blob), timeoutPromise]);
     return await snapshot.ref.getDownloadURL();
+
   } catch (err) {
-    console.warn("Firebase Storage upload failed or timed out, falling back to base64 Data URL:", err);
+    console.warn('[JoshFolio CMS] Storage upload failed — falling back to base64:', err.message);
     return await fallbackToBase64();
   }
 }
+
 
 function resizeImageFile(file, maxW, maxH, callback) {
   const reader = new FileReader();

@@ -113,7 +113,7 @@
         <div class="overview-info">
           <div class="oi-card">
             <h3>CMS Overview</h3>
-            <p>Welcome to your central administration panel. This console is fully integrated with <strong>Firebase Firestore</strong>, <strong>Authentication</strong>, and <strong>Cloud Storage</strong>. You can perform real-time updates across all sections of your portfolio without writing code.</p>
+            <p>Welcome to your central administration panel. This console is fully integrated with <strong>Supabase PostgreSQL</strong>, <strong>Authentication</strong>, and <strong>Supabase Storage</strong>. You can perform real-time updates across all sections of your portfolio without writing code.</p>
             <div class="quick-actions-grid">
               <button class="btn-gold" data-goto="projects">Manage Projects →</button>
               <button class="btn-outline" data-goto="blog">Write Blog Post →</button>
@@ -703,11 +703,9 @@
   <!-- ── Toast Notifications ──────────────────────── -->
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <!-- 🔥 Firebase SDK (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-  <script src="firebase-config.js"></script>
+  <!-- 🚀 Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="js/admin.js"></script>
 </body>

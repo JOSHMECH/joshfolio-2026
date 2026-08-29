@@ -328,11 +328,9 @@
     </div>
   </footer>
 
-  <!-- 🔥 Firebase SDK (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-  <script src="firebase-config.js"></script>
+  <!-- 🚀 Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="supabase-config.js"></script>
 
   <script>
   /* ══════════════════════════════════════════════════════
@@ -521,7 +519,7 @@
     const loading = document.getElementById('blogPageLoading');
     const empty   = document.getElementById('blogPageEmpty');
 
-    // Wait for firebase-config.js to initialize
+    // Wait for supabase-config.js to initialize
     await new Promise(resolve => {
       if (window.joshFirebase) { resolve(); return; }
       const maxWait = 4000;

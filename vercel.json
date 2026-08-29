@@ -11,7 +11,7 @@
       ]
     },
     {
-      "source": "/firebase-config.js",
+      "source": "/supabase-config.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-store" }
       ]
