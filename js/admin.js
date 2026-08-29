@@ -431,14 +431,19 @@ async function seedDemoBlogs() {
 
 async function clearDemoBlogs() {
   const isOnline = fbReady();
+  const demoSlugs = new Set(DEMO_DATASETS.blogs.map(b => b.slug));
   if (isOnline) {
     const db = getDB();
     const snap = await db.collection('blog').get();
     for (const doc of snap.docs) {
-      await db.collection('blog').doc(doc.id).delete();
+      if (demoSlugs.has(doc.data().slug)) {
+        await db.collection('blog').doc(doc.id).delete();
+      }
     }
   } else {
-    localStorage.setItem('josh_blog', '[]');
+    const local = JSON.parse(localStorage.getItem('josh_blog') || '[]');
+    const filtered = local.filter(b => !demoSlugs.has(b.slug));
+    localStorage.setItem('josh_blog', JSON.stringify(filtered));
   }
 }
 
@@ -472,14 +477,19 @@ async function seedDemoTestimonials() {
 
 async function clearDemoTestimonials() {
   const isOnline = fbReady();
+  const demoNames = new Set(DEMO_DATASETS.testimonials.map(t => t.clientName));
   if (isOnline) {
     const db = getDB();
     const snap = await db.collection('testimonials').get();
     for (const doc of snap.docs) {
-      await db.collection('testimonials').doc(doc.id).delete();
+      if (demoNames.has(doc.data().clientName)) {
+        await db.collection('testimonials').doc(doc.id).delete();
+      }
     }
   } else {
-    localStorage.setItem('josh_testimonials', '[]');
+    const local = JSON.parse(localStorage.getItem('josh_testimonials') || '[]');
+    const filtered = local.filter(t => !demoNames.has(t.clientName));
+    localStorage.setItem('josh_testimonials', JSON.stringify(filtered));
   }
 }
 
@@ -717,23 +727,19 @@ async function refreshDashboardData() {
     console.warn('[JoshFolio CMS] Firebase not ready — skipping data refresh.');
     return;
   }
-  try {
-    await Promise.all([
-      loadProjects(),
-      loadServices(),
-      loadPlans(),
-      loadTestimonials(),
-      loadBlogs(),
-      loadMessages()
-    ]);
-    updateDashboardStats();
-    loadActivityLogs();
-    // Refresh the currently-visible list view after data loads
-    safeRenderActiveView();
-  } catch (err) {
-    console.error('Error refreshing data:', err);
-    showToast('⚠ Dashboard data load error. Check console.', true);
-  }
+  // Load each collection independently so a failure in one doesn't cancel others
+  await Promise.allSettled([
+    loadProjects().catch(err => console.warn('[CMS] loadProjects failed:', err)),
+    loadServices().catch(err => console.warn('[CMS] loadServices failed:', err)),
+    loadPlans().catch(err => console.warn('[CMS] loadPlans failed:', err)),
+    loadTestimonials().catch(err => console.warn('[CMS] loadTestimonials failed:', err)),
+    loadBlogs().catch(err => console.warn('[CMS] loadBlogs failed:', err)),
+    loadMessages().catch(err => console.warn('[CMS] loadMessages failed:', err))
+  ]);
+  updateDashboardStats();
+  loadActivityLogs();
+  // Refresh the currently-visible list view after data loads
+  safeRenderActiveView();
 }
 
 function safeRenderActiveView() {
@@ -883,8 +889,16 @@ if (logoutBtn) {
 
 // ─── STORAGE FILE UPLOAD HELPERS ───────────────────────
 async function uploadFileToStorage(blob, folder, filename) {
-  if (!blob || !fbReady()) return '';
-
+  if (!blob) return '';
+  if (!fbReady()) {
+    console.warn('[JoshFolio CMS] Firebase not ready — falling back to base64 for image storage.');
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(blob);
+    });
+  }
   const fallbackToBase64 = () => new Promise((resolve) => {
     const reader = new FileReader();
     reader.onloadend = () => resolve(reader.result);
@@ -904,9 +918,9 @@ async function uploadFileToStorage(blob, folder, filename) {
     // Create the upload task
     const uploadTask = ref.put(blob);
     
-    // Timeout promise (5 seconds)
+    // Timeout promise (30 seconds)
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Upload timed out")), 5000)
+      setTimeout(() => reject(new Error("Upload timed out")), 30000)
     );
     
     // Race them
@@ -1279,9 +1293,14 @@ async function seedTestimonialsIfEmpty() {
 }
 
 async function loadTestimonials() {
-  await seedTestimonialsIfEmpty();
-  const snap = await getDB().collection('testimonials').orderBy('createdAt', 'desc').get();
-  cachedTestimonials = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  try {
+    const snap = await getDB().collection('testimonials').orderBy('createdAt', 'desc').get();
+    cachedTestimonials = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (err) {
+    console.warn('[CMS] loadTestimonials orderBy failed, loading without sort:', err);
+    const snap = await getDB().collection('testimonials').get();
+    cachedTestimonials = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
 }
 
 function renderTestimonialsList() {
@@ -1439,9 +1458,14 @@ async function seedBlogsIfEmpty() {
 }
 
 async function loadBlogs() {
-  await seedBlogsIfEmpty();
-  const snap = await getDB().collection('blog').orderBy('publishDate', 'desc').get();
-  cachedBlogs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  try {
+    const snap = await getDB().collection('blog').orderBy('publishDate', 'desc').get();
+    cachedBlogs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (err) {
+    console.warn('[CMS] loadBlogs orderBy failed, loading without sort:', err);
+    const snap = await getDB().collection('blog').get();
+    cachedBlogs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
 }
 
 function renderBlogsList(search = '') {
@@ -1515,7 +1539,9 @@ function editBlogForm(id) {
   document.getElementById('blogContent').value = b.content;
   
   if (b.publishDate) {
-    const d = b.publishDate.toDate();
+    const d = typeof b.publishDate.toDate === 'function'
+      ? b.publishDate.toDate()
+      : new Date(b.publishDate);
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
