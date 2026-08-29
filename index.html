@@ -55,13 +55,19 @@
         <a href="#about" class="nav-link">About</a>
         <a href="#skills" class="nav-link">Skills</a>
         <a href="#services" class="nav-link">Services</a>
+        <a href="#guru-ai" class="nav-link" style="color:var(--gold);">Guru AI</a>
         <a href="#projects" class="nav-link">Projects</a>
         <a href="#startup" class="nav-link">Startup</a>
         <a href="#blog" class="nav-link">Blog</a>
         <a href="#contact" class="nav-link">Contact</a>
       </div>
       <div class="nav-actions">
-        <button class="sound-toggle" id="soundToggle" aria-label="Toggle UI sounds">
+        <!-- Network Speed Telemetry Badge -->
+        <div class="net-speed-badge" id="netSpeedBadge" role="status" aria-live="polite" title="Network Connection Speed">
+          <span class="net-dot pulsing" id="netDot"></span>
+          <span class="net-speed-val" id="netSpeedVal">Checking...</span>
+        </div>
+        <button class="sound-toggle" id="soundToggle" aria-label="Toggle UI sounds" title="Toggle Synthesizer Sound Effects">
           <svg class="sound-icon" viewBox="0 0 24 24" width="20" height="20">
             <path fill="currentColor"
               d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
@@ -74,6 +80,25 @@
     </div>
   </nav>
   <div class="mobile-menu-overlay" id="menuOverlay"></div>
+
+  <!-- ─── Slow Network Advisory Banner ─────────────────── -->
+  <div class="net-advisory-banner" id="netAdvisoryBanner" role="alert" aria-live="polite">
+    <div class="nab-inner">
+      <div class="nab-icon-wrap">
+        <span class="nab-icon">⚠</span>
+      </div>
+      <div class="nab-content">
+        <h4 class="nab-title">Slow Network Detected (<span id="nabSpeedReadout">Limited Bandwidth</span>)</h4>
+        <p class="nab-desc">
+          Your connection is currently running below optimal speed. For the best experience with 3D WebGL visuals, spatial audio synthesizers, and real-time AI Co-Pilot responses, we advise returning when you have a stronger connection.
+        </p>
+      </div>
+      <div class="nab-actions">
+        <button class="nab-btn-retest" id="nabRetestBtn" title="Retest connection speed">↻ Retest</button>
+        <button class="nab-btn-dismiss" id="nabDismissBtn">Dismiss</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ─── Hero ────────────────────────────────────────── -->
   <section id="hero" class="hero">
@@ -102,7 +127,11 @@
         <div class="hero-actions reveal-up" style="--d:0.6s">
           <a href="#projects" class="btn-primary">View Work</a>
           <a href="#contact" class="btn-ghost">Let's Talk →</a>
-
+          <button class="section-voice-btn hero-voice-btn" data-tts="hero" aria-label="Listen to Audio Introduction" title="Listen to Voice Introduction">
+            <span class="svb-icon">◈</span>
+            <span class="svb-text">Audio Intro</span>
+            <span class="svb-wave"><span></span><span></span><span></span></span>
+          </button>
         </div>
         <div class="hero-stats reveal-up" style="--d:0.75s">
           <div class="stat">
@@ -148,8 +177,17 @@
   <section id="about" class="about section">
     <div class="container">
       <div class="section-header">
-        <span class="section-tag">01 / About</span>
-        <h2 class="section-title">The Person<br /><span class="gold">Behind the Screen</span></h2>
+        <div class="sh-title-row">
+          <div class="sh-left">
+            <span class="section-tag">01 / About</span>
+            <h2 class="section-title">The Person<br /><span class="gold">Behind the Screen</span></h2>
+          </div>
+          <button class="section-voice-btn" data-tts="about" aria-label="Listen to About Overview" title="Listen to Voice Narrative">
+            <span class="svb-icon">◈</span>
+            <span class="svb-text">Audio Briefing</span>
+            <span class="svb-wave"><span></span><span></span><span></span></span>
+          </button>
+        </div>
       </div>
       <div class="about-grid">
         <div class="about-text">
@@ -232,6 +270,13 @@
       <div class="section-header centered">
         <span class="section-tag">02 / Skills</span>
         <h2 class="section-title">Tools of the<br /><span class="gold">Trade</span></h2>
+        <div class="sh-voice-wrap">
+          <button class="section-voice-btn" data-tts="skills" aria-label="Listen to Skills Breakdown" title="Listen to Skills Breakdown">
+            <span class="svb-icon">◈</span>
+            <span class="svb-text">Audio Briefing</span>
+            <span class="svb-wave"><span></span><span></span><span></span></span>
+          </button>
+        </div>
       </div>
 
       <div class="skills-tabs">
@@ -416,6 +461,13 @@
         <span class="section-tag">03 / Services &amp; Plans</span>
         <h2 class="section-title">Professional<br /><span class="gold">Services &amp; Plans</span></h2>
         <p class="section-sub" style="margin: 0 auto; max-width: 520px;">High-quality consulting, bespoke development, and pricing plans structured to scale with your project.</p>
+        <div class="sh-voice-wrap">
+          <button class="section-voice-btn" data-tts="services" aria-label="Listen to Services Brief" title="Listen to Services Brief">
+            <span class="svb-icon">◈</span>
+            <span class="svb-text">Audio Briefing</span>
+            <span class="svb-wave"><span></span><span></span><span></span></span>
+          </button>
+        </div>
       </div>
       <div class="services-grid" id="servicesGrid">
         <!-- Dynamic services go here -->
@@ -426,13 +478,154 @@
     </div>
   </section>
 
+  <!-- ─── Flagship Showcase: Guru AI Companion ─────────── -->
+  <section id="guru-ai" class="guru-ai-flagship section">
+    <div class="container">
+      <div class="section-header">
+        <div class="sh-title-row">
+          <div class="sh-left">
+            <span class="section-tag">04 / Flagship Showcase</span>
+            <h2 class="section-title">Guru AI<br /><span class="gold">Companion</span></h2>
+            <p class="section-sub">Developer &amp; Builder Co-Pilot for African Innovators and Modern Engineers.</p>
+          </div>
+          <button class="section-voice-btn" data-tts="guru-ai" aria-label="Listen to Flagship Briefing" title="Listen to AI Architecture Briefing">
+            <span class="svb-icon">◈</span>
+            <span class="svb-text">AI Audio Brief</span>
+            <span class="svb-wave"><span></span><span></span><span></span></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="guru-flagship-card">
+        <div class="gfc-glow-mesh"></div>
+        
+        <div class="gfc-grid">
+          <!-- Col 1: Metadata & Highlights -->
+          <div class="gfc-info">
+            <div class="gfc-badge-wrap">
+              <span class="gfc-badge"><span class="badge-dot"></span>FLAGSHIP PROJECT SPOTLIGHT</span>
+              <span class="gfc-model-tag">Cognitive Architecture</span>
+            </div>
+
+            <h3 class="gfc-title">Guru AI Companion <span class="gfc-role">— Developer &amp; Builder Co-Pilot</span></h3>
+            
+            <p class="gfc-lead">
+              An intelligent, context-aware co-pilot engineered to guide developers, students, and African startup builders from initial problem decomposition to production-ready architectures and data-backed execution.
+            </p>
+
+            <!-- Metadata Pills -->
+            <div class="gfc-meta-chips">
+              <span class="gfc-chip"><span class="chip-icon">◈</span> Autonomous AI Engine</span>
+              <span class="gfc-chip"><span class="chip-icon">◈</span> Vanilla JS (ES6+)</span>
+              <span class="gfc-chip"><span class="chip-icon">◈</span> Supabase Cloud DB</span>
+              <span class="gfc-chip"><span class="chip-icon">◈</span> Context Engineering</span>
+              <span class="gfc-chip"><span class="chip-icon">◈</span> Web Audio Synthesizer</span>
+              <span class="gfc-chip"><span class="chip-icon">◈</span> Local Session Cache</span>
+            </div>
+
+            <!-- Key Highlights Feature List -->
+            <div class="gfc-highlights-list">
+              <div class="gfc-hl-item">
+                <div class="gfc-hl-icon">◈</div>
+                <div class="gfc-hl-content">
+                  <h4>Domain-Tailored Technical Co-Pilot</h4>
+                  <p>Custom-tuned for African innovators &amp; developers — resolving friction in UI/UX architecture, SPSS statistical modeling, Python data science pipelines, and launchpad logistics.</p>
+                </div>
+              </div>
+
+              <div class="gfc-hl-item">
+                <div class="gfc-hl-icon">⬡</div>
+                <div class="gfc-hl-content">
+                  <h4>Signal-Pathway Decryption Handshake</h4>
+                  <p>Gamified cybernetic onboarding protocol verifying system state clarity, mathematical parity, and builder readiness before granting clearance.</p>
+                </div>
+              </div>
+
+              <div class="gfc-hl-item">
+                <div class="gfc-hl-icon">▣</div>
+                <div class="gfc-hl-content">
+                  <h4>Resilient Client-Side Caching</h4>
+                  <p>Zero-latency response streaming with instant fallback caching, offline session resilience, and seamless Supabase persistence.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="gfc-actions">
+              <button class="btn-primary btn-guru-launch" id="btnLaunchGuruAi">
+                <span class="btn-glow-dot"></span> Live Interactive Demo →
+              </button>
+              <button class="btn-secondary" id="btnGuruSignalPuzzle">
+                Signal Decryption Protocol
+              </button>
+              <a href="https://github.com/JOSHMECH" target="_blank" rel="noopener" class="btn-ghost-gold">
+                View Source Code ↗
+              </a>
+            </div>
+          </div>
+
+          <!-- Col 2: Interactive Terminal Preview Simulator -->
+          <div class="gfc-preview">
+            <div class="guru-preview-terminal">
+              <div class="gpt-header">
+                <div class="gpt-dots">
+                  <span class="gpt-dot red"></span>
+                  <span class="gpt-dot yellow"></span>
+                  <span class="gpt-dot green"></span>
+                </div>
+                <span class="gpt-title">guru_ai_copilot_v2.5.sh</span>
+                <span class="gpt-status"><span class="gpt-live-dot"></span> LIVE NODE</span>
+              </div>
+
+              <!-- Quick Prompt Buttons -->
+              <div class="gpt-chips">
+                <button class="gpt-chip" data-prompt="Who is Joshua and what are his core specialties?">About Joshua</button>
+                <button class="gpt-chip" data-prompt="Analyze Joshua's frontend and data science tech stack.">Tech Stack</button>
+                <button class="gpt-chip" data-prompt="Explain GuruLabs Launchpad and its student ecosystem.">GuruLabs Ecosystem</button>
+                <button class="gpt-chip" data-prompt="INITIATE_SIGNAL_HANDSHAKE">Decrypt Signal</button>
+              </div>
+
+              <!-- Terminal Stream Window -->
+              <div class="gpt-body" id="guruTerminalBody">
+                <div class="gpt-msg-sys">
+                  <span class="gpt-tag">[SYSTEM]</span> Guru AI Companion v2.5 initialized. Neural cognitive bridge active.
+                </div>
+                <div class="gpt-msg-assistant">
+                  <span class="gpt-avatar">✦</span>
+                  <div class="gpt-text">
+                    Greetings, Builder. I am Joshua's <strong>Guru AI Co-Pilot</strong>. Query me regarding his architecture, software projects, statistical research, or launch the live companion drawer below.
+                  </div>
+                </div>
+              </div>
+
+              <!-- Interactive Terminal Input -->
+              <form class="gpt-input-row" id="guruTerminalForm">
+                <span class="gpt-prompt-symbol">&gt;</span>
+                <input type="text" id="guruTerminalInput" placeholder="Enter query or select a topic above…" autocomplete="off" spellcheck="false" />
+                <button type="submit" class="gpt-send-btn" aria-label="Send Query">↵</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+  </section>
+
   <!-- ─── Projects ────────────────────────────────────── -->
   <section id="projects" class="projects section">
     <div class="container">
       <div class="section-header">
-        <span class="section-tag">04 / Projects</span>
-        <h2 class="section-title">Selected<br /><span class="gold">Work</span></h2>
-        <p class="section-sub">A curated selection of development, design, and data science projects.</p>
+        <div class="sh-title-row">
+          <div class="sh-left">
+            <span class="section-tag">05 / Projects</span>
+            <h2 class="section-title">Selected<br /><span class="gold">Work</span></h2>
+            <p class="section-sub">A curated selection of development, design, and data science projects.</p>
+          </div>
+          <button class="section-voice-btn" data-tts="projects" aria-label="Listen to Projects Briefing" title="Listen to Projects Overview">
+            <span class="svb-icon">◈</span>
+            <span class="svb-text">Audio Briefing</span>
+            <span class="svb-wave"><span></span><span></span><span></span></span>
+          </button>
+        </div>
       </div>
       <div class="projects-filter">
         <button class="filter-btn active" data-filter="all">All</button>
@@ -556,11 +749,16 @@
   <section id="startup" class="startup section">
     <div class="container">
       <div class="section-header centered">
-        <span class="section-tag" style="color: #10B981; border-color: rgba(16, 185, 129, 0.2);">05 / Tech
-          Startup</span>
+        <span class="section-tag" style="color: #10B981; border-color: rgba(16, 185, 129, 0.2);">05 / Tech Startup</span>
         <h2 class="section-title">Guru<span class="emerald">Labs</span></h2>
-        <p class="section-sub" style="margin: 0 auto; color: var(--text-muted);">Building Africa's next digital
-          ecosystem — creating impactful platforms for youths, students, creators, and entrepreneurs.</p>
+        <p class="section-sub" style="margin: 0 auto; color: var(--text-muted);">Building Africa's next digital ecosystem — creating impactful platforms for youths, students, creators, and entrepreneurs.</p>
+        <div class="sh-voice-wrap">
+          <button class="section-voice-btn" data-tts="startup" aria-label="Listen to Startup Ecosystem Vision" title="Listen to Startup Ecosystem Vision">
+            <span class="svb-icon">◈</span>
+            <span class="svb-text">Startup Vision</span>
+            <span class="svb-wave"><span></span><span></span><span></span></span>
+          </button>
+        </div>
       </div>
 
       <!-- ── Startup Hero ── -->
@@ -748,7 +946,7 @@
           <div class="eco-arrow">──></div>
           <div class="eco-node">
             <span class="en-icon">◈</span>
-            <span class="en-lbl">Cloud DB (Supabase / Firebase)</span>
+            <span class="en-lbl">Cloud DB (Supabase PostgreSQL)</span>
           </div>
         </div>
 
@@ -758,10 +956,10 @@
           <div class="etg-badge"><span class="etg-dot"></span>React</div>
           <div class="etg-badge"><span class="etg-dot"></span>Tailwind CSS</div>
           <div class="etg-badge"><span class="etg-dot"></span>Node.js</div>
-          <div class="etg-badge"><span class="etg-dot"></span>Firebase</div>
           <div class="etg-badge"><span class="etg-dot"></span>Supabase</div>
-          <div class="etg-badge"><span class="etg-dot"></span>Gemini API</div>
-          <div class="etg-badge"><span class="etg-dot"></span>Cloud Firestore</div>
+          <div class="etg-badge"><span class="etg-dot"></span>PostgreSQL</div>
+          <div class="etg-badge"><span class="etg-dot"></span>Cognitive AI API</div>
+          <div class="etg-badge"><span class="etg-dot"></span>Cloud Storage</div>
         </div>
       </div>
 
@@ -824,21 +1022,91 @@
       <div class="section-header centered">
         <span class="section-tag">08 / Location Telemetry</span>
         <h2 class="section-title">Global<br /><span class="gold">Telemetry Node</span></h2>
-        <p class="section-sub" style="margin: 0 auto; max-width: 520px;">Locate my development node in real time. Spin,
-          swipe, or drag the holographic coordinates grid to scan geographic vectors.</p>
+        <p class="section-sub" style="margin: 0 auto; max-width: 540px;">Locate my primary development node in real time. Interact with the 3D vector globe, track regional timezones, and inspect live geographic telemetry.</p>
+        <div class="sh-voice-wrap">
+          <button class="section-voice-btn" data-tts="location" aria-label="Listen to Location Telemetry" title="Listen to Location Telemetry">
+            <span class="svb-icon">◈</span>
+            <span class="svb-text">Node Briefing</span>
+            <span class="svb-wave"><span></span><span></span><span></span></span>
+          </button>
+        </div>
       </div>
 
-      <div class="location-content">
-        <div class="globe-card">
+      <div class="location-command-grid">
+        <!-- Globe Visualizer Column -->
+        <div class="globe-visualizer-card">
           <div class="globe-card-header">
-            <span class="gch-dot"></span>
-            <span class="gch-title">telemetry_daemon.log</span>
-            <span class="gch-badge">LIVE</span>
+            <div class="gch-left">
+              <span class="gch-dot"></span>
+              <span class="gch-title">node_stream.gl // 3D_VECTOR_GLOBE</span>
+            </div>
+            <div class="gch-right">
+              <span class="gch-badge">LIVE 3D</span>
+            </div>
           </div>
+
           <div class="globe-canvas-wrap">
+            <div class="globe-atmosphere-ring"></div>
+            <div class="globe-radar-sweep"></div>
             <div id="locationGlobe"></div>
           </div>
-          <div id="globeTooltip" class="globe-tooltip">Lagos, Nigeria</div>
+
+          <!-- Quick Interactive Controls -->
+          <div class="globe-controls-bar">
+            <button class="gcb-btn" id="globeFlyLagosBtn" title="Recenter to Lagos Hub">
+              <span>⌖</span> Recenter Lagos
+            </button>
+            <button class="gcb-btn" id="globeToggleRotateBtn" title="Toggle Auto-Rotation">
+              <span id="globeRotateIcon">↻</span> <span id="globeRotateLabel">Pause Spin</span>
+            </button>
+            <div class="gcb-zoom-group">
+              <button class="gcb-btn gcb-icon-only" id="globeZoomInBtn" title="Zoom In" aria-label="Zoom In">+</button>
+              <button class="gcb-btn gcb-icon-only" id="globeZoomOutBtn" title="Zoom Out" aria-label="Zoom Out">−</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Telemetry & Node Specs Column -->
+        <div class="globe-telemetry-card">
+          <div class="gtc-header">
+            <div class="gtc-title-wrap">
+              <span class="gtc-tag">OPERATIONAL SPECIFICATIONS</span>
+              <h3 class="gtc-node-name">Lagos Core Node <span class="gtc-id">[LOS_NODE_01]</span></h3>
+            </div>
+            <span class="gtc-status-pill"><span class="gtc-dot"></span> ONLINE</span>
+          </div>
+
+          <div class="gtc-metrics-grid">
+            <div class="gtc-metric-box">
+              <span class="gmb-label">GEOGRAPHIC VECTOR</span>
+              <span class="gmb-value">6.5244° N, 3.3792° E</span>
+              <span class="gmb-sub">Lagos, Nigeria (West Africa)</span>
+            </div>
+            <div class="gtc-metric-box">
+              <span class="gmb-label">LOCAL TIME (WAT / UTC+1)</span>
+              <span class="gmb-value" id="nodeLocalTime">--:--:-- WAT</span>
+              <span class="gmb-sub" id="nodeTimezoneStatus">Active Core Hours</span>
+            </div>
+            <div class="gtc-metric-box">
+              <span class="gmb-label">DATABASE UPTIME</span>
+              <span class="gmb-value">99.98%</span>
+              <span class="gmb-sub">Supabase High-Availability Cluster</span>
+            </div>
+            <div class="gtc-metric-box">
+              <span class="gmb-label">REMOTE AVAILABILITY</span>
+              <span class="gmb-value" style="color:var(--gold);">Available Worldwide</span>
+              <span class="gmb-sub">Remote Contracts, AI & Full-Stack</span>
+            </div>
+          </div>
+
+          <div class="gtc-routing-banner">
+            <div class="grb-icon">◈</div>
+            <div class="grb-info">
+              <div class="grb-title">Direct Connection Protocol</div>
+              <div class="grb-desc">Ready to architect solutions with international teams across UTC-5 to UTC+4 timezones.</div>
+            </div>
+            <a href="#contact" class="grb-cta-btn">Initiate Ping →</a>
+          </div>
         </div>
       </div>
     </div>
@@ -848,9 +1116,18 @@
   <section id="blog" class="blog section">
     <div class="container">
       <div class="section-header">
-        <span class="section-tag">09 / Insights</span>
-        <h2 class="section-title">Latest<br /><span class="gold">Articles</span></h2>
-        <p class="section-sub">Thoughts on engineering, statistics, and creative UI/UX design.</p>
+        <div class="sh-title-row">
+          <div class="sh-left">
+            <span class="section-tag">09 / Insights</span>
+            <h2 class="section-title">Latest<br /><span class="gold">Articles</span></h2>
+            <p class="section-sub">Thoughts on engineering, statistics, and creative UI/UX design.</p>
+          </div>
+          <button class="section-voice-btn" data-tts="blog" aria-label="Listen to Insights Summary" title="Listen to Insights Summary">
+            <span class="svb-icon">◈</span>
+            <span class="svb-text">Audio Briefing</span>
+            <span class="svb-wave"><span></span><span></span><span></span></span>
+          </button>
+        </div>
       </div>
       <div class="blog-grid" id="blogGrid">
         <!-- Dynamic blog cards go here -->
@@ -887,8 +1164,17 @@
     <div class="container">
       <div class="contact-inner">
         <div class="contact-left">
-          <span class="section-tag">10 / Contact</span>
-          <h2 class="section-title">Let's Build<br /><span class="gold">Something Great</span></h2>
+          <div class="sh-title-row" style="margin-bottom:1.2rem;">
+            <div>
+              <span class="section-tag">10 / Contact</span>
+              <h2 class="section-title">Let's Build<br /><span class="gold">Something Great</span></h2>
+            </div>
+            <button class="section-voice-btn" data-tts="contact" aria-label="Listen to Transmission Protocol" title="Listen to Transmission Protocol">
+              <span class="svb-icon">◈</span>
+              <span class="svb-text">Transmission Brief</span>
+              <span class="svb-wave"><span></span><span></span><span></span></span>
+            </button>
+          </div>
           <p>Whether you need a stunning website, a compelling brand identity,
             data insights, or all three — I'm ready. Let's turn your ideas into reality.</p>
           <div class="contact-links">
@@ -1012,9 +1298,95 @@
   </div>
 
   <!-- ─── Floating CLI Button ─────────────────────────── -->
-  <button class="cli-toggle-btn" id="cliToggleBtn" aria-label="Toggle command line interface">
+  <button class="cli-toggle-btn" id="cliToggleBtn" aria-label="Toggle command line interface" title="Open CLI Console">
     <span class="cli-btn-icon">&gt;_</span>
   </button>
+
+  <!-- ─── Global Floating AI Companion Widget ───────────── -->
+  <div class="guru-ai-widget" id="guruAiWidget" role="button" aria-label="Open Guru AI Companion Co-Pilot" title="Talk with Guru AI Companion">
+    <div class="gaw-radar-ring"></div>
+    <div class="gaw-radar-ring outer"></div>
+    <div class="gaw-content">
+      <div class="gaw-avatar">
+        <span class="gaw-sparkle">✦</span>
+      </div>
+      <div class="gaw-text">
+        <span class="gaw-name">GURU AI</span>
+        <span class="gaw-status"><span class="gaw-dot"></span> CO-PILOT</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Global Slide-out Guru AI Companion Drawer ─────── -->
+  <div class="guru-drawer-overlay" id="guruDrawerOverlay" aria-hidden="true"></div>
+  <aside class="guru-ai-drawer" id="guruAiDrawer" role="dialog" aria-modal="true" aria-label="Guru AI Companion Co-Pilot">
+    <div class="gad-header">
+      <div class="gad-header-left">
+        <div class="gad-avatar-wrap">
+          <span class="gad-avatar-icon">✦</span>
+          <span class="gad-avatar-status"></span>
+        </div>
+        <div class="gad-header-info">
+          <h3 class="gad-title">Guru AI Companion</h3>
+          <p class="gad-meta">
+            <span class="gad-model">Autonomous Co-Pilot</span> · 
+            <span class="gad-latency" id="gadLatency">18ms latency</span>
+          </p>
+        </div>
+      </div>
+      <div class="gad-header-actions">
+        <button class="gad-voice-pill-btn active" id="gadVoiceToggle" aria-label="Toggle AI Voice Speech" title="Toggle AI Voice Auto-Readout: ON">
+          <span class="gvp-dot"></span>
+          <span class="gvp-text">Voice: ON</span>
+        </button>
+        <button class="gad-icon-btn" id="gadSoundToggle" aria-label="Toggle Audio" title="Toggle Synthesizer Feedback">
+          <span id="gadSoundIcon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+          </span>
+        </button>
+        <button class="gad-icon-btn" id="gadClearBtn" aria-label="Clear Chat" title="Reset Session">
+          <span>↻</span>
+        </button>
+        <button class="gad-close-btn" id="gadCloseBtn" aria-label="Close Drawer">✕</button>
+      </div>
+    </div>
+
+    <!-- Quick Chips Bar in Drawer -->
+    <div class="gad-chips-bar">
+      <button class="gad-chip" data-chat="Who is Joshua and what does he build?">About Joshua</button>
+      <button class="gad-chip" data-chat="What is Kudiflow and ScholarLens?">Startup Ecosystem</button>
+      <button class="gad-chip" data-chat="Show me his frontend and SPSS statistics stack.">Technical Stack</button>
+      <button class="gad-chip" data-chat="INITIATE_SIGNAL_HANDSHAKE">Signal Decryption</button>
+    </div>
+
+    <!-- Chat Messages Stream -->
+    <div class="gad-messages" id="gadMessages">
+      <div class="gad-bubble assistant">
+        <div class="gad-bubble-avatar">✦</div>
+        <div class="gad-bubble-body">
+          <p><strong>Welcome to Guru AI Companion</strong> — Developer &amp; builder co-pilot.</p>
+          <p>I can brief you on Joshua's technical background, explain his startup ecosystem (<em>Kudiflow &amp; ScholarLens</em>), provide architectural guidance, or run the signal pathway handshake.</p>
+          <div class="gad-suggest-box">
+            <span class="gsb-label">Suggested query:</span>
+            <button class="gsb-btn" data-chat="Brief me on Joshua's full engineering profile.">"Brief me on Joshua's full engineering profile." →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Row -->
+    <form class="gad-input-area" id="gadForm">
+      <div class="gad-input-wrap">
+        <textarea id="gadInput" placeholder="Enter your query..." rows="1" autocomplete="off" spellcheck="false"></textarea>
+        <button type="submit" class="gad-send-btn" id="gadSendBtn" aria-label="Send message">
+          <span>→</span>
+        </button>
+      </div>
+      <div class="gad-footer-note">
+        <span>Guru AI Cognitive Engine · Supabase Architecture</span>
+      </div>
+    </form>
+  </aside>
 
   <!-- ─── Custom Alert Modal ──────────────────────────── -->
   <div class="sys-modal-overlay" id="sysModal" role="dialog" aria-modal="true" aria-labelledby="sysModalTitle">
@@ -1033,6 +1405,23 @@
       <div class="sys-modal-footer">
         <button class="btn-primary" id="sysModalConfirmBtn">ACKNOWLEDGE REPORT</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ─── Floating Neural Audio Wave Controller ─────────── -->
+  <div class="voice-wave-pill" id="voiceWavePill" role="status" aria-live="polite">
+    <div class="vwp-left">
+      <div class="vwp-eq">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="vwp-info">
+        <span class="vwp-tag">NEURAL VOICE ACTIVE</span>
+        <span class="vwp-title" id="vwpTitle">Narrating Section...</span>
+      </div>
+    </div>
+    <div class="vwp-actions">
+      <button class="vwp-btn" id="vwpPauseBtn" title="Pause / Resume Voice">❚❚</button>
+      <button class="vwp-btn vwp-stop" id="vwpStopBtn" title="Stop Audio">✕</button>
     </div>
   </div>
 

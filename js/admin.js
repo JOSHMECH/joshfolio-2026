@@ -390,6 +390,24 @@ const DEMO_DATASETS = {
   ],
   projects: [
     {
+      title: 'Guru AI Companion — Developer & Builder Co-Pilot',
+      slug: 'guru-ai-companion',
+      category: 'dev',
+      categoryLabel: 'AI Engineering · Cognitive Systems',
+      description: 'An intelligent context-aware co-pilot for African innovators & builders with signal decryption onboarding and offline caching.',
+      longDescription: '<p>Guru AI Companion is an interactive developer and builder co-pilot engineered to assist engineers, student founders, and technical innovators from problem decomposition to production-ready architectures and data-backed execution. Features autonomous multi-modal reasoning, resilient offline session caching, and cybernetic signal handshake protocols.</p>',
+      client: 'Flagship Build · GuruLabs',
+      completionDate: 'June 2026',
+      projectUrl: 'https://github.com/JOSHMECH',
+      repoUrl: 'https://github.com/JOSHMECH',
+      coverImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
+      technologies: ['Autonomous AI Engine', 'Vanilla JS (ES6+)', 'Supabase', 'Web Audio Synthesizer', 'Local Session Cache'],
+      featured: true,
+      status: 'published',
+      emoji: '✦',
+      order: 1
+    },
+    {
       title: 'ScholarLens AI Sandbox',
       slug: 'scholarlens-ai-sandbox',
       category: 'dev',
@@ -405,7 +423,7 @@ const DEMO_DATASETS = {
       featured: true,
       status: 'published',
       emoji: '🚀',
-      order: 1
+      order: 2
     },
     {
       title: 'Kudiflow Smart Ledger',
@@ -423,7 +441,7 @@ const DEMO_DATASETS = {
       featured: true,
       status: 'published',
       emoji: '📊',
-      order: 2
+      order: 3
     },
     {
       title: 'Apex Brand Identity System',
@@ -441,7 +459,7 @@ const DEMO_DATASETS = {
       featured: true,
       status: 'published',
       emoji: '🎨',
-      order: 3
+      order: 4
     }
   ],
   services: [

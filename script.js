@@ -1447,7 +1447,7 @@ function initTerminalCLI() {
       "  - Active Beta Users: 2,400+",
       "  - Ecosystem Nodes: 3 Built",
       "  - Community Members: 15,000+",
-      "INTEGRATIONS: Gemini AI, Firebase, Cloud Firestore"
+      "INTEGRATIONS: Multi-Modal AI, Supabase, Cloud DB"
     ],
     globe: () => [
       "LOCATION TELEMETRY SYSTEM:",
@@ -1491,7 +1491,7 @@ function initTerminalCLI() {
       else if (userAgent.indexOf("Android") !== -1) os = "Android";
       else if (userAgent.indexOf("like Mac") !== -1) os = "iOS";
       
-      const dbStr = (window.joshFirebase && window.joshFirebase.firebaseReady) ? "Cloud Firestore (Connected)" : "Local Storage Fallback";
+      const dbStr = (window.joshFirebase && window.joshFirebase.firebaseReady) ? "Supabase Cloud DB (Connected)" : "Local Storage Fallback";
       const audioStr = isMuted ? "MUTED" : "Active (Web Audio Synthesizer)";
       const projectsCount = allAdminProjects.length;
       
@@ -1628,109 +1628,238 @@ function initMagneticAndParallax() {
   }, { passive: true });
 }
 
-/* ─── 3D MapLibre GL Location Globe ───────────────────────── */
+/* ─── 3D MapLibre GL Location Globe & Command Center ───────── */
 let locationMap = null;
 function initLocationGlobe() {
   const container = document.getElementById('locationGlobe');
-  if (!container || typeof maplibregl === 'undefined') return;
+  if (!container) return;
 
-  // Initialize MapLibre GL
-  locationMap = new maplibregl.Map({
-    container: 'locationGlobe',
-    style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
-    center: [3.3792, 6.5244], // Lagos longitude/latitude
-    zoom: 1.8,
-    projection: { type: 'globe' }, // Enable 3D Globe view
-    attributionControl: false,
-    dragPan: true,
-    dragRotate: true,
-    scrollZoom: false, // Prevent page scrolling issues
-    doubleClickZoom: false,
-    boxZoom: false,
-    keyboard: false
-  });
+  // Initialize Lagos Local Time Ticker
+  const timeEl = document.getElementById('nodeLocalTime');
+  const statusEl = document.getElementById('nodeTimezoneStatus');
+  
+  function updateLagosTime() {
+    try {
+      const now = new Date();
+      const options = {
+        timeZone: 'Africa/Lagos',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      };
+      const timeFormatter = new Intl.DateTimeFormat('en-US', options);
+      const timeStr = timeFormatter.format(now);
+      if (timeEl) timeEl.textContent = `${timeStr} WAT`;
 
-  locationMap.on('load', () => {
-    // Add custom gold pulse marker
-    const el = document.createElement('div');
-    el.className = 'maplibre-custom-marker';
-    
-    const pulse = document.createElement('div');
-    pulse.className = 'maplibre-pulse-ring';
-    el.appendChild(pulse);
+      // Determine operational hours (8 AM - 10 PM WAT)
+      const hourFormatter = new Intl.DateTimeFormat('en-US', { timeZone: 'Africa/Lagos', hour: 'numeric', hour12: false });
+      const currentHour = parseInt(hourFormatter.format(now), 10);
+      if (statusEl) {
+        if (currentHour >= 8 && currentHour < 22) {
+          statusEl.textContent = 'Active Core Production Hours';
+          statusEl.style.color = '#10B981';
+        } else {
+          statusEl.textContent = 'After Hours · Global On-Call';
+          statusEl.style.color = 'var(--gold)';
+        }
+      }
+    } catch (e) {
+      if (timeEl) timeEl.textContent = 'UTC+1 (Lagos)';
+    }
+  }
 
-    const core = document.createElement('div');
-    core.className = 'maplibre-core-dot';
-    el.appendChild(core);
+  updateLagosTime();
+  setInterval(updateLagosTime, 1000);
 
-    // Create and add the marker to the map
-    const marker = new maplibregl.Marker({ element: el })
-      .setLngLat([3.3792, 6.5244])
-      .addTo(locationMap);
+  if (typeof maplibregl === 'undefined') {
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--gold);font-family:var(--font-mono);font-size:0.8rem;text-align:center;padding:1rem;">
+        <span style="font-size:2rem;margin-bottom:0.5rem;">⬡</span>
+        <span>LAGOS DEV NODE</span>
+        <span style="font-size:0.7rem;color:var(--text-muted);margin-top:0.3rem;">[6.5244° N, 3.3792° E]</span>
+      </div>
+    `;
+    return;
+  }
 
-    // Custom Popup styled in dark gold
-    const popup = new maplibregl.Popup({
-      offset: 15,
-      closeButton: false,
-      closeOnClick: false,
-      className: 'maplibre-custom-popup'
-    })
-      .setHTML(`
-        <div class="map-popup-header">
-          <span class="mph-dot"></span>
-          <span class="mph-title">LAGOS NODE</span>
-        </div>
-        <div class="map-popup-body">
-          <p class="mp-loc">Lagos, Nigeria</p>
-          <p class="mp-status">✦ STATUS: ACTIVE DEV NODE</p>
-          <p class="mp-coords">[6.5244° N, 3.3792° E]</p>
-        </div>
-      `);
+  try {
+    // Initialize MapLibre GL
+    locationMap = new maplibregl.Map({
+      container: 'locationGlobe',
+      style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+      center: [3.3792, 6.5244], // Lagos longitude/latitude
+      zoom: 1.85,
+      pitch: 15,
+      projection: { type: 'globe' }, // Enable 3D Globe view
+      attributionControl: false,
+      dragPan: true,
+      dragRotate: true,
+      touchZoomRotate: true,
+      scrollZoom: false, // Prevent page scrolling hijacking
+      doubleClickZoom: true,
+      boxZoom: false,
+      keyboard: false
+    });
 
-    marker.setPopup(popup);
-    popup.addTo(locationMap);
-
-    // Slow Auto-Rotation Loop
+    let isRotating = true;
     let userInteracted = false;
     let idleTimeout = null;
 
-    function rotateGlobe() {
-      if (!userInteracted && locationMap) {
-        const center = locationMap.getCenter();
-        center.lng = (center.lng + 0.15) % 360;
-        locationMap.setCenter(center);
-        requestAnimationFrame(rotateGlobe);
+    locationMap.on('load', () => {
+      // Add custom gold pulse marker
+      const el = document.createElement('div');
+      el.className = 'maplibre-custom-marker';
+      
+      const pulse = document.createElement('div');
+      pulse.className = 'maplibre-pulse-ring';
+      el.appendChild(pulse);
+
+      const core = document.createElement('div');
+      core.className = 'maplibre-core-dot';
+      el.appendChild(core);
+
+      // Create and add the marker to the map
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([3.3792, 6.5244])
+        .addTo(locationMap);
+
+      // Custom Popup styled in dark gold
+      const popup = new maplibregl.Popup({
+        offset: 18,
+        closeButton: false,
+        closeOnClick: false,
+        className: 'maplibre-custom-popup'
+      })
+        .setHTML(`
+          <div class="map-popup-header">
+            <span class="mph-dot"></span>
+            <span class="mph-title">LAGOS NODE</span>
+          </div>
+          <div class="map-popup-body">
+            <p class="mp-loc">Lagos, Nigeria</p>
+            <p class="mp-status">✦ STATUS: ACTIVE DEV NODE</p>
+            <p class="mp-coords">[6.5244° N, 3.3792° E]</p>
+          </div>
+        `);
+
+      marker.setPopup(popup);
+      popup.addTo(locationMap);
+
+      // Slow Auto-Rotation Loop
+      function rotateGlobe() {
+        if (isRotating && !userInteracted && locationMap) {
+          const center = locationMap.getCenter();
+          center.lng = (center.lng + 0.16) % 360;
+          locationMap.setCenter(center);
+          requestAnimationFrame(rotateGlobe);
+        }
       }
-    }
 
-    const stopRotation = () => {
-      userInteracted = true;
-      if (idleTimeout) clearTimeout(idleTimeout);
-    };
+      const stopRotation = () => {
+        userInteracted = true;
+        if (idleTimeout) clearTimeout(idleTimeout);
+      };
 
-    const startRotation = () => {
-      userInteracted = false;
+      const startRotation = () => {
+        userInteracted = false;
+        if (isRotating) rotateGlobe();
+      };
+
+      // Listen to user map interactions to stop rotation
+      locationMap.on('dragstart', stopRotation);
+      locationMap.on('zoomstart', stopRotation);
+      locationMap.on('rotatestart', stopRotation);
+      locationMap.on('touchstart', stopRotation);
+
+      // Setup idle timer to resume rotation after 6 seconds
+      const resetIdleTimer = () => {
+        if (idleTimeout) clearTimeout(idleTimeout);
+        idleTimeout = setTimeout(startRotation, 6000);
+      };
+
+      locationMap.on('dragend', resetIdleTimer);
+      locationMap.on('zoomend', resetIdleTimer);
+      locationMap.on('rotateend', resetIdleTimer);
+      locationMap.on('touchend', resetIdleTimer);
+
+      // Start auto-rotation
       rotateGlobe();
-    };
 
-    // Listen to user map interactions to stop rotation
-    locationMap.on('dragstart', stopRotation);
-    locationMap.on('zoomstart', stopRotation);
-    locationMap.on('rotatestart', stopRotation);
+      // Setup Interactive Controls
+      const flyLagosBtn = document.getElementById('globeFlyLagosBtn');
+      const toggleRotateBtn = document.getElementById('globeToggleRotateBtn');
+      const rotateIcon = document.getElementById('globeRotateIcon');
+      const rotateLabel = document.getElementById('globeRotateLabel');
+      const zoomInBtn = document.getElementById('globeZoomInBtn');
+      const zoomOutBtn = document.getElementById('globeZoomOutBtn');
 
-    // Setup idle timer to resume rotation after 5 seconds
-    const resetIdleTimer = () => {
-      if (idleTimeout) clearTimeout(idleTimeout);
-      idleTimeout = setTimeout(startRotation, 5000);
-    };
+      if (flyLagosBtn) {
+        flyLagosBtn.addEventListener('click', () => {
+          stopRotation();
+          locationMap.flyTo({
+            center: [3.3792, 6.5244],
+            zoom: 2.3,
+            pitch: 20,
+            bearing: 0,
+            speed: 1.2,
+            curve: 1.4,
+            essential: true
+          });
+          playAudioEffect('click');
+          resetIdleTimer();
+        });
+      }
 
-    locationMap.on('dragend', resetIdleTimer);
-    locationMap.on('zoomend', resetIdleTimer);
-    locationMap.on('rotateend', resetIdleTimer);
+      if (toggleRotateBtn) {
+        toggleRotateBtn.addEventListener('click', () => {
+          isRotating = !isRotating;
+          if (isRotating) {
+            userInteracted = false;
+            if (rotateIcon) rotateIcon.textContent = '↻';
+            if (rotateLabel) rotateLabel.textContent = 'Pause Spin';
+            rotateGlobe();
+          } else {
+            if (rotateIcon) rotateIcon.textContent = '▶';
+            if (rotateLabel) rotateLabel.textContent = 'Resume Spin';
+          }
+          playAudioEffect('click');
+        });
+      }
 
-    // Start auto-rotation
-    rotateGlobe();
-  });
+      if (zoomInBtn) {
+        zoomInBtn.addEventListener('click', () => {
+          stopRotation();
+          locationMap.zoomIn({ duration: 400 });
+          playAudioEffect('click');
+          resetIdleTimer();
+        });
+      }
+
+      if (zoomOutBtn) {
+        zoomOutBtn.addEventListener('click', () => {
+          stopRotation();
+          locationMap.zoomOut({ duration: 400 });
+          playAudioEffect('click');
+          resetIdleTimer();
+        });
+      }
+    });
+
+    // Resize observer for responsive orientation changes
+    if (window.ResizeObserver) {
+      const ro = new ResizeObserver(() => {
+        if (locationMap) locationMap.resize();
+      });
+      ro.observe(container);
+    }
+    window.addEventListener('resize', () => {
+      if (locationMap) locationMap.resize();
+    });
+
+  } catch (err) {
+    console.warn('MapLibre GL error:', err);
+  }
 }
 
 /* ─── GuruLabs Waitlist ──────────────────────────────── */
@@ -1957,7 +2086,7 @@ function initFooterTelemetry() {
     if (!dbNode) return;
     const { firebaseReady } = window.joshFirebase || {};
     if (firebaseReady) {
-      dbNode.innerHTML = '<span class="tel-dot pulsing"></span> CLOUD_FIREBASE';
+      dbNode.innerHTML = '<span class="tel-dot pulsing"></span> SUPABASE_CLOUD';
     } else {
       dbNode.innerHTML = '<span class="tel-dot pulsing-amber"></span> LOCAL_FALLBACK';
     }
@@ -2052,6 +2181,9 @@ initStartupMetrics();
 initInteractiveMockups();
 initDottedSurface();
 initSocialSettings();
+initGuruAiCompanion();
+initNetworkSpeedMonitor();
+initNeuralTTS();
 
 // Load CMS Dynamic Sections
 loadDynamicAbout();
@@ -2837,3 +2969,731 @@ function initDottedSurface() {
 
   animate();
 }
+
+/* ════════════════════════════════════════════════════════
+   Guru AI Companion — Interactive Co-Pilot Logic
+   ════════════════════════════════════════════════════════ */
+
+function initGuruAiCompanion() {
+  // Elements: Flagship Showcase Section
+  const terminalForm = document.getElementById('guruTerminalForm');
+  const terminalInput = document.getElementById('guruTerminalInput');
+  const terminalBody = document.getElementById('guruTerminalBody');
+  const promptChips = document.querySelectorAll('.gpt-chip');
+  const btnLaunchGuru = document.getElementById('btnLaunchGuruAi');
+  const btnSignalPuzzle = document.getElementById('btnGuruSignalPuzzle');
+
+  // Elements: Floating Widget & Slide-Out Drawer
+  const widget = document.getElementById('guruAiWidget');
+  const drawer = document.getElementById('guruAiDrawer');
+  const overlay = document.getElementById('guruDrawerOverlay');
+  const closeBtn = document.getElementById('gadCloseBtn');
+  const clearBtn = document.getElementById('gadClearBtn');
+  const soundToggleBtn = document.getElementById('gadSoundToggle');
+  const soundIcon = document.getElementById('gadSoundIcon');
+  const gadForm = document.getElementById('gadForm');
+  const gadInput = document.getElementById('gadInput');
+  const gadMessages = document.getElementById('gadMessages');
+  const drawerChips = document.querySelectorAll('.gad-chip');
+  const latencyEl = document.getElementById('gadLatency');
+
+  let isDrawerSoundEnabled = true;
+
+  // 1. Knowledge Base & Response Engine
+  function getAiResponse(rawQuery) {
+    const q = rawQuery.toLowerCase().trim();
+
+    if (q.includes('signal') || q.includes('decrypt') || q.includes('handshake') || q.includes('initiate_signal_handshake')) {
+      return {
+        text: `<strong>[PROTOCOL CLEARANCE: GRANTED]</strong><br/>
+Signal Pathway Decryption: <code>SHA-256::GURU-ALPHA-2026</code> verified.<br/>
+- Decrypted Block: <em>"Innovate from raw constraints. Bridge UI elegance with statistical precision."</em><br/>
+- Onboarding status: <strong>LEVEL 4 BUILDER ACCESS ACTIVE</strong>. Welcome to the GuruLabs core.`,
+        suggest: 'Explore GuruLabs startup roadmap.'
+      };
+    }
+
+    if (q.includes('who is') || q.includes('joshua') || q.includes('about') || q.includes('profile') || q.includes('bio')) {
+      return {
+        text: `<strong>Idowu Joshua Victor (Josh_d_Guru)</strong> is a creative technologist, software engineer, and BSc Statistics student at Olabisi Onabanjo University (OOU).<br/><br/>
+He serves as the founder of <strong>GuruLabs</strong>, engineering flagship projects including <em>Kudiflow</em> (smart business finance) and <em>ScholarLens</em> (AI academic research). His work merges modern frontend design with statistical machine learning and custom cognitive integrations.`,
+        suggest: 'Show me his frontend and SPSS statistics stack.'
+      };
+    }
+
+    if (q.includes('stack') || q.includes('skills') || q.includes('technolog') || q.includes('frontend') || q.includes('languages')) {
+      return {
+        text: `Joshua's core technical stack spans three interconnected disciplines:<br/>
+• <strong>Frontend & Creative Engineering:</strong> Vanilla JS (ES6+), Three.js WebGL, Tailwind CSS, Next.js, React, Web Audio API.<br/>
+• <strong>Backend & Cloud Architecture:</strong> Supabase, Firebase Cloud Firestore, Node.js, REST & Serverless APIs.<br/>
+• <strong>Data Science & Statistics:</strong> Python (Pandas, NumPy, Scikit-learn), SPSS (ANOVA, Chi-square, Multi-variable Regression), Linear & KNN sandbox modeling.`,
+        suggest: 'What is Kudiflow and ScholarLens?'
+      };
+    }
+
+    if (q.includes('kudiflow') || q.includes('scholarlens') || q.includes('startup') || q.includes('gurulabs') || q.includes('cases')) {
+      return {
+        text: `<strong>GuruLabs Startup Ecosystem:</strong><br/>
+1. <strong>Kudiflow:</strong> Smart financial ledger and cash flow automation for student entrepreneurs and builders.<br/>
+2. <strong>ScholarLens:</strong> AI-powered academic research sandbox featuring automated PDF analysis, citation compilation, and predictive GPA modeling.<br/>
+3. <strong>Guru AI Companion:</strong> Developer & builder co-pilot with zero-latency offline caching.`,
+        suggest: 'How can I collaborate or hire Joshua?'
+      };
+    }
+
+    if (q.includes('hire') || q.includes('contact') || q.includes('email') || q.includes('reach') || q.includes('collaborate')) {
+      return {
+        text: `You can reach Joshua directly for engineering roles, technical co-founding, or client contracts:<br/>
+• <strong>Email:</strong> <a href="mailto:joshmech851@gmail.com" style="color:var(--gold); text-decoration:underline;">joshmech851@gmail.com</a><br/>
+• <strong>Phone / WhatsApp:</strong> <a href="tel:+2348161523407" style="color:var(--gold); text-decoration:underline;">+234 816 1523 407</a><br/>
+• <strong>GitHub:</strong> <a href="https://github.com/JOSHMECH" target="_blank" style="color:var(--gold); text-decoration:underline;">github.com/JOSHMECH</a><br/>
+• Or use the <em>#contact</em> form below on this page.`,
+        suggest: 'Tell me about the Guru AI Companion architecture.'
+      };
+    }
+
+    if (q.includes('companion') || q.includes('guru ai') || q.includes('architecture') || q.includes('model') || q.includes('engine')) {
+      return {
+        text: `<strong>Guru AI Companion Architecture:</strong><br/>
+• <strong>Cognitive Pipeline:</strong> Autonomous multi-modal reasoning with context-engineered prompt architectures.<br/>
+• <strong>Client Pipeline:</strong> Lightweight Vanilla ES6+ core for maximum client responsiveness.<br/>
+• <strong>Data Layer:</strong> Supabase PostgreSQL with real-time sync and client session storage fallback.<br/>
+• <strong>Audio Feedback:</strong> Real-time Web Audio API frequency synthesizers.`,
+        suggest: 'Run Signal Handshake protocol.'
+      };
+    }
+
+    // Default intelligent fallback
+    return {
+      text: `Understood. As Joshua's <strong>Guru AI Co-Pilot</strong>, I am tuned to assist with development roadmaps, data engineering questions, or briefing you on Joshua's project portfolio. Feel free to query his software builds, statistics research, or startup launchpad.`,
+      suggest: 'Who is Joshua and what does he build?'
+    };
+  }
+
+  // 2. Interactive Terminal Simulator in Section
+  function appendTerminalMessage(sender, htmlContent, isUser = false) {
+    if (!terminalBody) return;
+    const msg = document.createElement('div');
+    if (isUser) {
+      msg.className = 'gpt-msg-user';
+      msg.textContent = htmlContent;
+    } else {
+      msg.className = 'gpt-msg-assistant';
+      msg.innerHTML = `
+        <span class="gpt-avatar">✦</span>
+        <div class="gpt-text">${htmlContent}</div>
+      `;
+    }
+    terminalBody.appendChild(msg);
+    terminalBody.scrollTop = terminalBody.scrollHeight;
+  }
+
+  function handleTerminalQuery(queryText) {
+    if (!queryText.trim()) return;
+    appendTerminalMessage('user', queryText, true);
+    playAudioEffect('terminal');
+
+    // Simulate typing delay
+    setTimeout(() => {
+      const resp = getAiResponse(queryText);
+      appendTerminalMessage('assistant', resp.text);
+      playAudioEffect('chord');
+    }, 400);
+  }
+
+  if (terminalForm && terminalInput) {
+    terminalForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const val = terminalInput.value.trim();
+      if (!val) return;
+      handleTerminalQuery(val);
+      terminalInput.value = '';
+    });
+  }
+
+  promptChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const prompt = chip.getAttribute('data-prompt') || chip.textContent;
+      handleTerminalQuery(prompt);
+      playAudioEffect('click');
+    });
+  });
+
+  // 3. Floating Widget & Slide-Out Drawer Controls
+  function openDrawer(prefillQuery = null) {
+    if (!drawer || !overlay) return;
+    overlay.classList.add('open');
+    drawer.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    playAudioEffect('chord');
+
+    // Randomize slight latency ticker for realism
+    if (latencyEl) {
+      latencyEl.textContent = `${Math.floor(Math.random() * 15 + 14)}ms latency`;
+    }
+
+    if (prefillQuery) {
+      sendDrawerMessage(prefillQuery);
+    } else if (gadInput) {
+      setTimeout(() => gadInput.focus(), 300);
+    }
+  }
+
+  function closeDrawer() {
+    if (!drawer || !overlay) return;
+    overlay.classList.remove('open');
+    drawer.classList.remove('open');
+    document.body.style.overflow = '';
+    playAudioEffect('click');
+  }
+
+  if (widget) {
+    widget.addEventListener('click', () => openDrawer());
+  }
+
+  if (btnLaunchGuru) {
+    btnLaunchGuru.addEventListener('click', () => openDrawer());
+  }
+
+  if (btnSignalPuzzle) {
+    btnSignalPuzzle.addEventListener('click', () => {
+      openDrawer('INITIATE_SIGNAL_HANDSHAKE');
+    });
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeDrawer);
+  }
+
+  if (overlay) {
+    overlay.addEventListener('click', closeDrawer);
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && drawer && drawer.classList.contains('open')) {
+      closeDrawer();
+    }
+  });
+
+  // 4. Drawer Messages & Input
+  function appendDrawerMessage(role, htmlText, suggestion = null) {
+    if (!gadMessages) return;
+    const bubble = document.createElement('div');
+    bubble.className = `gad-bubble ${role}`;
+
+    const avatar = role === 'user' 
+      ? '<span style="font-family:var(--font-mono);font-size:0.65rem;font-weight:700;">YOU</span>' 
+      : '✦';
+    let suggestHtml = '';
+    if (suggestion) {
+      suggestHtml = `
+        <div class="gad-suggest-box">
+          <span class="gsb-label">Suggested query:</span>
+          <button class="gsb-btn" data-chat="${suggestion}">"${suggestion}" →</button>
+        </div>
+      `;
+    }
+
+    let ttsBtnHtml = '';
+    if (role === 'assistant') {
+      ttsBtnHtml = `<button class="gad-bubble-tts-btn" title="Read Aloud" aria-label="Read Message Aloud">🔊</button>`;
+    }
+
+    bubble.innerHTML = `
+      <div class="gad-bubble-avatar">${avatar}</div>
+      <div class="gad-bubble-body">
+        <div>${htmlText}</div>
+        ${suggestHtml}
+        ${ttsBtnHtml}
+      </div>
+    `;
+
+    gadMessages.appendChild(bubble);
+    gadMessages.scrollTop = gadMessages.scrollHeight;
+
+    // Attach listener for suggestion button inside bubble
+    const suggestBtn = bubble.querySelector('.gsb-btn');
+    if (suggestBtn) {
+      suggestBtn.addEventListener('click', () => {
+        const txt = suggestBtn.getAttribute('data-chat');
+        sendDrawerMessage(txt);
+      });
+    }
+
+    // Attach listener for TTS readout button inside bubble
+    const ttsBtn = bubble.querySelector('.gad-bubble-tts-btn');
+    if (ttsBtn) {
+      ttsBtn.addEventListener('click', () => {
+        if (window.joshTTS) {
+          if (ttsBtn.classList.contains('speaking')) {
+            window.joshTTS.stop();
+            ttsBtn.classList.remove('speaking');
+          } else {
+            document.querySelectorAll('.gad-bubble-tts-btn.speaking').forEach(b => b.classList.remove('speaking'));
+            ttsBtn.classList.add('speaking');
+            window.joshTTS.speak(htmlText, 'Guru AI Co-Pilot', ttsBtn);
+          }
+        }
+      });
+    }
+  }
+
+  // Voice toggle in drawer header
+  const gadVoiceToggle = document.getElementById('gadVoiceToggle');
+  let isAiVoiceAutoEnabled = true;
+  if (gadVoiceToggle) {
+    gadVoiceToggle.addEventListener('click', () => {
+      isAiVoiceAutoEnabled = !isAiVoiceAutoEnabled;
+      gadVoiceToggle.classList.toggle('active', isAiVoiceAutoEnabled);
+      const textSpan = gadVoiceToggle.querySelector('.gvp-text') || gadVoiceToggle;
+      textSpan.textContent = isAiVoiceAutoEnabled ? 'Voice: ON' : 'Voice: OFF';
+      gadVoiceToggle.title = `Toggle AI Voice Auto-Readout: ${isAiVoiceAutoEnabled ? 'ON' : 'OFF'}`;
+      playAudioEffect('click');
+    });
+  }
+
+  function sendDrawerMessage(queryText) {
+    if (!queryText || !queryText.trim()) return;
+    const text = queryText.trim();
+
+    // User Message
+    appendDrawerMessage('user', text);
+    if (isDrawerSoundEnabled) playAudioEffect('click');
+
+    // Show Typing Indicator
+    const typingBubble = document.createElement('div');
+    typingBubble.className = 'gad-bubble assistant typing-bubble';
+    typingBubble.innerHTML = `
+      <div class="gad-bubble-avatar">✦</div>
+      <div class="gad-bubble-body">
+        <div class="gad-typing">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    `;
+    gadMessages.appendChild(typingBubble);
+    gadMessages.scrollTop = gadMessages.scrollHeight;
+
+    // Simulate AI response
+    setTimeout(() => {
+      typingBubble.remove();
+      const resp = getAiResponse(text);
+      appendDrawerMessage('assistant', resp.text, resp.suggest);
+      if (isDrawerSoundEnabled) playAudioEffect('chord');
+
+      // Auto-readout if AI voice is enabled
+      if (isAiVoiceAutoEnabled && window.joshTTS) {
+        window.joshTTS.speak(resp.text, 'Guru AI Co-Pilot');
+      }
+    }, 550);
+  }
+
+  if (gadForm && gadInput) {
+    gadForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const val = gadInput.value.trim();
+      if (!val) return;
+      sendDrawerMessage(val);
+      gadInput.value = '';
+      gadInput.style.height = 'auto';
+    });
+
+    gadInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        gadForm.dispatchEvent(new Event('submit'));
+      }
+    });
+
+    // Auto-grow textarea
+    gadInput.addEventListener('input', () => {
+      gadInput.style.height = 'auto';
+      gadInput.style.height = Math.min(gadInput.scrollHeight, 120) + 'px';
+    });
+  }
+
+  // Drawer Chips
+  drawerChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const q = chip.getAttribute('data-chat') || chip.textContent;
+      sendDrawerMessage(q);
+    });
+  });
+
+  // Global suggestion delegation
+  if (gadMessages) {
+    gadMessages.addEventListener('click', e => {
+      const btn = e.target.closest('.gsb-btn');
+      if (btn) {
+        const chatTxt = btn.getAttribute('data-chat');
+        if (chatTxt) sendDrawerMessage(chatTxt);
+      }
+    });
+  }
+
+  // Clear chat history
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (!gadMessages) return;
+      gadMessages.innerHTML = `
+        <div class="gad-bubble assistant">
+          <div class="gad-bubble-avatar">✦</div>
+          <div class="gad-bubble-body">
+            <p><strong>Session reset.</strong> Guru AI Companion v2.5 is ready for fresh queries.</p>
+            <div class="gad-suggest-box">
+              <span class="gsb-label">Suggested query:</span>
+              <button class="gsb-btn" data-chat="Who is Joshua and what are his core specialties?">"Who is Joshua and what are his core specialties?" →</button>
+            </div>
+          </div>
+        </div>
+      `;
+      playAudioEffect('click');
+    });
+  }
+
+  // Sound toggle button
+  if (soundToggleBtn && soundIcon) {
+    soundToggleBtn.addEventListener('click', () => {
+      isDrawerSoundEnabled = !isDrawerSoundEnabled;
+      soundIcon.innerHTML = isDrawerSoundEnabled 
+        ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>`
+        : `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`;
+      soundToggleBtn.title = isDrawerSoundEnabled ? 'Audio Synthesizer: ON' : 'Audio Synthesizer: MUTED';
+      playAudioEffect('click');
+    });
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   Network Speed Telemetry & Low Bandwidth Advisory
+   ════════════════════════════════════════════════════════ */
+
+function initNetworkSpeedMonitor() {
+  const badge = document.getElementById('netSpeedBadge');
+  const dot = document.getElementById('netDot');
+  const speedVal = document.getElementById('netSpeedVal');
+  const banner = document.getElementById('netAdvisoryBanner');
+  const speedReadout = document.getElementById('nabSpeedReadout');
+  const retestBtn = document.getElementById('nabRetestBtn');
+  const dismissBtn = document.getElementById('nabDismissBtn');
+
+  if (!badge || !dot || !speedVal) return;
+
+  let isTesting = false;
+
+  async function measureNetworkSpeed() {
+    if (isTesting) return;
+    isTesting = true;
+
+    const navConn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const isOnline = navigator.onLine;
+
+    if (!isOnline) {
+      dot.className = 'net-dot slow';
+      speedVal.textContent = 'Offline';
+      badge.title = 'No active internet connection';
+      showAdvisoryBanner('Offline');
+      isTesting = false;
+      return;
+    }
+
+    let downlink = navConn && navConn.downlink ? navConn.downlink : null;
+    let rtt = navConn && navConn.rtt ? navConn.rtt : null;
+    let effectiveType = navConn && navConn.effectiveType ? navConn.effectiveType : null;
+
+    // Active speed probe using local favicon/asset
+    try {
+      const probeStart = performance.now();
+      const probeUrl = `josh fav.png?_probe=${Date.now()}`;
+      const res = await fetch(probeUrl, { cache: 'no-store' });
+      const blob = await res.blob();
+      const probeEnd = performance.now();
+      
+      const durationSec = (probeEnd - probeStart) / 1000;
+      const sizeBits = blob.size * 8;
+      const calculatedMbps = durationSec > 0 ? (sizeBits / durationSec / (1024 * 1024)) : 0;
+      const measuredRtt = Math.round(probeEnd - probeStart);
+
+      if (downlink === null || calculatedMbps > 0) {
+        downlink = calculatedMbps > 0 ? Number(calculatedMbps.toFixed(1)) : downlink;
+      }
+      if (rtt === null) {
+        rtt = measuredRtt;
+      }
+    } catch (e) {
+      // Fallback to navigator.connection
+    }
+
+    let tier = 'fast';
+    let displaySpeed = '';
+
+    if (downlink !== null && downlink > 0) {
+      if (downlink >= 1.8 && (!rtt || rtt < 350)) {
+        tier = 'fast';
+        displaySpeed = `${downlink >= 10 ? Math.round(downlink) : downlink} Mbps`;
+      } else if (downlink >= 0.6 || (effectiveType === '3g' && (!rtt || rtt < 600))) {
+        tier = 'moderate';
+        displaySpeed = `${downlink} Mbps`;
+      } else {
+        tier = 'slow';
+        displaySpeed = `${downlink} Mbps (Slow)`;
+      }
+    } else if (effectiveType) {
+      if (effectiveType === '4g') {
+        tier = 'fast';
+        displaySpeed = '4G · Fast';
+      } else if (effectiveType === '3g') {
+        tier = 'moderate';
+        displaySpeed = '3G · Moderate';
+      } else {
+        tier = 'slow';
+        displaySpeed = `${effectiveType.toUpperCase()} · Slow`;
+      }
+    } else {
+      tier = 'fast';
+      displaySpeed = 'Online';
+    }
+
+    // Update UI badge
+    dot.className = `net-dot ${tier}`;
+    speedVal.textContent = displaySpeed;
+
+    const rttText = rtt ? ` | Latency: ${rtt}ms` : '';
+    badge.title = `Network Status: ${tier.toUpperCase()} (${displaySpeed}${rttText})`;
+
+    if (tier === 'slow') {
+      showAdvisoryBanner(displaySpeed);
+    } else {
+      hideAdvisoryBanner();
+    }
+
+    isTesting = false;
+  }
+
+  function showAdvisoryBanner(speedText) {
+    if (!banner) return;
+    const isDismissed = sessionStorage.getItem('josh_net_advisory_dismissed') === 'true';
+    if (isDismissed) return;
+
+    if (speedReadout) speedReadout.textContent = speedText || 'Limited Bandwidth';
+    banner.classList.add('open');
+  }
+
+  function hideAdvisoryBanner() {
+    if (!banner) return;
+    banner.classList.remove('open');
+  }
+
+  if (dismissBtn) {
+    dismissBtn.addEventListener('click', () => {
+      hideAdvisoryBanner();
+      sessionStorage.setItem('josh_net_advisory_dismissed', 'true');
+      playAudioEffect('click');
+    });
+  }
+
+  if (retestBtn) {
+    retestBtn.addEventListener('click', () => {
+      speedVal.textContent = 'Probing...';
+      playAudioEffect('click');
+      measureNetworkSpeed();
+    });
+  }
+
+  if (badge) {
+    badge.addEventListener('click', () => {
+      speedVal.textContent = 'Probing...';
+      playAudioEffect('click');
+      measureNetworkSpeed();
+    });
+  }
+
+  // Initial measurement & event listeners
+  setTimeout(measureNetworkSpeed, 600);
+
+  const navConn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (navConn) {
+    navConn.addEventListener('change', measureNetworkSpeed);
+  }
+  window.addEventListener('online', measureNetworkSpeed);
+  window.addEventListener('offline', measureNetworkSpeed);
+
+  // Periodic background telemetry check every 25 seconds
+  setInterval(measureNetworkSpeed, 25000);
+}
+
+/* ════════════════════════════════════════════════════════
+   Neural Audio & Text-to-Speech (TTS) Engine
+   ════════════════════════════════════════════════════════ */
+
+const SECTION_NARRATIVES = {
+  hero: "Greetings and welcome. I am Idowu Joshua Victor, also known as Josh_d_Guru — a software developer, creative designer, and data scientist based in Lagos, Nigeria. I bridge interactive user interface engineering, brand design, and statistical data pipelines into cohesive digital experiences.",
+  about: "Joshua started his creative path in 2018 as a graphic designer, advancing into front-end engineering in 2023 and studying Statistics at Olabisi Onabanjo University. He architects responsive web applications, brand identities, and predictive data models that combine mathematical rigor with elegant user experiences.",
+  skills: "Joshua's core technical toolkit spans modern JavaScript, React, and Python, complemented by graphic design mastery in CorelDraw, Figma, and Adobe Suite, plus statistical modeling with R, SPSS, and predictive machine learning algorithms.",
+  services: "Explore bespoke services and scalable consulting plans, spanning custom front-end web applications, full brand identity packages, data science dashboards, and AI pipeline automations tailored to launch your next venture.",
+  'guru-ai': "Guru AI Companion is Joshua's flagship developer and builder co-pilot. Engineered with autonomous cognitive architecture, client-side session caching, and cybernetic signal decryption protocols, it guides founders from ideation to production.",
+  projects: "Explore Joshua's curated portfolio of production web applications, AI sandboxes, fintech engines, and creative branding cases built for clients and African innovators.",
+  startup: "GuruLabs is a parent tech ecosystem engineering next-generation software assets. Flagship ventures include Kudiflow, an intelligent financial tracker for youths, and ScholarLens, an AI academic research sandbox.",
+  location: "Operating out of Lagos Core Node at coordinates 6.5244 degrees North, 3.3792 degrees East. Joshua is actively available for global remote contracts and technical consultations worldwide.",
+  blog: "Dive into insights and technical writings covering frontend engineering, predictive data modeling, and modern web application architecture.",
+  contact: "Direct communication transmission channels are active. Reach out via email, phone, or GitHub to initiate your next project collaboration or technical consultation."
+};
+
+const SECTION_TITLES = {
+  hero: "Hero Introduction",
+  about: "About Joshua",
+  skills: "Technical Arsenal",
+  services: "Services & Plans",
+  'guru-ai': "Guru AI Architecture",
+  projects: "Featured Projects",
+  startup: "GuruLabs Ecosystem",
+  location: "Lagos Telemetry Node",
+  blog: "Insights & Articles",
+  contact: "Transmission Protocol"
+};
+
+let activeUtterance = null;
+let currentVoice = null;
+let activeVoiceBtn = null;
+let isVoicePaused = false;
+
+function initNeuralTTS() {
+  if (!('speechSynthesis' in window)) {
+    console.warn('Speech Synthesis not supported by browser.');
+    return;
+  }
+
+  const synth = window.speechSynthesis;
+  const pill = document.getElementById('voiceWavePill');
+  const pillTitle = document.getElementById('vwpTitle');
+  const pauseBtn = document.getElementById('vwpPauseBtn');
+  const stopBtn = document.getElementById('vwpStopBtn');
+
+  // Load and pick premium natural voices
+  function loadVoices() {
+    const voices = synth.getVoices();
+    if (!voices || voices.length === 0) return;
+
+    // Prioritize natural English voices
+    currentVoice = voices.find(v => v.lang.startsWith('en') && (
+      v.name.includes('Natural') || 
+      v.name.includes('Google') || 
+      v.name.includes('Samantha') || 
+      v.name.includes('Guy') || 
+      v.name.includes('Ryan') || 
+      v.name.includes('Male') || 
+      v.name.includes('Daniel')
+    )) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+  }
+
+  loadVoices();
+  if (speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }
+
+  function stopSpeech() {
+    synth.cancel();
+    if (activeVoiceBtn) {
+      activeVoiceBtn.classList.remove('speaking');
+      activeVoiceBtn = null;
+    }
+    document.querySelectorAll('.section-voice-btn.speaking, .gad-bubble-tts-btn.speaking').forEach(b => b.classList.remove('speaking'));
+    if (pill) {
+      pill.classList.remove('active', 'paused');
+    }
+    isVoicePaused = false;
+    if (pauseBtn) pauseBtn.textContent = '❚❚';
+    activeUtterance = null;
+  }
+
+  function speakText(text, title = 'Neural Voice', sourceBtn = null) {
+    stopSpeech();
+
+    // Clean text of markdown / html tags
+    const cleanText = text.replace(/<[^>]*>/g, '').replace(/[*_#`]/g, '').trim();
+    if (!cleanText) return;
+
+    const utter = new SpeechSynthesisUtterance(cleanText);
+    utter.rate = 1.02;
+    utter.pitch = 1.0;
+    if (currentVoice) utter.voice = currentVoice;
+
+    activeUtterance = utter;
+    activeVoiceBtn = sourceBtn;
+
+    if (sourceBtn) sourceBtn.classList.add('speaking');
+    if (pill) {
+      if (pillTitle) pillTitle.textContent = title;
+      pill.classList.add('active');
+      pill.classList.remove('paused');
+    }
+
+    utter.onend = () => {
+      stopSpeech();
+    };
+
+    utter.onerror = () => {
+      stopSpeech();
+    };
+
+    // Play subtle synth frequency cue
+    if (typeof playAudioEffect === 'function') {
+      playAudioEffect('click');
+    }
+
+    synth.speak(utter);
+  }
+
+  // Bind Section Voice Buttons
+  const sectionBtns = document.querySelectorAll('.section-voice-btn');
+  sectionBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const secKey = btn.getAttribute('data-tts');
+      const narrative = SECTION_NARRATIVES[secKey];
+      const title = SECTION_TITLES[secKey] || 'Section Briefing';
+
+      if (btn.classList.contains('speaking')) {
+        stopSpeech();
+      } else if (narrative) {
+        speakText(narrative, title, btn);
+      }
+    });
+  });
+
+  // Floating Wave Pill Controls
+  if (pauseBtn) {
+    pauseBtn.addEventListener('click', () => {
+      if (!synth.speaking) return;
+      if (isVoicePaused) {
+        synth.resume();
+        isVoicePaused = false;
+        pauseBtn.textContent = '❚❚';
+        if (pill) pill.classList.remove('paused');
+      } else {
+        synth.pause();
+        isVoicePaused = true;
+        pauseBtn.textContent = '▶';
+        if (pill) pill.classList.add('paused');
+      }
+      playAudioEffect('click');
+    });
+  }
+
+  if (stopBtn) {
+    stopBtn.addEventListener('click', () => {
+      stopSpeech();
+      playAudioEffect('click');
+    });
+  }
+
+  // Expose global methods
+  window.joshTTS = {
+    speak: speakText,
+    stop: stopSpeech,
+    isSpeaking: () => synth.speaking
+  };
+}
+
+
+
