@@ -323,6 +323,8 @@ let cachedTestimonials = [];
 let cachedBlogs = [];
 let cachedMessages = [];
 let cachedGitHubRepos = [];
+let cachedCerts = [];
+let certImageBlob = null;
 let deleteTarget = { id: null, type: null };
 let currentDemoTab = 'blogs';
 
@@ -824,6 +826,7 @@ function safeRenderActiveView() {
     else if (activeView === 'blog')        renderBlogsList();
     else if (activeView === 'messages')    renderMessagesList();
     else if (activeView === 'demodata')    renderDemoEditorList();
+    else if (activeView === 'certifications') renderCertsList();
   } catch (e) {
     console.warn('[CMS] safeRenderActiveView error:', e);
   }
@@ -851,6 +854,7 @@ function switchView(viewId) {
     pricing: 'Pricing Plans',
     testimonials: 'Client Feedback',
     about: 'About Profile Settings',
+    certifications: 'Certifications Manager',
     blog: 'Blog Manager',
     messages: 'Inbox Messages',
     github: 'GitHub Repository Sync',
@@ -865,6 +869,7 @@ function switchView(viewId) {
     pricing: 'Configure editable plan tiers and popular options.',
     testimonials: 'Manage client quotes, ratings, and avatars.',
     about: 'Update biography text, skills tags, timeline entries, and profile photo.',
+    certifications: 'Upload and manage your professional certificates and credentials.',
     blog: 'Write and publish editorial insights with formatting.',
     messages: 'Review user contact queries in your email/inbox.',
     github: 'Sync public repositories and overlay customization links.',
@@ -886,6 +891,7 @@ function switchView(viewId) {
   if (viewId === 'github') renderGitHubList();
   if (viewId === 'email') loadEmailSettingsForm();
   if (viewId === 'demodata') { updateDemoCounts(); renderDemoEditorList(); }
+  if (viewId === 'certifications') { loadCerts().then(() => renderCertsList()); }
 
   closeSidebar();
 }
@@ -2080,6 +2086,18 @@ function initEventTriggers() {
     resetBlogForm();
   });
 
+  // Certifications Form Toggles
+  document.getElementById('openAddCertBtn').addEventListener('click', () => {
+    const f = document.getElementById('certFormPanel');
+    const display = f.style.display === 'none';
+    f.style.display = display ? 'block' : 'none';
+    if (display) resetCertForm();
+  });
+  document.getElementById('cancelCertFormBtn').addEventListener('click', () => {
+    document.getElementById('certFormPanel').style.display = 'none';
+    resetCertForm();
+  });
+
   // Image Upload Bindings
   setupImageDropZone('projCoverDropZone', 'projCoverFile', 'projCoverPreview', 'projCoverPreviewWrap', 'projCoverRemove', blob => {
     projectCoverBlob = blob;
@@ -2093,6 +2111,9 @@ function initEventTriggers() {
   setupImageDropZone('ghDropZone', 'ghImgFile', 'ghImgPreview', 'ghImgPreviewWrap', 'ghImgRemove', blob => {
     ghOverrideBlob = blob;
   });
+  setupImageDropZone('certImgDropZone', 'certImgFile', 'certImgPreview', 'certImgPreviewWrap', 'certImgRemove', blob => {
+    certImageBlob = blob;
+  });
 
   // Submit Operations
   document.getElementById('projectForm').addEventListener('submit', handleProjectSubmit);
@@ -2103,6 +2124,7 @@ function initEventTriggers() {
   document.getElementById('blogForm').addEventListener('submit', handleBlogSubmit);
   document.getElementById('emailSettingsForm').addEventListener('submit', handleEmailSettingsSubmit);
   document.getElementById('githubOverrideForm').addEventListener('submit', handleGitHubOverrideSubmit);
+  document.getElementById('certForm').addEventListener('submit', handleCertSubmit);
   
   // Experience timeline row add
   document.getElementById('addExpRowBtn').addEventListener('click', () => createExperienceRow());
@@ -2121,6 +2143,13 @@ function initEventTriggers() {
   document.getElementById('blogSearch').addEventListener('input', e => renderBlogsList(e.target.value));
   document.getElementById('messagesSearch').addEventListener('input', e => renderMessagesList(e.target.value));
   document.getElementById('githubSearch').addEventListener('input', e => renderGitHubList(e.target.value));
+  const certSearchEl = document.getElementById('certSearchInput');
+  if (certSearchEl) {
+    certSearchEl.addEventListener('input', e => {
+      certSearchQuery = e.target.value.trim();
+      renderCertsList();
+    });
+  }
 
   // Auto-slug generator for projects & blogs (on new item creation)
   const projTitleInput = document.getElementById('projTitle');
@@ -2628,7 +2657,9 @@ async function handleBlogSubmit(e) {
   }
 
   const saveBtn = document.getElementById('saveBlogBtn');
+  const origBtnText = saveBtn.textContent;
   saveBtn.disabled = true;
+  saveBtn.textContent = id ? 'Updating...' : 'Publishing...';
 
   const tags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
   const publishDate = dateInput ? new Date(dateInput) : new Date();
@@ -2654,11 +2685,11 @@ async function handleBlogSubmit(e) {
     if (!id) {
       payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
       await getDB().collection('blog').doc(docId).set(payload);
-      showToast('✓ Article published.');
+      showToast('✓ Article published successfully.');
       logActivity('Publish Blog', title);
     } else {
       await getDB().collection('blog').doc(id).update(payload);
-      showToast('✓ Article updated.');
+      showToast('✓ Article updated successfully.');
       logActivity('Edit Blog', title);
     }
 
@@ -2666,9 +2697,11 @@ async function handleBlogSubmit(e) {
     document.getElementById('blogFormPanel').style.display = 'none';
     await refreshDashboardData();
   } catch (err) {
-    showToast(`Blog failed: ${err.message}`, true);
+    console.error('[JoshFolio CMS] Blog save error:', err);
+    showToast(`Blog save failed: ${err.message}`, true);
   } finally {
     saveBtn.disabled = false;
+    saveBtn.textContent = origBtnText;
   }
 }
 
@@ -2775,7 +2808,226 @@ function resetBlogForm() {
   blogImgBlob = null;
 }
 
+
+// ─── CERTIFICATIONS CRUD ───────────────────────────────
+const CERTS_DOC_ID = 'certifications_store';
+let certSearchQuery = '';
+
+async function loadCerts() {
+  if (!fbReady()) {
+    try {
+      cachedCerts = JSON.parse(localStorage.getItem('josh_cached_certs') || '[]');
+    } catch {
+      cachedCerts = [];
+    }
+    return;
+  }
+  try {
+    const doc = await getDB().collection('settings').doc(CERTS_DOC_ID).get();
+    cachedCerts = doc.exists ? (doc.data().items || []) : [];
+    localStorage.setItem('josh_cached_certs', JSON.stringify(cachedCerts));
+  } catch (err) {
+    console.warn('[CMS] loadCerts failed, attempting localStorage fallback:', err);
+    try {
+      cachedCerts = JSON.parse(localStorage.getItem('josh_cached_certs') || '[]');
+    } catch {
+      cachedCerts = [];
+    }
+  }
+}
+
+function renderCertsList() {
+  const grid = document.getElementById('certsGrid');
+  const emptyMsg = document.getElementById('certsEmptyMsg');
+  const sub = document.getElementById('certsCountSub');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+  
+  const filtered = certSearchQuery 
+    ? cachedCerts.filter(c => {
+        const q = certSearchQuery.toLowerCase();
+        return (c.title && c.title.toLowerCase().includes(q)) ||
+               (c.issuer && c.issuer.toLowerCase().includes(q)) ||
+               (Array.isArray(c.skills) && c.skills.some(s => s.toLowerCase().includes(q)));
+      })
+    : cachedCerts;
+
+  sub.textContent = `${cachedCerts.length} certificate${cachedCerts.length !== 1 ? 's' : ''} uploaded.`;
+
+  if (filtered.length === 0) {
+    emptyMsg.style.display = 'block';
+    emptyMsg.textContent = certSearchQuery ? `No certificates match "${certSearchQuery}".` : 'No certificates uploaded yet.';
+    return;
+  }
+  emptyMsg.style.display = 'none';
+
+  filtered.forEach((cert) => {
+    const realIdx = cachedCerts.indexOf(cert);
+    const card = document.createElement('div');
+    card.className = 'manage-card';
+    const imagePreview = cert.imageUrl
+      ? `<img src="${cert.imageUrl}" alt="${cert.title}" />`
+      : `<div style="font-size:2.5rem;">✪</div>`;
+
+    const skillsHtml = Array.isArray(cert.skills) && cert.skills.length > 0
+      ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px;">
+           ${cert.skills.slice(0, 3).map(s => `<span style="font-size:0.68rem; background:var(--surface-2); border:1px solid var(--border-dim); padding:2px 6px; border-radius:4px; color:var(--text-dim);">${s}</span>`).join('')}
+         </div>`
+      : '';
+
+    card.innerHTML = `
+      <div class="mc-thumb">${imagePreview}</div>
+      <div class="mc-body">
+        <p class="mc-cat">${cert.issuer || 'Verified Credential'} ${cert.issueDate ? `· ${cert.issueDate}` : ''}</p>
+        <h3 class="mc-title">${cert.title}</h3>
+        ${skillsHtml}
+        ${cert.credentialUrl ? `<p style="margin-top:6px;"><a href="${cert.credentialUrl}" target="_blank" rel="noopener" style="font-size:0.75rem; color:var(--gold); text-decoration:none;">Verify Link ↗</a></p>` : ''}
+        <div class="mc-actions" style="margin-top:10px;">
+          <button class="btn-outline btn-sm edit-cert-btn" data-idx="${realIdx}">Edit</button>
+          <button class="btn-danger btn-sm del-cert-btn" data-idx="${realIdx}">Delete</button>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+
+  grid.querySelectorAll('.edit-cert-btn').forEach(btn => {
+    btn.addEventListener('click', () => editCertForm(parseInt(btn.dataset.idx)));
+  });
+  grid.querySelectorAll('.del-cert-btn').forEach(btn => {
+    btn.addEventListener('click', () => deleteCert(parseInt(btn.dataset.idx)));
+  });
+}
+
+function editCertForm(idx) {
+  const cert = cachedCerts[idx];
+  if (!cert) return;
+
+  document.getElementById('certFormPanel').style.display = 'block';
+  document.getElementById('certFormTitle').textContent = 'Edit Certificate';
+  document.getElementById('saveCertBtn').textContent = 'Update Certificate';
+  document.getElementById('certId').value = idx;
+  document.getElementById('certTitle').value = cert.title || '';
+  document.getElementById('certIssuer').value = cert.issuer || '';
+  document.getElementById('certIssueDate').value = cert.issueDate || '';
+  document.getElementById('certCredentialUrl').value = cert.credentialUrl || '';
+  document.getElementById('certSkills').value = Array.isArray(cert.skills) ? cert.skills.join(', ') : (cert.skills || '');
+
+  if (cert.imageUrl) {
+    document.getElementById('certImgPreview').src = cert.imageUrl;
+    document.getElementById('certImgPreviewWrap').style.display = 'block';
+    document.getElementById('certImgDropZone').style.display = 'none';
+  } else {
+    document.getElementById('certImgPreviewWrap').style.display = 'none';
+    document.getElementById('certImgDropZone').style.display = 'block';
+  }
+  certImageBlob = null;
+  document.getElementById('certFormPanel').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function handleCertSubmit(e) {
+  e.preventDefault();
+  const idxStr = document.getElementById('certId').value;
+  const title = document.getElementById('certTitle').value.trim();
+  const issuer = document.getElementById('certIssuer').value.trim();
+  const issueDate = document.getElementById('certIssueDate').value.trim();
+  const credentialUrl = document.getElementById('certCredentialUrl').value.trim();
+  const skillsRaw = document.getElementById('certSkills').value.trim();
+
+  if (!title || !issuer) {
+    showToast('⚠ Certificate Title and Issuer are required.', true);
+    return;
+  }
+
+  const skills = skillsRaw ? skillsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const saveBtn = document.getElementById('saveCertBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving...';
+
+  try {
+    let imageUrl = '';
+
+    if (certImageBlob) {
+      const safeName = title.toLowerCase().replace(/[^a-z0-9]/g, '_').substring(0, 40);
+      imageUrl = await uploadFileToStorage(certImageBlob, 'certifications', `cert_${safeName}_${Date.now()}.jpg`);
+    } else if (idxStr !== '') {
+      const existing = cachedCerts[parseInt(idxStr)];
+      imageUrl = existing ? (existing.imageUrl || '') : '';
+    }
+
+    const newCert = {
+      title,
+      issuer,
+      issueDate,
+      credentialUrl,
+      skills,
+      imageUrl,
+      updatedAt: new Date().toISOString()
+    };
+
+    if (idxStr !== '') {
+      cachedCerts[parseInt(idxStr)] = { ...cachedCerts[parseInt(idxStr)], ...newCert };
+    } else {
+      newCert.createdAt = new Date().toISOString();
+      cachedCerts.push(newCert);
+    }
+
+    localStorage.setItem('josh_cached_certs', JSON.stringify(cachedCerts));
+
+    if (fbReady()) {
+      await getDB().collection('settings').doc(CERTS_DOC_ID).set(
+        { items: cachedCerts, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+        { merge: true }
+      );
+    }
+
+    showToast(idxStr !== '' ? '✓ Certificate updated!' : '✓ Certificate added!');
+    logActivity(idxStr !== '' ? 'Edit Certificate' : 'Add Certificate', title);
+    resetCertForm();
+    document.getElementById('certFormPanel').style.display = 'none';
+    renderCertsList();
+  } catch (err) {
+    console.error(err);
+    showToast(`Certificate save failed: ${err.message}`, true);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Save Certificate';
+  }
+}
+
+async function deleteCert(idx) {
+  if (!confirm('Delete this certificate? This cannot be undone.')) return;
+  try {
+    const deletedTitle = cachedCerts[idx] ? cachedCerts[idx].title : `Index ${idx}`;
+    cachedCerts.splice(idx, 1);
+    localStorage.setItem('josh_cached_certs', JSON.stringify(cachedCerts));
+    
+    if (fbReady()) {
+      await getDB().collection('settings').doc(CERTS_DOC_ID).set(
+        { items: cachedCerts, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+        { merge: true }
+      );
+    }
+    showToast('✓ Certificate deleted.');
+    logActivity('Delete Certificate', deletedTitle);
+    renderCertsList();
+  } catch (err) {
+    showToast(`Delete failed: ${err.message}`, true);
+  }
+}
+
+function resetCertForm() {
+  document.getElementById('certForm').reset();
+  document.getElementById('certId').value = '';
+  document.getElementById('certFormTitle').textContent = 'Add New Certificate';
+  document.getElementById('saveCertBtn').textContent = 'Save Certificate';
+  document.getElementById('certImgPreviewWrap').style.display = 'none';
+  document.getElementById('certImgDropZone').style.display = 'block';
+  certImageBlob = null;
+}
+
 // ─── TOAST NOTIFICATION UTILITY ────────────────────────
+
 const toast = document.getElementById('toast');
 let toastTimer;
 function showToast(msg, isError = false) {

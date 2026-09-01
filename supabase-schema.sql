@@ -69,7 +69,8 @@ CREATE TABLE IF NOT EXISTS public.testimonials (
   review TEXT,
   rating NUMERIC DEFAULT 5,
   "profileImage" TEXT,
-  "createdAt" TEXT DEFAULT to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
+  "createdAt" TEXT DEFAULT to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+  "updatedAt" TEXT DEFAULT to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
 );
 
 -- 6. Blog Posts Table
@@ -83,7 +84,8 @@ CREATE TABLE IF NOT EXISTS public.blog (
   "publishDate" TEXT DEFAULT to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
   "featuredImage" TEXT,
   status TEXT DEFAULT 'published',
-  "createdAt" TEXT DEFAULT to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
+  "createdAt" TEXT DEFAULT to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+  "updatedAt" TEXT DEFAULT to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
 );
 
 -- 7. Contact Messages Table
@@ -99,7 +101,7 @@ CREATE TABLE IF NOT EXISTS public.messages (
   "createdAt" TEXT DEFAULT to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
 );
 
--- 8. Global Settings Table (key-value store for about, socials, email)
+-- 8. Global Settings Table (key-value store for about, socials, email, certs)
 CREATE TABLE IF NOT EXISTS public.settings (
   id TEXT PRIMARY KEY,
   value JSONB,
@@ -157,6 +159,29 @@ CREATE TABLE IF NOT EXISTS public.activity_logs (
   timestamp TEXT DEFAULT to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
 );
 
+-- 12. Certifications Table (Dedicated table alongside settings doc)
+CREATE TABLE IF NOT EXISTS public.certifications (
+  id TEXT PRIMARY KEY DEFAULT ('cert_' || substring(md5(random()::text) from 1 for 12)),
+  title TEXT,
+  issuer TEXT,
+  "issueDate" TEXT,
+  "credentialUrl" TEXT,
+  skills JSONB DEFAULT '[]'::jsonb,
+  "imageUrl" TEXT,
+  "order" NUMERIC DEFAULT 0,
+  "createdAt" TEXT DEFAULT to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+  "updatedAt" TEXT DEFAULT to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
+);
+
+-- ───────────────────────────────────────────────────────────────────────────
+-- Safe Schema Migrations (for pre-existing databases)
+-- ───────────────────────────────────────────────────────────────────────────
+ALTER TABLE public.blog ADD COLUMN IF NOT EXISTS "updatedAt" TEXT DEFAULT to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"');
+ALTER TABLE public.services ADD COLUMN IF NOT EXISTS "updatedAt" TEXT DEFAULT to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"');
+ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS "updatedAt" TEXT DEFAULT to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"');
+ALTER TABLE public.testimonials ADD COLUMN IF NOT EXISTS "updatedAt" TEXT DEFAULT to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"');
+ALTER TABLE public.settings ADD COLUMN IF NOT EXISTS "value" JSONB;
+
 -- ───────────────────────────────────────────────────────────────────────────
 -- Row Level Security (RLS) Policies
 -- ───────────────────────────────────────────────────────────────────────────
@@ -171,12 +196,13 @@ ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.hidden_repos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.github_overrides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.certifications ENABLE ROW LEVEL SECURITY;
 
 -- Allow Public / Anon full read/write access (Portfolio admin uses anon key + JS auth)
 DO $$
 DECLARE
   t text;
-  tables text[] := ARRAY['projects', 'services', 'plans', 'testimonials', 'blog', 'messages', 'settings', 'hidden_repos', 'github_overrides', 'activity_logs'];
+  tables text[] := ARRAY['projects', 'services', 'plans', 'testimonials', 'blog', 'messages', 'settings', 'hidden_repos', 'github_overrides', 'activity_logs', 'certifications'];
 BEGIN
   FOREACH t IN ARRAY tables LOOP
     EXECUTE format('DROP POLICY IF EXISTS "Public access for %I" ON public.%I', t, t);

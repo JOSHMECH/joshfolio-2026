@@ -238,10 +238,70 @@
       </a>
       <div class="nav-links" id="navLinks">
         <a href="index.html#about" class="nav-link">About</a>
-        <a href="index.html#skills" class="nav-link">Skills</a>
-        <a href="index.html#services" class="nav-link">Services</a>
+        
+        <!-- Dropdown: Expertise -->
+        <div class="nav-dropdown" id="navDropdownExpertise">
+          <button class="nav-link nav-dropdown-trigger" type="button" aria-expanded="false" aria-haspopup="true">
+            <span>Expertise</span>
+            <svg class="dropdown-chevron" viewBox="0 0 10 6" width="10" height="6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+          </button>
+          <div class="nav-dropdown-menu">
+            <a href="index.html#skills" class="nav-dropdown-item">
+              <span class="ndi-icon">❖</span>
+              <div class="ndi-text">
+                <span class="ndi-title">Skills & Stack</span>
+                <span class="ndi-desc">Core languages, tools & frameworks</span>
+              </div>
+            </a>
+            <a href="index.html#services" class="nav-dropdown-item">
+              <span class="ndi-icon">⚙</span>
+              <div class="ndi-text">
+                <span class="ndi-title">Services & Pricing</span>
+                <span class="ndi-desc">Custom engineering & consulting</span>
+              </div>
+            </a>
+            <a href="index.html#certifications" class="nav-dropdown-item">
+              <span class="ndi-icon">✪</span>
+              <div class="ndi-text">
+                <span class="ndi-title">Credentials</span>
+                <span class="ndi-desc">Verified certificates & badges</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Dropdown: Innovations -->
+        <div class="nav-dropdown" id="navDropdownInnovations">
+          <button class="nav-link nav-dropdown-trigger" type="button" aria-expanded="false" aria-haspopup="true">
+            <span style="color:var(--gold);">Innovations</span>
+            <svg class="dropdown-chevron" viewBox="0 0 10 6" width="10" height="6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+          </button>
+          <div class="nav-dropdown-menu">
+            <a href="index.html#guru-ai" class="nav-dropdown-item">
+              <span class="ndi-icon" style="color:var(--gold);">◈</span>
+              <div class="ndi-text">
+                <span class="ndi-title" style="color:var(--gold);">Guru AI Co-Pilot</span>
+                <span class="ndi-desc">Autonomous cybernetic assistant</span>
+              </div>
+            </a>
+            <a href="index.html#startup" class="nav-dropdown-item">
+              <span class="ndi-icon">✦</span>
+              <div class="ndi-text">
+                <span class="ndi-title">GuruLabs Startup</span>
+                <span class="ndi-desc">Next-gen African software assets</span>
+              </div>
+            </a>
+            <a href="index.html#location" class="nav-dropdown-item">
+              <span class="ndi-icon">⊕</span>
+              <div class="ndi-text">
+                <span class="ndi-title">Lagos Node</span>
+                <span class="ndi-desc">Real-time vector & telemetry</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
         <a href="index.html#projects" class="nav-link">Projects</a>
-        <a href="index.html#startup" class="nav-link">Startup</a>
         <a href="blog.html" class="nav-link" style="color:var(--gold)">Blog</a>
         <a href="index.html#contact" class="nav-link">Contact</a>
       </div>
@@ -630,11 +690,34 @@
       if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 40);
     }, { passive: true });
 
+    // Dropdown toggles
+    const navDropdowns = document.querySelectorAll('.nav-dropdown');
+    navDropdowns.forEach(dd => {
+      const trigger = dd.querySelector('.nav-dropdown-trigger');
+      if (trigger) {
+        trigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const wasOpen = dd.classList.contains('open');
+          navDropdowns.forEach(other => {
+            if (other !== dd) other.classList.remove('open');
+          });
+          dd.classList.toggle('open', !wasOpen);
+        });
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.nav-dropdown')) {
+        navDropdowns.forEach(dd => dd.classList.remove('open'));
+      }
+    });
+
     // Close mobile nav on link click
-    navLinks.forEach(link => {
+    document.querySelectorAll('.nav-link, .nav-dropdown-item').forEach(link => {
       link.addEventListener('click', () => {
         if (hamburger) hamburger.classList.remove('open');
         if (menuOverlay) menuOverlay.classList.remove('open');
+        navDropdowns.forEach(dd => dd.classList.remove('open'));
         document.body.style.overflow = '';
       });
     });

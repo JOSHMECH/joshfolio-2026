@@ -143,21 +143,40 @@ class SupabaseDocRef {
 
   async set(payload, options = {}) {
     const clean = cleanPayload(payload);
-    const row = { ...clean, id: this.docId };
-    const { error } = await this._sb
+    let row = { ...clean, id: this.docId };
+    let { error } = await this._sb
       .from(this.tableName)
       .upsert(row, { onConflict: 'id' });
+    if (error && error.message && (error.message.includes('does not exist') || error.message.includes('Could not find') || error.code === 'PGRST204')) {
+      const match = error.message.match(/column "?([^"'\s]+)"? /i) || error.message.match(/'([^']+)' column/i);
+      if (match && match[1] && match[1] in row) {
+        console.warn(`[JoshFolio DB] Column '${match[1]}' missing in '${this.tableName}'. Retrying without it.`);
+        delete row[match[1]];
+        const retry = await this._sb.from(this.tableName).upsert(row, { onConflict: 'id' });
+        error = retry.error;
+      }
+    }
     if (error) throw error;
     return true;
   }
 
   async update(payload) {
     const clean = cleanPayload(payload);
-    const { data, error } = await this._sb
+    let { data, error } = await this._sb
       .from(this.tableName)
       .update(clean)
       .eq('id', this.docId)
       .select('id');
+    if (error && error.message && (error.message.includes('does not exist') || error.message.includes('Could not find') || error.code === 'PGRST204')) {
+      const match = error.message.match(/column "?([^"'\s]+)"? /i) || error.message.match(/'([^']+)' column/i);
+      if (match && match[1] && match[1] in clean) {
+        console.warn(`[JoshFolio DB] Column '${match[1]}' missing in '${this.tableName}'. Retrying without it.`);
+        delete clean[match[1]];
+        const retry = await this._sb.from(this.tableName).update(clean).eq('id', this.docId).select('id');
+        data = retry.data;
+        error = retry.error;
+      }
+    }
     if (error) throw error;
     if (!data || data.length === 0) {
       // Row didn't exist in Supabase yet; upsert to prevent data loss
@@ -218,11 +237,21 @@ class SupabaseQuery {
     if (!clean.id) {
       clean.id = generateSbId(this.tableName ? this.tableName.substring(0, 4) : 'sb');
     }
-    const { data, error } = await this._sb
+    let { data, error } = await this._sb
       .from(this.tableName)
       .insert(clean)
       .select('id')
       .single();
+    if (error && error.message && (error.message.includes('does not exist') || error.message.includes('Could not find') || error.code === 'PGRST204')) {
+      const match = error.message.match(/column "?([^"'\s]+)"? /i) || error.message.match(/'([^']+)' column/i);
+      if (match && match[1] && match[1] in clean) {
+        console.warn(`[JoshFolio DB] Column '${match[1]}' missing in '${this.tableName}'. Retrying without it.`);
+        delete clean[match[1]];
+        const retry = await this._sb.from(this.tableName).insert(clean).select('id').single();
+        data = retry.data;
+        error = retry.error;
+      }
+    }
     if (error) throw error;
     return { id: data ? data.id : clean.id };
   }
@@ -425,6 +454,34 @@ async function seedSettingsIfEmpty(db) {
       templateID: "",
       autoReplyEnabled: false,
       autoReplyTemplateID: ""
+    },
+    certifications_store: {
+      items: [
+        {
+          title: "Meta Front-End Developer Professional Certificate",
+          issuer: "Meta",
+          issueDate: "2024",
+          credentialUrl: "https://www.coursera.org/professional-certificates/meta-front-end-developer",
+          skills: ["React.js", "JavaScript (ES6+)", "UI/UX Architecture", "HTML5 & CSS3"],
+          imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80"
+        },
+        {
+          title: "Google Data Analytics Professional Certificate",
+          issuer: "Google",
+          issueDate: "2024",
+          credentialUrl: "https://www.coursera.org/professional-certificates/google-data-analytics",
+          skills: ["R Programming", "SQL", "Statistical Modeling", "Tableau & Spreadsheets"],
+          imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80"
+        },
+        {
+          title: "Responsive Web Design & Algorithms",
+          issuer: "freeCodeCamp",
+          issueDate: "2023",
+          credentialUrl: "https://www.freecodecamp.org/certification/fcc-responsive-web-design",
+          skills: ["CSS Flexbox & Grid", "Accessibility", "Design Systems", "Web Performance"],
+          imageUrl: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80"
+        }
+      ]
     }
   };
 

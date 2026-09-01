@@ -312,12 +312,63 @@ hamburger.addEventListener('click', ()=>{
 
 menuOvl.addEventListener('click', closeMenu);
 navLinks.querySelectorAll('a').forEach(l => l.addEventListener('click', closeMenu));
+
+/* ─── Navbar Dropdown Interactions ───────────────────── */
+const navDropdowns = document.querySelectorAll('.nav-dropdown');
+navDropdowns.forEach(dd => {
+  const trigger = dd.querySelector('.nav-dropdown-trigger');
+  if (trigger) {
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const wasOpen = dd.classList.contains('open');
+      // Close all other dropdowns
+      navDropdowns.forEach(other => {
+        if (other !== dd) {
+          other.classList.remove('open');
+          const t = other.querySelector('.nav-dropdown-trigger');
+          if (t) t.setAttribute('aria-expanded', 'false');
+        }
+      });
+      dd.classList.toggle('open', !wasOpen);
+      trigger.setAttribute('aria-expanded', !wasOpen);
+      playAudioEffect('click');
+    });
+  }
+});
+
+// Close dropdowns on outside click
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.nav-dropdown')) {
+    navDropdowns.forEach(dd => {
+      dd.classList.remove('open');
+      const trigger = dd.querySelector('.nav-dropdown-trigger');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    });
+  }
+});
+
+// Keyboard support (Escape to close dropdowns)
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    navDropdowns.forEach(dd => {
+      dd.classList.remove('open');
+      const trigger = dd.querySelector('.nav-dropdown-trigger');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    });
+  }
+});
+
 function closeMenu(){
   navLinks.classList.remove('open');
   hamburger.classList.remove('open');
   hamburger.setAttribute('aria-expanded','false');
   menuOvl.classList.remove('visible');
   document.body.style.overflow = '';
+  navDropdowns.forEach(dd => {
+    dd.classList.remove('open');
+    const trigger = dd.querySelector('.nav-dropdown-trigger');
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+  });
 }
 
 /* ─── Active Nav Link ────────────────────────────────── */
@@ -489,6 +540,175 @@ function buildCard(project){
   }
 
   return card;
+}
+
+/* ─── Featured Projects Horizontal Infinite Loop Strip ── */
+let featTrackListenersAttached = false;
+let featScrollTickerActive = false;
+let featTickerPaused = false;
+let featPauseTimer = null;
+
+function renderFeaturedProjects(projects) {
+  const section = document.getElementById('featured');
+  const track   = document.getElementById('featuredTrack');
+  if (!section || !track) return;
+
+  // Filter projects marked featured, or fallback to first 4 published projects if none marked
+  let featured = projects.filter(p => p.featured);
+  if (featured.length === 0) {
+    featured = projects.filter(p => !p.status || p.status === 'published').slice(0, 4);
+  }
+
+  if (featured.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  track.innerHTML = '';
+
+  // Duplicate items 3 times to ensure a seamless infinite horizontal loop
+  const loopList = [...featured, ...featured, ...featured];
+
+  loopList.forEach(p => {
+    const title   = p.title || '';
+    const image   = p.coverImage || p.image || '';
+    const desc    = p.description || p.desc || '';
+    const liveUrl = p.projectUrl || p.liveUrl || '';
+    const stack   = (p.technologies || p.stack || []).slice(0, 3);
+    const cat     = p.categoryLabel || p.category || 'Featured Work';
+
+    const card = document.createElement('div');
+    card.className = 'feat-card';
+    card.innerHTML = `
+      <div class="feat-card-img">
+        ${image
+          ? `<img src="${image}" alt="${title}" loading="lazy" />`
+          : `<div class="feat-card-placeholder"><span>✦</span></div>`}
+        <div class="feat-card-overlay">
+          ${liveUrl ? `<a href="${liveUrl}" class="feat-overlay-btn" target="_blank" rel="noopener">View ↗</a>` : ''}
+        </div>
+      </div>
+      <div class="feat-card-body">
+        <div class="feat-card-header-row">
+          <p class="feat-card-cat">${cat}</p>
+          ${liveUrl ? `<a href="${liveUrl}" target="_blank" rel="noopener" class="feat-card-live-tag">Live ↗</a>` : ''}
+        </div>
+        <h4 class="feat-card-title" title="${title}">${title}</h4>
+        <p class="feat-card-desc">${desc}</p>
+        <div class="feat-card-stack">${stack.map(s => `<span class="feat-stack-tag">${s}</span>`).join('')}</div>
+      </div>`;
+    track.appendChild(card);
+  });
+
+  // Start continuous infinite auto-scrolling ticker
+  startFeaturedAutoScroll();
+
+  // Setup scroll buttons and drag physics once
+  if (!featTrackListenersAttached) {
+    featTrackListenersAttached = true;
+    const prevBtn = document.getElementById('featPrevBtn');
+    const nextBtn = document.getElementById('featNextBtn');
+
+    const pauseTickerTemporarily = (duration = 2000) => {
+      featTickerPaused = true;
+      if (featPauseTimer) clearTimeout(featPauseTimer);
+      featPauseTimer = setTimeout(() => {
+        featTickerPaused = false;
+      }, duration);
+    };
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        pauseTickerTemporarily(2500);
+        track.scrollBy({ left: -320, behavior: 'smooth' });
+        playAudioEffect('click');
+        // Handle wrap back if near left start
+        setTimeout(() => {
+          if (track.scrollLeft <= 10) {
+            track.scrollLeft += (track.scrollWidth / 3);
+          }
+        }, 350);
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        pauseTickerTemporarily(2500);
+        track.scrollBy({ left: 320, behavior: 'smooth' });
+        playAudioEffect('click');
+      });
+    }
+
+    // Hover pauses auto-scroll smoothly
+    track.addEventListener('mouseenter', () => {
+      featTickerPaused = true;
+    });
+
+    track.addEventListener('mouseleave', () => {
+      if (!isDown) {
+        pauseTickerTemporarily(800);
+      }
+    });
+
+    // Touch & Drag-to-scroll support for mouse
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+
+    track.addEventListener('mousedown', (e) => {
+      isDown = true;
+      featTickerPaused = true;
+      track.classList.add('active');
+      startX = e.pageX - track.offsetLeft;
+      scrollLeft = track.scrollLeft;
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isDown) {
+        isDown = false;
+        track.classList.remove('active');
+        pauseTickerTemporarily(1200);
+      }
+    });
+
+    track.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - track.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      track.scrollLeft = scrollLeft - walk;
+    });
+
+    // Mobile touch events
+    track.addEventListener('touchstart', () => {
+      featTickerPaused = true;
+    }, { passive: true });
+
+    track.addEventListener('touchend', () => {
+      pauseTickerTemporarily(1500);
+    }, { passive: true });
+  }
+
+  section.style.display = 'block';
+}
+
+function startFeaturedAutoScroll() {
+  if (featScrollTickerActive) return;
+  featScrollTickerActive = true;
+
+  function step() {
+    const track = document.getElementById('featuredTrack');
+    if (track && !featTickerPaused && track.scrollWidth > track.clientWidth) {
+      track.scrollLeft += 0.65; // Silky-smooth auto scroll speed
+      const thirdWidth = track.scrollWidth / 3;
+      // Seamless wrap-around
+      if (track.scrollLeft >= thirdWidth * 2) {
+        track.scrollLeft -= thirdWidth;
+      }
+    }
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
 }
 
 /* ─── Render Projects with Transitions ──────────────── */
@@ -817,6 +1037,7 @@ async function loadAdminProjects(){
   } finally {
     if(loading) loading.style.display='none';
     renderProjects('all');
+    renderFeaturedProjects(allAdminProjects);
   }
 }
 
@@ -2188,6 +2409,8 @@ initNeuralTTS();
 // Load CMS Dynamic Sections
 loadDynamicAbout();
 loadDynamicServicesAndPlans();
+loadDynamicCertifications();
+setupCertModalClose();
 loadDynamicTestimonials();
 setupTestimonialControls();
 loadDynamicBlogs();
@@ -2872,6 +3095,178 @@ function setupBlogReaderClose() {
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 }
 
+/* ─── Certifications & Verified Credentials ───────── */
+let cachedClientCerts = [];
+
+async function loadDynamicCertifications() {
+  const { db, firebaseReady } = window.joshFirebase || {};
+  let certs = [];
+
+  if (firebaseReady && db) {
+    try {
+      const doc = await db.collection('settings').doc('certifications_store').get();
+      if (doc.exists && doc.data() && Array.isArray(doc.data().items)) {
+        certs = doc.data().items;
+      }
+    } catch (err) {
+      console.warn('[JoshFolio] Failed to load certs from DB, checking local fallback:', err);
+    }
+  }
+
+  if (certs.length === 0) {
+    try {
+      certs = JSON.parse(localStorage.getItem('josh_cached_certs') || '[]');
+    } catch (e) {}
+  }
+
+  if (certs.length === 0) {
+    certs = [
+      {
+        title: "Meta Front-End Developer Professional Certificate",
+        issuer: "Meta",
+        issueDate: "2024",
+        credentialUrl: "https://www.coursera.org/professional-certificates/meta-front-end-developer",
+        skills: ["React.js", "JavaScript (ES6+)", "UI/UX Architecture", "HTML5 & CSS3"],
+        imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        title: "Google Data Analytics Professional Certificate",
+        issuer: "Google",
+        issueDate: "2024",
+        credentialUrl: "https://www.coursera.org/professional-certificates/google-data-analytics",
+        skills: ["R Programming", "SQL", "Statistical Modeling", "Tableau & Spreadsheets"],
+        imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        title: "Responsive Web Design & Algorithms",
+        issuer: "freeCodeCamp",
+        issueDate: "2023",
+        credentialUrl: "https://www.freecodecamp.org/certification/fcc-responsive-web-design",
+        skills: ["CSS Flexbox & Grid", "Accessibility", "Design Systems", "Web Performance"],
+        imageUrl: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80"
+      }
+    ];
+  }
+
+  cachedClientCerts = certs;
+  renderCertifications(certs);
+}
+
+function renderCertifications(certs) {
+  const grid = document.getElementById('certificationsGrid');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+  certs.forEach((cert, idx) => {
+    const card = document.createElement('div');
+    card.className = 'cert-card reveal-up';
+    
+    const skills = Array.isArray(cert.skills) ? cert.skills : (cert.skills ? String(cert.skills).split(',').map(s => s.trim()) : []);
+    const skillsHtml = skills.map(s => `<span class="cert-skill-tag">${s}</span>`).join('');
+    
+    const thumbHtml = cert.imageUrl
+      ? `<img src="${cert.imageUrl}" alt="${cert.title}" class="cert-thumb-img" loading="lazy" />`
+      : `<div class="cert-thumb-placeholder">
+           <span class="cert-ph-icon">✪</span>
+           <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted);">Verified Credential</span>
+         </div>`;
+
+    card.innerHTML = `
+      <div class="cert-thumb-wrap" data-idx="${idx}">
+        ${thumbHtml}
+        <div class="cert-zoom-overlay">
+          <span>🔍</span> Inspect Credential
+        </div>
+      </div>
+      <div class="cert-content">
+        <div class="cert-meta-row">
+          <span class="cert-issuer-badge">✪ ${cert.issuer || 'Accredited Issuer'}</span>
+          ${cert.issueDate ? `<span class="cert-date">${cert.issueDate}</span>` : ''}
+        </div>
+        <h3 class="cert-title">${cert.title}</h3>
+        <div class="cert-skills-wrap">${skillsHtml}</div>
+        <div class="cert-footer-row">
+          ${cert.credentialUrl ? `<a href="${cert.credentialUrl}" target="_blank" rel="noopener" class="cert-verify-link">Verify Credential ↗</a>` : '<span style="font-size:0.75rem; color:var(--text-dim); font-family:var(--font-mono);">Verified Record</span>'}
+          <button type="button" class="cert-preview-btn" data-idx="${idx}">Preview 🔍</button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Attach Lightbox triggers
+  grid.querySelectorAll('.cert-thumb-wrap, .cert-preview-btn').forEach(trigger => {
+    trigger.addEventListener('click', () => {
+      const idx = parseInt(trigger.dataset.idx);
+      const cert = cachedClientCerts[idx];
+      if (cert) openCertModal(cert);
+    });
+  });
+}
+
+function openCertModal(cert) {
+  const overlay = document.getElementById('certModalOverlay');
+  const imgEl = document.getElementById('certModalImg');
+  const titleEl = document.getElementById('certModalTitle');
+  const tagEl = document.getElementById('certModalIssuerTag');
+  const metaEl = document.getElementById('certModalMeta');
+  const skillsEl = document.getElementById('certModalSkills');
+  const actionsEl = document.getElementById('certModalActions');
+  if (!overlay) return;
+
+  if (imgEl) {
+    if (cert.imageUrl) {
+      imgEl.src = cert.imageUrl;
+      imgEl.style.display = 'block';
+    } else {
+      imgEl.style.display = 'none';
+    }
+  }
+  if (titleEl) titleEl.textContent = cert.title || 'Professional Certificate';
+  if (tagEl) tagEl.textContent = cert.issuer ? `✪ ${cert.issuer}` : 'Verified Credential';
+  if (metaEl) metaEl.textContent = cert.issueDate ? `Issued in ${cert.issueDate}` : 'Verified Competency Badge';
+
+  if (skillsEl) {
+    const skills = Array.isArray(cert.skills) ? cert.skills : (cert.skills ? String(cert.skills).split(',').map(s => s.trim()) : []);
+    skillsEl.innerHTML = skills.map(s => `<span class="cert-skill-tag">${s}</span>`).join('');
+  }
+
+  if (actionsEl) {
+    actionsEl.innerHTML = cert.credentialUrl 
+      ? `<a href="${cert.credentialUrl}" target="_blank" rel="noopener" class="btn-primary" style="display:inline-flex; align-items:center; gap:0.5rem; padding:0.6rem 1.4rem; font-size:0.85rem;">
+           Verify On Official Portal ↗
+         </a>`
+      : '';
+  }
+
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  playAudioEffect('chord');
+}
+
+function setupCertModalClose() {
+  const overlay = document.getElementById('certModalOverlay');
+  const closeBtn = document.getElementById('certModalCloseBtn');
+
+  const close = () => {
+    if (overlay) overlay.style.display = 'none';
+    document.body.style.overflow = '';
+    playAudioEffect('click');
+  };
+
+  if (closeBtn) closeBtn.addEventListener('click', close);
+  if (overlay) {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) close();
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay && overlay.style.display !== 'none') {
+      close();
+    }
+  });
+}
+
 /* ─── WebGL Waving Dotted Particle Surface Background ─── */
 function initDottedSurface() {
   const container = document.getElementById('dottedSurfaceContainer');
@@ -3533,6 +3928,7 @@ const SECTION_NARRATIVES = {
   services: "Explore bespoke services and scalable consulting plans, spanning custom front-end web applications, full brand identity packages, data science dashboards, and AI pipeline automations tailored to launch your next venture.",
   'guru-ai': "Guru AI Companion is Joshua's flagship developer and builder co-pilot. Engineered with autonomous cognitive architecture, client-side session caching, and cybernetic signal decryption protocols, it guides founders from ideation to production.",
   projects: "Explore Joshua's curated portfolio of production web applications, AI sandboxes, fintech engines, and creative branding cases built for clients and African innovators.",
+  certifications: "Explore Joshua's accredited certifications and verified technical credentials spanning frontend engineering, data analytics, and computational systems.",
   startup: "GuruLabs is a parent tech ecosystem engineering next-generation software assets. Flagship ventures include Kudiflow, an intelligent financial tracker for youths, and ScholarLens, an AI academic research sandbox.",
   location: "Operating out of Lagos Core Node at coordinates 6.5244 degrees North, 3.3792 degrees East. Joshua is actively available for global remote contracts and technical consultations worldwide.",
   blog: "Dive into insights and technical writings covering frontend engineering, predictive data modeling, and modern web application architecture.",
@@ -3546,6 +3942,7 @@ const SECTION_TITLES = {
   services: "Services & Plans",
   'guru-ai': "Guru AI Architecture",
   projects: "Featured Projects",
+  certifications: "Verified Credentials",
   startup: "GuruLabs Ecosystem",
   location: "Lagos Telemetry Node",
   blog: "Insights & Articles",

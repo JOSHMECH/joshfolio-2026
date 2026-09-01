@@ -53,11 +53,70 @@
       </a>
       <div class="nav-links" id="navLinks">
         <a href="#about" class="nav-link">About</a>
-        <a href="#skills" class="nav-link">Skills</a>
-        <a href="#services" class="nav-link">Services</a>
-        <a href="#guru-ai" class="nav-link" style="color:var(--gold);">Guru AI</a>
+        
+        <!-- Dropdown: Expertise -->
+        <div class="nav-dropdown" id="navDropdownExpertise">
+          <button class="nav-link nav-dropdown-trigger" type="button" aria-expanded="false" aria-haspopup="true">
+            <span>Expertise</span>
+            <svg class="dropdown-chevron" viewBox="0 0 10 6" width="10" height="6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+          </button>
+          <div class="nav-dropdown-menu">
+            <a href="#skills" class="nav-dropdown-item">
+              <span class="ndi-icon">❖</span>
+              <div class="ndi-text">
+                <span class="ndi-title">Skills & Stack</span>
+                <span class="ndi-desc">Core languages, tools & frameworks</span>
+              </div>
+            </a>
+            <a href="#services" class="nav-dropdown-item">
+              <span class="ndi-icon">⚙</span>
+              <div class="ndi-text">
+                <span class="ndi-title">Services & Pricing</span>
+                <span class="ndi-desc">Custom engineering & consulting</span>
+              </div>
+            </a>
+            <a href="#certifications" class="nav-dropdown-item">
+              <span class="ndi-icon">✪</span>
+              <div class="ndi-text">
+                <span class="ndi-title">Credentials</span>
+                <span class="ndi-desc">Verified certificates & badges</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Dropdown: Innovations -->
+        <div class="nav-dropdown" id="navDropdownInnovations">
+          <button class="nav-link nav-dropdown-trigger" type="button" aria-expanded="false" aria-haspopup="true">
+            <span style="color:var(--gold);">Innovations</span>
+            <svg class="dropdown-chevron" viewBox="0 0 10 6" width="10" height="6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+          </button>
+          <div class="nav-dropdown-menu">
+            <a href="#guru-ai" class="nav-dropdown-item">
+              <span class="ndi-icon" style="color:var(--gold);">◈</span>
+              <div class="ndi-text">
+                <span class="ndi-title" style="color:var(--gold);">Guru AI Co-Pilot</span>
+                <span class="ndi-desc">Autonomous cybernetic assistant</span>
+              </div>
+            </a>
+            <a href="#startup" class="nav-dropdown-item">
+              <span class="ndi-icon">✦</span>
+              <div class="ndi-text">
+                <span class="ndi-title">GuruLabs Startup</span>
+                <span class="ndi-desc">Next-gen African software assets</span>
+              </div>
+            </a>
+            <a href="#location" class="nav-dropdown-item">
+              <span class="ndi-icon">⊕</span>
+              <div class="ndi-text">
+                <span class="ndi-title">Lagos Node</span>
+                <span class="ndi-desc">Real-time vector & telemetry</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
         <a href="#projects" class="nav-link">Projects</a>
-        <a href="#startup" class="nav-link">Startup</a>
         <a href="#blog" class="nav-link">Blog</a>
         <a href="#contact" class="nav-link">Contact</a>
       </div>
@@ -173,7 +232,25 @@
     </a>
   </section>
 
+  <!-- ─── Featured Projects ──────────────────────────── -->
+  <section id="featured" class="featured-strip" style="display:none;" aria-label="Featured Projects">
+    <div class="feat-header">
+      <div class="feat-header-left">
+        <span class="feat-tag">★ Featured Work</span>
+        <h2 class="feat-title">Pinned <span class="gold">Projects</span></h2>
+      </div>
+      <div class="feat-nav-controls">
+        <button class="feat-nav-btn feat-prev" id="featPrevBtn" aria-label="Previous featured projects" title="Previous Projects">←</button>
+        <button class="feat-nav-btn feat-next" id="featNextBtn" aria-label="Next featured projects" title="Next Projects">→</button>
+      </div>
+    </div>
+    <div class="feat-scroll-wrap">
+      <div class="feat-scroll-track" id="featuredTrack"></div>
+    </div>
+  </section>
+
   <!-- ─── About ───────────────────────────────────────── -->
+
   <section id="about" class="about section">
     <div class="container">
       <div class="section-header">
@@ -997,6 +1074,27 @@
     </div>
   </section>
 
+  <!-- ─── Certifications & Credentials ───────────────── -->
+  <section id="certifications" class="certifications section" aria-label="Certifications and Credentials">
+    <div class="container">
+      <div class="section-header centered">
+        <span class="section-tag">06 / Credentials</span>
+        <h2 class="section-title">Verified <span class="gold">Certifications</span></h2>
+        <p class="section-sub" style="margin: 0 auto; max-width: 540px;">Professional certifications, verified credentials, and specialized engineering badges validating core competencies.</p>
+        <div class="sh-voice-wrap">
+          <button class="section-voice-btn" data-tts="certifications" aria-label="Listen to Certifications Brief" title="Listen to Credentials Briefing">
+            <span class="svb-icon">◈</span>
+            <span class="svb-text">Audio Briefing</span>
+            <span class="svb-wave"><span></span><span></span><span></span></span>
+          </button>
+        </div>
+      </div>
+      <div class="certs-grid" id="certificationsGrid">
+        <!-- Dynamic certificate cards injected via JavaScript -->
+      </div>
+    </div>
+  </section>
+
   <!-- ─── Testimonials ──────────────────────────────── -->
   <section id="testimonials" class="testimonials section">
     <div class="container">
@@ -1387,6 +1485,23 @@
       </div>
     </form>
   </aside>
+
+  <!-- ─── Certificate Lightbox Modal ─────────────────── -->
+  <div class="cert-modal-overlay" id="certModalOverlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Certificate Image Viewer">
+    <div class="cert-modal-card">
+      <button class="cert-modal-close" id="certModalCloseBtn" aria-label="Close Certificate Preview">✕</button>
+      <div class="cert-modal-img-wrap">
+        <img id="certModalImg" src="" alt="Certificate Full Preview" />
+      </div>
+      <div class="cert-modal-body">
+        <span class="cert-modal-tag" id="certModalIssuerTag">Verified Credential</span>
+        <h3 id="certModalTitle" class="cert-modal-title"></h3>
+        <p id="certModalMeta" class="cert-modal-meta"></p>
+        <div id="certModalSkills" class="cert-modal-skills"></div>
+        <div id="certModalActions" class="cert-modal-actions" style="margin-top:1.25rem;"></div>
+      </div>
+    </div>
+  </div>
 
   <!-- ─── Custom Alert Modal ──────────────────────────── -->
   <div class="sys-modal-overlay" id="sysModal" role="dialog" aria-modal="true" aria-labelledby="sysModalTitle">
