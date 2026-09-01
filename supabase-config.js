@@ -456,32 +456,7 @@ async function seedSettingsIfEmpty(db) {
       autoReplyTemplateID: ""
     },
     certifications_store: {
-      items: [
-        {
-          title: "Meta Front-End Developer Professional Certificate",
-          issuer: "Meta",
-          issueDate: "2024",
-          credentialUrl: "https://www.coursera.org/professional-certificates/meta-front-end-developer",
-          skills: ["React.js", "JavaScript (ES6+)", "UI/UX Architecture", "HTML5 & CSS3"],
-          imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80"
-        },
-        {
-          title: "Google Data Analytics Professional Certificate",
-          issuer: "Google",
-          issueDate: "2024",
-          credentialUrl: "https://www.coursera.org/professional-certificates/google-data-analytics",
-          skills: ["R Programming", "SQL", "Statistical Modeling", "Tableau & Spreadsheets"],
-          imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80"
-        },
-        {
-          title: "Responsive Web Design & Algorithms",
-          issuer: "freeCodeCamp",
-          issueDate: "2023",
-          credentialUrl: "https://www.freecodecamp.org/certification/fcc-responsive-web-design",
-          skills: ["CSS Flexbox & Grid", "Accessibility", "Design Systems", "Web Performance"],
-          imageUrl: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80"
-        }
-      ]
+      items: []
     }
   };
 
