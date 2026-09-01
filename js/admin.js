@@ -933,7 +933,7 @@ if (loginForm) {
       loginBtn.textContent = 'Entering...';
     } catch (err) {
       console.error(err);
-      loginError.textContent = `✕ Auth Failed: ${err.message}`;
+      loginError.textContent = err.message ? `✕ ${err.message}` : '✕ Invalid email or password.';
       loginBtn.disabled = false;
       loginBtn.textContent = 'Enter Dashboard →';
     }

@@ -39,7 +39,7 @@ class HardcodedAuth {
       this.callbacks.forEach(cb => cb(this.user));
       return { user: this.user };
     }
-    throw new Error('Invalid credentials. Use admin@joshfolio.com and admin123.');
+    throw new Error('Invalid email or password.');
   }
   async signOut() {
     this.user = null;
